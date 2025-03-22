@@ -10,6 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
 
+  shelf: ^1.4.0            # Framework xử lý HTTP
+  shelf_router: ^1.1.4     # Định tuyến API
+  mysql1: ^0.20.0          # Kết nối MySQL (hoặc sqlite3 nếu dùng SQLite)
+  dotenv: ^4.2.0           # Đọc biến môi trường
+  json_serializable: ^6.7.1  # Hỗ trợ JSON
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
