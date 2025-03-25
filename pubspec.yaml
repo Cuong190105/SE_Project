@@ -15,6 +15,9 @@ dependencies:
   mysql1: ^0.20.0          # Kết nối MySQL (hoặc sqlite3 nếu dùng SQLite)
   dotenv: ^4.2.0           # Đọc biến môi trường
   json_serializable: ^6.7.1  # Hỗ trợ JSON
+  crypto: ^3.0.3
+  shelf_cors_headers: ^0.1.5
+  jwt_decoder: ^2.0.1
 
 dev_dependencies:
   flutter_test:
