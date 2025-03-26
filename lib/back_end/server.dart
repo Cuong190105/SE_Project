@@ -14,6 +14,9 @@ class ServerRoutes {
       return Response.ok('✅ Server từ điển đang chạy!');
     });
 
+    router.post('/sync-users', AuthService.syncUsers);
+
+
     router.get('/test-db', (Request request) async {
       try {
         final conn = await DatabaseConfig.connect();
