@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home.dart'; // Import màn hình Home từ thư mục screens
+import 'authentic/register_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -12,7 +13,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(), // Chạy màn hình chính
+      home: RegisterScreen(), // Chạy màn hình chính
     );
   }
 }
