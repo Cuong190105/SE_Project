@@ -7,12 +7,27 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-
+    int streakCount = 5; // đợi data base
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
         actions: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                SizedBox(width: 5),
+                Text("$streakCount", style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                      )
+                    ),
+                Icon(Icons.local_fire_department, color: Colors.orange, size: 32,),
+              ],
+            ),
+          ),
           IconButton(
             icon: Container(
               padding: const EdgeInsets.all(8),
@@ -97,6 +112,7 @@ class HomeScreen extends StatelessWidget {
                         hintStyle: TextStyle(color: Colors.blue.shade300),
                         border: InputBorder.none,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -139,7 +155,7 @@ Widget buildIconGrid(BuildContext context, double width) {
                 ),
                 FeatureButton(
                   icon: Icons.add_circle_outline,
-                  label: 'Thêm từ',
+                  label: 'Kho từ vựng',
                   color: Colors.purple.shade400,
                   height: (availableHeight-space)/2,
                   onTap: () {
