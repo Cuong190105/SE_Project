@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^0.13.0
+  process_run: ^0.13.0
 
 dev_dependencies:
   flutter_test:
