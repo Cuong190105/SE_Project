@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'translate.dart';
+import 'add_word.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -175,7 +175,10 @@ Widget buildIconGrid(BuildContext context, double width) {
                   color: Colors.purple.shade400,
                   height: (availableHeight-space)/2,
                   onTap: () {
-
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddWord()),
+                    );
                   },
                 ),
                 FeatureButton(
@@ -222,8 +225,6 @@ class FeatureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double space = 16;
-    double width = (MediaQuery.of(context).size.width/2-space)/2;
 
     return InkWell(
       onTap: onTap,
@@ -239,14 +240,14 @@ class FeatureButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: (min(width,height)*0.19).clamp(25, 200), color: color),
+            Icon(icon, size: 35, color: color),
             const SizedBox(height: 5),
             Text(
               label,
               textAlign: TextAlign.center,
               softWrap: false, // Ngăn không cho chữ xuống dòng
               style: TextStyle(
-                fontSize: (min(width,height)*0.19).clamp(20, 200),
+                fontSize: 35,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
