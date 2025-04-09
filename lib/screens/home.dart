@@ -1,15 +1,35 @@
 import 'package:flutter/material.dart';
+import 'translate.dart';
+import 'add_word.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    int streakCount = 5; // đợi data base
     return Scaffold(
+
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
         actions: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 1),
+            child: Row(
+              //mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("$streakCount", style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                      ),
+                    ),
+                Icon(Icons.local_fire_department, color: Colors.orange, size: 32,),
+              ],
+            ),
+          ),
           IconButton(
             icon: Container(
               padding: const EdgeInsets.all(8),
@@ -19,12 +39,11 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {
-              // Account profile
-            },
+            onPressed: () {},
           ),
         ],
       ),
+
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -35,12 +54,12 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
             child: Column(
+
               children: [
-                const SizedBox(height: 10),
-                // App logo and name
+                const SizedBox(height: 25),
+
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -61,8 +80,10 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 Text(
                   'DICTIONARY',
+                  softWrap: false,
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -72,8 +93,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 30),
 
-                // Search bar
                 Container(
+                  width: MediaQuery.of(context).size.width / 2,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(30),
@@ -88,70 +109,109 @@ class HomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
+                      prefixIcon: IconButton(
+                        icon: Icon(Icons.search, color: Colors.blue.shade700),
+                        onPressed: () {},
+                      ),
                       hintText: 'Nhập từ cần tìm kiếm',
                       hintStyle: TextStyle(color: Colors.blue.shade300),
                       border: InputBorder.none,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                // Feature buttons grid
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    children: [
-                      FeatureButton(
-                        icon: Icons.translate,
-                        label: 'Dịch văn bản',
-                        color: Colors.blue.shade600,
-                        onTap: () {
-                          // điều hướng dịch vb (hóa)
-                        },
-                      ),
-                      FeatureButton(
-                        icon: Icons.add_circle_outline,
-                        label: 'Thêm từ',
-                        color: Colors.purple.shade400,
-                        onTap: () {
-                          // điều hướng thêm từ (hóa)
-                        },
-                      ),
-                      FeatureButton(
-                        icon: Icons.card_membership,
-                        label: 'Flashcard',
-                        color: Colors.teal.shade500,
-                        onTap: () {
-                          // điều hướng flashcard
-                        },
-                      ),
-                      FeatureButton(
-                        icon: Icons.games,
-                        label: 'Minigame',
-                        color: Colors.amber.shade700,
-                        onTap: () {
-                          // điều hướng minigame
-                        },
-                      ),
-                    ],
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.54, // Giới hạn chiều cao
                   ),
+                  child: buildIconGrid(context, screenWidth / 2 + 16),
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
         ),
       ),
+
+
     );
   }
 }
+// tạo lưới ô
+Widget buildIconGrid(BuildContext context, double width) {
 
+  double space = 16;
+
+  return
+    LayoutBuilder(
+      builder: (context, constraints) {
+        double availableHeight = constraints.maxHeight; // Lấy chiều cao còn lại
+        return Center(
+          child: SizedBox(
+            width: width,
+            child: GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: space,
+              mainAxisSpacing: space,
+              childAspectRatio: (width-space) / (availableHeight-space).clamp(200, 9999), // Căn chỉnh tỷ lệ kích thước ô
+              children: [
+                FeatureButton(
+                  icon: Icons.translate,
+                  label: 'Dịch văn bản',
+                  color: Colors.blue.shade600,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Translate()),
+                    );
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.add_circle_outline,
+                  label: 'Kho từ vựng',
+                  color: Colors.purple.shade400,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddWord()),
+                    );
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.card_membership,
+                  label: 'Flashcard',
+                  color: Colors.teal.shade500,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.games,
+                  label: 'Minigame',
+                  color: Colors.amber.shade700,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+  );
+}
+// lớp ô vuông
 class FeatureButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final double height;
   final VoidCallback onTap;
 
   const FeatureButton({
@@ -159,15 +219,19 @@ class FeatureButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
+    required this.height,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        width: 100,
+        height: 50,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
@@ -176,13 +240,14 @@ class FeatureButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 8),
+            Icon(icon, size: 35, color: color),
+            const SizedBox(height: 5),
             Text(
               label,
               textAlign: TextAlign.center,
+              softWrap: false, // Ngăn không cho chữ xuống dòng
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 35,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
