@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home.dart'; // Import màn hình Home từ thư mục screens
+// Import màn hình Home từ thư mục screens
 import 'authentic/register_screen.dart';
 
 void main() {

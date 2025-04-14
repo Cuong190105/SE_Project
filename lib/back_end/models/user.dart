@@ -1,54 +1,37 @@
 class User {
-  // Định danh duy nhất của người dùng
   int? id;
-  
-  // Thông tin đăng nhập
-  String username;
+  String name;
   String email;
-  String passwordHash;
-  
-  // Trạng thái đồng bộ
+  String password;
   bool isSynced;
-  
-  // Thời gian tạo và cập nhật tài khoản
-  DateTime createdAt;
-  DateTime updatedAt;
 
   User({
     this.id,
-    required this.username,
+    required this.name,
     required this.email,
-    required this.passwordHash,
+    required this.password,
     this.isSynced = false,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) : 
-    createdAt = createdAt ?? DateTime.now(),
-    updatedAt = updatedAt ?? DateTime.now();
+  });
 
-  // Chuyển đổi từ Map sang User (dùng cho SQLite)
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
-      id: map['id'],
-      username: map['username'],
-      email: map['email'],
-      passwordHash: map['password_hash'],
-      isSynced: map['is_synced'] == 1,
-      createdAt: DateTime.parse(map['created_at']),
-      updatedAt: DateTime.parse(map['updated_at']),
-    );
-  }
-
-  // Chuyển đổi User sang Map (dùng cho SQLite)
+  // Convert User to Map for database storage
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'username': username,
+      'name': name,
       'email': email,
-      'password_hash': passwordHash,
+      'password': password,
       'is_synced': isSynced ? 1 : 0,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  // Create User from Map
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      name: map['name'],
+      email: map['email'],
+      password: map['password'],
+      isSynced: map['is_synced'] == 1,
+    );
   }
 }
