@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^0.13.0
+  process_run: ^0.13.0
+  window_size: ^0.1.0
 
   shelf: ^1.4.0            # Framework xử lý HTTP
   shelf_router: ^1.1.4     # Định tuyến API
