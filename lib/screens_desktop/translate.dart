@@ -455,6 +455,15 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
       final data = jsonDecode(response.body);
       return data["translatedText"];
     } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lỗi mạng',
+            style: TextStyle(color: Colors.white), // chữ trắng
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
       throw Exception("Lỗi dịch thuật: ${response.body}");
     }
   }
@@ -471,6 +480,16 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
       }
     } catch (e) {
       debugPrint("Lỗi khi dịch: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Không thể dịch',
+            style: TextStyle(color: Colors.white), // chữ trắng
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+
     }
   }
 

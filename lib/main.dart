@@ -22,6 +22,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
+      title: 'EDU dictionary',
       debugShowCheckedModeBanner: false,
       home: HomeScreen(), // Chạy màn hình chính
     );
