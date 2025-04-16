@@ -4,27 +4,25 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-   sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.0
   process_run: ^0.13.0
   window_size: ^0.1.0
-
-  shelf: ^1.4.0            # Framework xử lý HTTP
-  shelf_router: ^1.1.4     # Định tuyến API
-  mysql1: ^0.20.0          # Kết nối MySQL (hoặc sqlite3 nếu dùng SQLite)
-  dotenv: ^4.2.0           # Đọc biến môi trường
-  json_serializable: ^6.7.1  # Hỗ trợ JSON
+  shelf: ^1.4.0
+  shelf_router: ^1.1.4
+  dotenv: ^4.2.0
+  json_serializable: ^6.7.1
   crypto: ^3.0.3
   shelf_cors_headers: ^0.1.5
   jwt_decoder: ^2.0.1
-  sqflite: ^2.4.2
+  mysql_client: ^0.0.27 # hoặc phiên bản mới nhất
   path: ^1.9.1
   http: ^1.3.0
   dart_jsonwebtoken: ^3.2.0
+  sqlite3: ^2.1.0  # Thêm dòng này
 
 dev_dependencies:
   flutter_test:
