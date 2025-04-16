@@ -161,10 +161,10 @@ Widget buildIconGrid(BuildContext context, double screenWidth) {
                   color: Colors.purple.shade400,
                   height: (availableHeight - space * 4) / 4-1,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddWord()),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(builder: (context) => const AddWord()),
+                    // );
                   },
                 ),
                 SizedBox(height: space),
