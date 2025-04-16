@@ -33,7 +33,7 @@ class _TranslateState extends State<Translate> {
     var shell = Shell();
 
     try {
-      _serverProcess = await Process.start('node', ['D:/cnpm/SE_Project/node_server/server.js']);
+      //_serverProcess = await Process.start('node', ['D:/cnpm/SE_Project/node_server/server.js']);
       print("Server Node.js đã chạy!");
     } catch (e) {
       print("Lỗi khi chạy server: $e");
@@ -444,7 +444,7 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
 
   // Hàm gọi API để dịch văn bản
   Future<String> translateText(String text, String targetLang) async {
-    final url = Uri.parse("http://localhost:3000/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
+    final url = Uri.parse("https://my-translation-api.vercel.app/api/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -455,6 +455,15 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
       final data = jsonDecode(response.body);
       return data["translatedText"];
     } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lỗi mạng',
+            style: TextStyle(color: Colors.white), // chữ trắng
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
       throw Exception("Lỗi dịch thuật: ${response.body}");
     }
   }
@@ -471,6 +480,16 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
       }
     } catch (e) {
       debugPrint("Lỗi khi dịch: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Không thể dịch',
+            style: TextStyle(color: Colors.white), // chữ trắng
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+
     }
   }
 

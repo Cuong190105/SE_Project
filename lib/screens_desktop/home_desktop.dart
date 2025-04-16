@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'translate.dart';
 import 'add_word.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreenDesktop extends StatelessWidget {
+  const HomeScreenDesktop({super.key});
 
   @override
   Widget build(BuildContext context) {
