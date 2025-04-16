@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../home_phone.dart';
+import '../authentic_phone/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -280,9 +282,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const TextSpan(
-                                        text: ' và '
-                                      ),
+                                      const TextSpan(text: ' và '),
                                       TextSpan(
                                         text: 'Chính sách bảo mật',
                                         style: TextStyle(
@@ -297,18 +297,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          
+
                           //register button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: _agreeToTerms ? () {
-                                if (_formKey.currentState!.validate()) {
-                                  Navigator.pushReplacementNamed(context, '/home');
-                                }
-                              } 
-                              : null,
+                              onPressed:
+                                  _agreeToTerms
+                                      ? () {
+                                        if (_formKey.currentState!.validate()) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const HomeScreenPhone(),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                      : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white,
@@ -320,7 +329,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                               child: const Text(
                                 "ĐĂNG KÝ",
-                                 style: TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,
@@ -337,7 +346,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const Text('Đã có tài khoản?'),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(),
+                                    ),
+                                  );
                                 },
                                 child: Text(
                                   'Đăng nhập',
