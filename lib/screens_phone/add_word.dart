@@ -35,107 +35,57 @@ class _AddWordState extends State<AddWord> {
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
-        leadingWidth: screenWidth,
-        leading: Stack(
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'DICTIONARY',
-                      softWrap: false,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                  StatefulBuilder(
-                    builder: (context, setState) {
-
-                      return MouseRegion(
-                        onEnter: (_) => setState(() => isHoveringIcon = true),
-                        onExit: (_) => setState(() => isHoveringIcon = false),
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.shade100,
-                                  blurRadius: 2,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.book,
-                              size: 20,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            /*Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: screenWidth / 2,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(color: Colors.blue.shade100, blurRadius: 5, spreadRadius: 1),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: IconButton(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
-                      onPressed: () {},
-                    ),
-                    hintText: 'Nhập từ cần tìm kiếm',
-                    hintStyle: TextStyle(color: Colors.blue.shade300),
-                    border: InputBorder.none,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),*/
-          ],
-        ),
         actions: [
-          Row(
-            children: [
-              Text(
-                "$streakCount",
-                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
+          // IconButton ở bên trái
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person, color: Colors.blue.shade700, size: 24),
               ),
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
-            ],
-          ),
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
+              onPressed: () {},
             ),
-            onPressed: () {},
+          ),
+
+          // Thêm Expanded để làm DICTIONARY nằm giữa
+          Expanded(
+            child: Center(
+              child: Text(
+                'DICTIONARY',
+                softWrap: false,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+
+          // Thêm phần tử ở bên phải
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.local_fire_department, color: Colors.orange, size: 28),
+                SizedBox(width: 4),
+                Text(
+                  "$streakCount",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -200,7 +150,7 @@ class _AddWordState extends State<AddWord> {
                 ),
                 const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
 
@@ -292,7 +242,7 @@ class _AddWordState extends State<AddWord> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(left: 110), // cách viền trái
+                              padding: const EdgeInsets.only(left: 10), // cách viền trái
                               child: ElevatedButton(
                                 onPressed: () {
                                   setState(() {
@@ -305,7 +255,7 @@ class _AddWordState extends State<AddWord> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(right: 25), // cách viền phải
+                              padding: const EdgeInsets.only(right: 10), // cách viền phải
                               child: ElevatedButton(
                                 onPressed: () {
                                   setState(() {
@@ -342,6 +292,7 @@ class _AddWordState extends State<AddWord> {
               ],
             ),
           ),
+
         ),
       ),
     );
@@ -530,28 +481,28 @@ class _AddSoundButtonState extends State<AddSoundButton> {
     super.dispose();
   }
 
+  String _shortenFileName(String name, [int maxLength = 20]) {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + "...";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      //color: Colors.amber.withOpacity(0.3),
       child: Row(
         children: [
           if (_filePath != null) ...[
-            Container(
-              //color: Colors.cyan,
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width - 580,
-              ),
-              child: Text(
-                "🎵 $_fileName",
-                softWrap: true,
-              ),
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width - 300,
             ),
-
-            SizedBox(width: 10),
-
-            Text("🕒 ${_duration?.inSeconds ?? '...'} giây"),
-
+             child: Text(
+                "🎵 ${_shortenFileName(_fileName ?? "")}",
+                overflow: TextOverflow.ellipsis,
+              ),
+          ),
+            const SizedBox(width: 8),
+            Text("🕒 ${_duration?.inSeconds ?? '...'}s"),
             IconButton(
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
@@ -570,12 +521,13 @@ class _AddSoundButtonState extends State<AddSoundButton> {
               },
               tooltip: 'Xoá file',
             ),
+          ] else ...[
+            ElevatedButton.icon(
+              onPressed: _pickAudioFile,
+              icon: Icon(Icons.upload_file),
+              label: Text("Chọn file"),
+            ),
           ],
-          ElevatedButton.icon(
-            onPressed: _pickAudioFile,
-            icon: Icon(Icons.upload_file),
-            label: Text("Chọn file âm thanh"),
-          ),
         ],
       ),
     );
