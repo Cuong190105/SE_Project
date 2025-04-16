@@ -10,6 +10,7 @@ class HomeScreenDesktop extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     int streakCount = 5; // đợi data base
     return Scaffold(
+
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
@@ -19,19 +20,13 @@ class HomeScreenDesktop extends StatelessWidget {
             child: Row(
               //mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  "$streakCount",
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Icon(
-                  Icons.local_fire_department,
-                  color: Colors.orange,
-                  size: 32,
-                ),
+                Text("$streakCount", style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                      ),
+                    ),
+                Icon(Icons.local_fire_department, color: Colors.orange, size: 32,),
               ],
             ),
           ),
@@ -61,6 +56,7 @@ class HomeScreenDesktop extends StatelessWidget {
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
+
               children: [
                 const SizedBox(height: 25),
 
@@ -128,9 +124,7 @@ class HomeScreenDesktop extends StatelessWidget {
 
                 ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxHeight:
-                        MediaQuery.of(context).size.height *
-                        0.54, // Giới hạn chiều cao
+                    maxHeight: MediaQuery.of(context).size.height * 0.54, // Giới hạn chiều cao
                   ),
                   child: buildIconGrid(context, screenWidth / 2 + 16),
                 ),
@@ -140,77 +134,78 @@ class HomeScreenDesktop extends StatelessWidget {
           ),
         ),
       ),
+
+
     );
   }
 }
-
 // tạo lưới ô
 Widget buildIconGrid(BuildContext context, double width) {
+
   double space = 16;
 
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      double availableHeight = constraints.maxHeight; // Lấy chiều cao còn lại
-      return Center(
-        child: SizedBox(
-          width: width,
-          child: GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: space,
-            mainAxisSpacing: space,
-            childAspectRatio:
-                (width - space) /
-                (availableHeight - space).clamp(
-                  200,
-                  9999,
-                ), // Căn chỉnh tỷ lệ kích thước ô
-            children: [
-              FeatureButton(
-                icon: Icons.translate,
-                label: 'Dịch văn bản',
-                color: Colors.blue.shade600,
-                height: (availableHeight - space) / 2,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Translate()),
-                  );
-                },
-              ),
-              FeatureButton(
-                icon: Icons.add_circle_outline,
-                label: 'Kho từ vựng',
-                color: Colors.purple.shade400,
-                height: (availableHeight - space) / 2,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AddWord()),
-                  );
-                },
-              ),
-              FeatureButton(
-                icon: Icons.card_membership,
-                label: 'Flashcard',
-                color: Colors.teal.shade500,
-                height: (availableHeight - space) / 2,
-                onTap: () {},
-              ),
-              FeatureButton(
-                icon: Icons.games,
-                label: 'Minigame',
-                color: Colors.amber.shade700,
-                height: (availableHeight - space) / 2,
-                onTap: () {},
-              ),
-            ],
+  return
+    LayoutBuilder(
+      builder: (context, constraints) {
+        double availableHeight = constraints.maxHeight; // Lấy chiều cao còn lại
+        return Center(
+          child: SizedBox(
+            width: width,
+            child: GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: space,
+              mainAxisSpacing: space,
+              childAspectRatio: (width-space) / (availableHeight-space).clamp(200, 9999), // Căn chỉnh tỷ lệ kích thước ô
+              children: [
+                FeatureButton(
+                  icon: Icons.translate,
+                  label: 'Dịch văn bản',
+                  color: Colors.blue.shade600,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Translate()),
+                    );
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.add_circle_outline,
+                  label: 'Kho từ vựng',
+                  color: Colors.purple.shade400,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddWord()),
+                    );
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.card_membership,
+                  label: 'Flashcard',
+                  color: Colors.teal.shade500,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+
+                  },
+                ),
+                FeatureButton(
+                  icon: Icons.games,
+                  label: 'Minigame',
+                  color: Colors.amber.shade700,
+                  height: (availableHeight-space)/2,
+                  onTap: () {
+
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
   );
 }
-
 // lớp ô vuông
 class FeatureButton extends StatelessWidget {
   final IconData icon;
@@ -230,6 +225,7 @@ class FeatureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),

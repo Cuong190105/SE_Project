@@ -65,68 +65,10 @@ class _TranslateState extends State<Translate> {
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
         leadingWidth: screenWidth,
-        leading: Stack(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-              child: Column(
-                children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                 child: Text(
-                'DICTIONARY',
-                softWrap: false,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade800,
-                  letterSpacing: 2,
-                  ),
-                ),
-                ),
-
-              StatefulBuilder(
-              builder: (context, setState) {
-
-                return MouseRegion(
-              onEnter: (_) => setState(() => isHoveringIcon = true),
-              onExit: (_) => setState(() => isHoveringIcon = false),
-              child: InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.shade100,
-                        blurRadius: 2,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.book,
-                    size: 20,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-
-          ],
-              ),
-      ),
-          Align(
+        leading: Align(
         alignment: Alignment.center,
         child: Container(
-          width: screenWidth / 2,
+          width: screenWidth-20,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
@@ -149,27 +91,6 @@ class _TranslateState extends State<Translate> {
           ),
         ),
       ),
-      ],
-    ),
-        actions: [
-          Row(
-            children: [
-              Text(
-                "$streakCount",
-                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
-            ],
-          ),
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
 
       body: Container(
@@ -181,95 +102,92 @@ class _TranslateState extends State<Translate> {
             stops: const [0.3, 1.0],
           ),
         ),
-
         child: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      child: StatefulBuilder(
-                        builder: (context, setState) {
-                          return MouseRegion(
-                            onEnter: (_) => setState(() => _isHovering = true),
-                            onExit: (_) => setState(() => _isHovering = false),
-                            child: Material(
-                              color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
-                              borderRadius: BorderRadius.circular(30),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                borderRadius: BorderRadius.circular(30),
-                                splashColor: Colors.blue.withOpacity(0.2),
-                                highlightColor: Colors.blue.withOpacity(0.1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      buttonBack(context),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Dịch văn bản',
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue.shade700,
-                                          letterSpacing: 1,
-                                        ),
-                                      ),
-                                    ],
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: StatefulBuilder(
+                    builder: (context, setState) {
+                      return MouseRegion(
+                        onEnter: (_) => setState(() => _isHovering = true),
+                        onExit: (_) => setState(() => _isHovering = false),
+                        child: Material(
+                          color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
+                          borderRadius: BorderRadius.circular(30),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            borderRadius: BorderRadius.circular(30),
+                            splashColor: Colors.blue.withOpacity(0.2),
+                            highlightColor: Colors.blue.withOpacity(0.1),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  buttonBack(context),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Dịch văn bản',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-
-                    // 2 Ô nhập và hiển thị văn bản
-
-
-                    ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: screenHeight-160, // Giới hạn chiều cao
-                ),
-                 child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        LabeledTextField(
-                          title: "Văn bản gốc",
-                          controller: textController,
-                          isEditing: isEditing,
-                          onEditingChanged: (value) {
-                            setState(() {
-                              isEditing = value;
-                            });
-                          },
+                          ),
                         ),
-                        SizedBox(width: 15),
-                        LabeledDisplayBox(title: "Bản dịch",
-                          inputText: textController.text,
-                          isEditing: isEditing,),
-                      ],
-                    ),
-
-                 ),
+                      );
+                    },
+                  ),
+                ),
               ),
-                   SizedBox(height: 20),
+              const SizedBox(height: 10),
+
+              // 2 Ô nhập và hiển thị văn bản
+              Expanded(
+                child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      double availableHeight = constraints.maxHeight; // Lấy chiều cao còn lại
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            LabeledTextField(
+                              title: "Văn bản gốc",
+                              controller: textController,
+                              isEditing: isEditing,
+                              height: availableHeight/2-5,
+                              onEditingChanged: (value) {
+                                setState(() {
+                                  isEditing = value;
+                                });
+                              },
+                            ),
+                            SizedBox(height: 10),
+
+                            LabeledDisplayBox(title: "Bản dịch",
+                              inputText: textController.text,
+                              isEditing: isEditing,
+                              height: availableHeight/2-5,),
+                          ],
+                        );
+                    }
+                  ),
+                ),
+              SizedBox(height: 10),
             ],
           ),
         ),
-      ),
-      ),
+      )
+
     );
   }
 
@@ -295,6 +213,7 @@ class LabeledTextField extends StatefulWidget {
   final String title;
   final TextEditingController? controller;
   final bool isEditing;
+  final double height;
   final ValueChanged<bool> onEditingChanged;
 
   const LabeledTextField({
@@ -302,6 +221,7 @@ class LabeledTextField extends StatefulWidget {
     required this.title,
     this.controller,
     required this.isEditing,
+    required this.height,
     required this.onEditingChanged,
   }) : super(key: key);
 
@@ -317,28 +237,13 @@ class _LabeledTextFieldState extends State<LabeledTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tiêu đề ô nhập văn bản
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
 
         // Ô nhập và nút phía dưới
-        Expanded(
-          child: Stack(
+          Stack(
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Container(
-                    width: (screenWidth - 55) / 2,
+              Container(
+                    width: screenWidth-20,
+                    height: widget.height,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -356,14 +261,11 @@ class _LabeledTextFieldState extends State<LabeledTextField> {
                       //readOnly: !isEditing, // Chế độ chỉnh sửa hay không
                       decoration: const InputDecoration(
                         border: InputBorder.none,
-                        hintText: "",
+                        hintText: "Nhập văn bản",
                         isCollapsed: true,
                       ),
                     ),
-                  );
-                },
-              ),
-
+                  ),
               // Nút đặt dưới cùng bên trái của ô
               Positioned(
                 bottom: 8,
@@ -395,7 +297,7 @@ class _LabeledTextFieldState extends State<LabeledTextField> {
               )
             ],
           ),
-        ),
+
       ],
     );
   }
@@ -407,12 +309,14 @@ class LabeledDisplayBox extends StatefulWidget {
   final String title;
   final String inputText; // Văn bản cần dịch
   final bool isEditing;
+  final double height;
 
   const LabeledDisplayBox({
     Key? key,
     required this.title,
     required this.inputText,
     required this.isEditing,
+    required this.height,
   }) : super(key: key);
 
   @override
@@ -500,30 +404,15 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Tiêu đề
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
 
         // Ô hiển thị văn bản dịch
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return GestureDetector(
+        GestureDetector(
                 onTap: () {
                   FocusScope.of(context).requestFocus(FocusNode()); // Ẩn bàn phím
                 },
                 child: Container(
-                  width: (screenWidth-55) / 2,
+                  width: screenWidth-20,
+                  height: widget.height,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(12),
@@ -539,10 +428,8 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+                ),
+
       ],
     );
   }
