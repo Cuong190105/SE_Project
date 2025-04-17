@@ -1,4 +1,5 @@
-import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen.dart';
+import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
 import 'package:flutter/material.dart';
 import 'translate.dart';
 import 'add_word.dart';
@@ -54,7 +55,7 @@ class HomeScreenPhone extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                MaterialPageRoute(builder: (context) => const RegisterScreenPhone()),
               );
             },
           ),
@@ -170,7 +171,7 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Flashcard',
                         color: Colors.teal.shade500,
                         onTap: () {
-                          Navigator.pushNamed(context, '/flashcard');
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => FlashcardScreen()));
                         },
                       ),
                       FeatureButton(

@@ -175,10 +175,10 @@ Widget buildIconGrid(BuildContext context, double width) {
                   color: Colors.purple.shade400,
                   height: (availableHeight-space)/2,
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => const AddWord()),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AddWord()),
+                    );
                   },
                 ),
                 FeatureButton(

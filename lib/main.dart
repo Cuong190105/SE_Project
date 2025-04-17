@@ -1,7 +1,8 @@
+import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:flutter/material.dart';
 import 'screens_desktop/home_desktop.dart';
 import 'screens_phone/home_phone.dart';
-import 'screens_phone/authentic_phone/register_screen.dart';
+import 'screens_phone/authentic_phone/register_screen_phone.dart';
 import 'package:window_size/window_size.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -26,7 +27,7 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: HomeScreenPhone(), // Chạy màn hình chính
+        home: LoginScreen(), // Chạy màn hình chính
       );
     } else {
       return const MaterialApp(

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../home_phone.dart';
-import '../authentic_phone/login_screen.dart';
+import 'login_screen_phone.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class RegisterScreenPhone extends StatefulWidget {
+  const RegisterScreenPhone({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterScreenPhone> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreenPhone> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
