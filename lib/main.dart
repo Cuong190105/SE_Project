@@ -33,7 +33,7 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        // home: HomeScreenDesktop(), // Chạy màn hình chính
+        home: HomeScreenDesktop(), // Chạy màn hình chính
       );
     }
   }
