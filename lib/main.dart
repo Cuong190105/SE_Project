@@ -29,15 +29,15 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: HomeScreenPhone(), // Chạy màn hình chính
+        home: HomeScreenDesktop(), // Chạy màn hình chính
       );
     } else {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: HomeScreenDesktop(), // Chạy màn hình chính
+        home: HomeScreenPhone(), // Chạy màn hình chính
       );
     }
   }
 }
-//  TestApiScreen(),
+//  TestApiScreen(), HomeScreenPhone(), HomeScreenDesktop(),
