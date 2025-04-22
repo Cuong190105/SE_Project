@@ -349,7 +349,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const LoginScreen(),
+                                      builder: (context) => const LoginScreenPhone(),
                                     ),
                                   );
                                 },

@@ -27,7 +27,7 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: LoginScreen(), // Chạy màn hình chính
+        home: LoginScreenPhone(), // Chạy màn hình chính
       );
     } else {
       return const MaterialApp(

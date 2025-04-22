@@ -3,14 +3,14 @@ import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_pho
 import 'package:eng_dictionary/screens_phone/home_phone.dart';
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginScreenPhone extends StatefulWidget {
+  const LoginScreenPhone({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreenPhone> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreenPhone> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
