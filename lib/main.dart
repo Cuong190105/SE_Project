@@ -10,13 +10,11 @@ import 'back_end/test_api.dart';  // Import file test API
 import 'package:eng_dictionary/authentic/splash_screen.dart';
 
 void main() {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   /*if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowMinSize(const Size(1300, 800));// Bạn có thể đặt max size nếu cần: setWindowMaxSize(const Size(1600, 1200));
   }*/
-
   runApp(const MainApp());
 }
 

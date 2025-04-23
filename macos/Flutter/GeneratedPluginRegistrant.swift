@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import audio_session
-import device_info_plus_macos
+import device_info_plus
 import file_selector_macos
 import just_audio
 import path_provider_foundation
