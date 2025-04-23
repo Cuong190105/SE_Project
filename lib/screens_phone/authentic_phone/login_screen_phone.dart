@@ -2,6 +2,9 @@ import 'package:eng_dictionary/screens_phone/authentic_phone/forgotpassword_scre
 import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
 import 'package:eng_dictionary/screens_phone/home_phone.dart';
 import 'package:flutter/material.dart';
+import 'package:device_info_plus/device_info_plus.dart'; // Thêm package này
+import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
+import 'dart:io';
 
 class LoginScreenPhone extends StatefulWidget {
   const LoginScreenPhone({super.key});
@@ -15,11 +18,71 @@ class _LoginScreenState extends State<LoginScreenPhone> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false; // Thêm biến để kiểm soát trạng thái loading
 
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Hàm để lấy tên thiết bị
+  Future<String> _getDeviceName() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.model ?? 'Android Device';
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.utsname.machine ?? 'iOS Device';
+    } else {
+      return 'Unknown Device';
+    }
+  }
+
+  // Hàm xử lý đăng nhập
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final deviceName = await _getDeviceName();
+        final success = await AuthService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+          deviceName,
+        );
+
+        if (success) {
+          // Đăng nhập thành công
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreenPhone(),
+            ),
+          );
+        } else {
+          // Đăng nhập thất bại
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.')),
+          );
+        }
+      } catch (e) {
+        // Xử lý lỗi
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: ${e.toString()}')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -43,7 +106,7 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(),
+                      color: Colors.white.withOpacity(0.9),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -177,7 +240,7 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                                     MaterialPageRoute(
                                       builder:
                                           (context) =>
-                                              ForgotpasswordScreenPhone(),
+                                          ForgotpasswordScreenPhone(),
                                     ),
                                   );
                                 },
@@ -199,16 +262,7 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: () {
-                                // if (_formKey.currentState!.validate()) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => HomeScreenPhone(),
-                                    ),
-                                  );
-                                // }
-                              },
+                              onPressed: _isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white,
@@ -216,7 +270,9 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: Text(
+                              child: _isLoading
+                                  ? CircularProgressIndicator(color: Colors.white)
+                                  : Text(
                                 'ĐĂNG NHẬP',
                                 style: TextStyle(
                                   fontSize: 16,

@@ -200,6 +200,7 @@ class FeatureButton extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final double height; // Thêm dòng này
 
   const FeatureButton({
     super.key,
@@ -207,6 +208,7 @@ class FeatureButton extends StatelessWidget {
     required this.label,
     required this.color,
     required this.onTap,
+    required this.height, // Thêm dòng này
   });
 
   @override
@@ -215,6 +217,7 @@ class FeatureButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        height: height, // Sử dụng tham số height ở đây
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),

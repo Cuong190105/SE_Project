@@ -7,6 +7,7 @@ import 'package:window_size/window_size.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'back_end/test_api.dart';  // Import file test API
+import 'package:eng_dictionary/authentic/splash_screen.dart';
 
 void main() {
 
@@ -29,13 +30,13 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: LoginScreenPhone(), // Chạy màn hình chính
+        home: SplashScreen(), // Chạy màn hình chính
       );
     } else {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: HomeScreenPhone(), // Chạy màn hình chính
+        home: SplashScreen(), // Chạy màn hình chính
       );
     }
   }

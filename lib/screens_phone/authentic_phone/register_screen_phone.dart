@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../home_phone.dart';
 import 'login_screen_phone.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
+import 'package:device_info_plus/device_info_plus.dart'; // Thêm package này
+import 'dart:io';
 
 class RegisterScreenPhone extends StatefulWidget {
   const RegisterScreenPhone({super.key});
@@ -18,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isLoading = false; // Thêm biến để kiểm soát trạng thái loading
 
   @override
   void dispose() {
@@ -26,6 +30,69 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  // Hàm để lấy tên thiết bị
+  Future<String> _getDeviceName() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.model ?? 'Android Device';
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.utsname.machine ?? 'iOS Device';
+    } else {
+      return 'Unknown Device';
+    }
+  }
+
+  // Hàm xử lý đăng ký
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState!.validate() && _agreeToTerms) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final deviceName = await _getDeviceName();
+        final success = await AuthService.register(
+          _nameController.text.trim(),
+          _emailController.text.trim(),
+          _passwordController.text,
+          _confirmPasswordController.text,
+          deviceName,
+        );
+
+        if (success) {
+          // Đăng ký thành công
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đăng ký thành công!')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreenPhone(),
+            ),
+          );
+        } else {
+          // Đăng ký thất bại
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đăng ký thất bại. Vui lòng thử lại.')),
+          );
+        }
+      } catch (e) {
+        // Xử lý lỗi
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: ${e.toString()}')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -228,7 +295,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                                 onPressed: () {
                                   setState(() {
                                     _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
+                                    !_obscureConfirmPassword;
                                   });
                                 },
                               ),
@@ -303,21 +370,9 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed:
-                                  _agreeToTerms
-                                      ? () {
-                                        if (_formKey.currentState!.validate()) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const HomeScreenPhone(),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                      : null,
+                              onPressed: _agreeToTerms && !_isLoading
+                                  ? _handleRegister
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white,
@@ -327,7 +382,9 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                                 elevation: 5,
                                 disabledBackgroundColor: Colors.grey.shade400,
                               ),
-                              child: const Text(
+                              child: _isLoading
+                                  ? CircularProgressIndicator(color: Colors.white)
+                                  : const Text(
                                 "ĐĂNG KÝ",
                                 style: TextStyle(
                                   fontSize: 16,
