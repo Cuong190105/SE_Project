@@ -11,6 +11,9 @@ import file_selector_macos
 import just_audio
 import path_provider_foundation
 import shared_preferences_foundation
+import file_selector_macos
+import just_audio
+import path_provider_foundation
 import window_size
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {

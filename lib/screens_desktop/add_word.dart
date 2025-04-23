@@ -260,6 +260,32 @@ class _AddWordState extends State<AddWord> {
                 ],
               ),
             ),
+            /*Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: screenWidth / 2,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(color: Colors.blue.shade100, blurRadius: 5, spreadRadius: 1),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  decoration: InputDecoration(
+                    prefixIcon: IconButton(
+                      icon: Icon(Icons.search, color: Colors.blue.shade700),
+                      onPressed: () {},
+                    ),
+                    hintText: 'Nhập từ cần tìm kiếm',
+                    hintStyle: TextStyle(color: Colors.blue.shade300),
+                    border: InputBorder.none,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),*/
           ],
         ),
         actions: [
@@ -505,6 +531,7 @@ class _AddWordState extends State<AddWord> {
                 ),
             ],
           ),
+
         ),
       ),
     );
@@ -822,4 +849,224 @@ class _AddSoundButtonState extends State<AddSoundButton> {
       ),
     );
   }
+  // ô nghĩa và ví dụ
+  Widget meaningBox() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabeledTextField('Nghĩa'),
+          SizedBox(height: 10),
+          _buildLabeledTextField('Ví dụ 1'),
+          SizedBox(height: 10),
+          _buildLabeledTextField('Ví dụ 2'),
+        ],
+      ),
+    );
+  }
+  Widget _buildLabeledTextField(String label) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox( // Cố định chiều rộng phần label
+          width: 90, // Bạn có thể điều chỉnh phù hợp
+          child: Text(
+            '$label:',
+            style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.shade100,
+                  blurRadius: 5,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: TextField(
+              decoration: InputDecoration(
+                //hintText: 'Nhập ${label.toLowerCase()}...',
+                hintStyle: TextStyle(color: Colors.blue.shade300),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  // đồng, trái nghĩa
+  Widget __buildLabeledTextField(String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label:',
+          style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+        ),
+        SizedBox(height: 5),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.shade100,
+                blurRadius: 5,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child:  TextField(
+            decoration: InputDecoration(
+              hintStyle: TextStyle(color: Colors.blue.shade300),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 }
+
+// Tạo âm thanh
+class AddSoundButton extends StatefulWidget {
+  @override
+  _AddSoundButtonState createState() => _AddSoundButtonState();
+}
+class _AddSoundButtonState extends State<AddSoundButton> {
+  final AudioPlayer _player = AudioPlayer();
+  String? _filePath;
+  String? _fileName;
+  Duration? _duration;
+  bool _isPlaying = false;
+
+  Future<void> _pickAudioFile() async {
+    final typeGroup = XTypeGroup(
+      label: 'audio',
+      extensions: ['mp3', 'wav', 'm4a', 'aac'],
+    );
+
+    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+
+    if (file != null) {
+      try {
+        await _player.stop(); // Dừng file cũ nếu có
+        await _player.setFilePath(file.path);
+
+        final duration = await _player.durationFuture;
+
+        setState(() {
+          _filePath = file.path;
+          _fileName = file.name;
+          _duration = duration;
+          _isPlaying = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Đã chọn file âm thanh: ${file.name} thành công',
+                style: TextStyle(color: Colors.white), // chữ trắng
+              ),
+              backgroundColor: Colors.blue,
+            ),
+        );
+
+      } catch (e) {
+        print('Lỗi khi tải file: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Không tải file âm thanh',
+              style: TextStyle(color: Colors.white), // chữ trắng
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (_player.playing) {
+      await _player.pause();
+    } else {
+      await _player.play();
+    }
+    setState(() {
+      _isPlaying = _player.playing;
+    });
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      //color: Colors.amber.withOpacity(0.3),
+      child: Row(
+        children: [
+          if (_filePath != null) ...[
+            Container(
+              //color: Colors.cyan,
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width - 580,
+              ),
+              child: Text(
+                "🎵 $_fileName",
+                softWrap: true,
+              ),
+            ),
+
+            SizedBox(width: 10),
+
+            Text("🕒 ${_duration?.inSeconds ?? '...'} giây"),
+
+            IconButton(
+              icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: _togglePlayPause,
+              tooltip: _isPlaying ? 'Tạm dừng' : 'Phát',
+            ),
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () async {
+                await _player.stop();
+                setState(() {
+                  _filePath = null;
+                  _fileName = null;
+                  _duration = null;
+                  _isPlaying = false;
+                });
+              },
+              tooltip: 'Xoá file',
+            ),
+          ],
+          ElevatedButton.icon(
+            onPressed: _pickAudioFile,
+            icon: Icon(Icons.upload_file),
+            label: Text("Chọn file âm thanh"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

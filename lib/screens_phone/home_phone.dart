@@ -1,3 +1,5 @@
+import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
 import 'package:flutter/material.dart';
 import 'translate.dart';
 import 'add_word.dart';
@@ -197,7 +199,6 @@ class FeatureButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final double height;
   final VoidCallback onTap;
 
   const FeatureButton({
@@ -205,18 +206,16 @@ class FeatureButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.color,
-    required this.height,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        height: height,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),

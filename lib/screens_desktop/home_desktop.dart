@@ -10,6 +10,7 @@ class HomeScreenDesktop extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     int streakCount = 5; // đợi data base
     return Scaffold(
+
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
@@ -55,6 +56,7 @@ class HomeScreenDesktop extends StatelessWidget {
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
+
               children: [
                 const SizedBox(height: 25),
 
@@ -223,6 +225,7 @@ class FeatureButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
