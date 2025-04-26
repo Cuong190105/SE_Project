@@ -1,5 +1,6 @@
 import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
 import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
+import 'package:eng_dictionary/screens_phone/minigame_screen_phone.dart';
 import 'package:flutter/material.dart';
 import 'translate.dart';
 import 'add_word.dart';
@@ -179,7 +180,7 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Minigame',
                         color: Colors.amber.shade700,
                         onTap: () {
-                          Navigator.pushNamed(context, '/minigame');
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => MinigameScreen()));
                         },
                       ),
                     ],
