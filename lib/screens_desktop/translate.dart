@@ -444,7 +444,7 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
 
   // Hàm gọi API để dịch văn bản
   Future<String> translateText(String text, String targetLang) async {
-    final url = Uri.parse("https://my-translation-api.vercel.app/api/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
+    final url = Uri.parse("https://web-production-26d7.up.railway.app/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
