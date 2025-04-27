@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'translate.dart';
-import 'add_word.dart';
-
+import 'vocabulary.dart';
+import 'package:eng_dictionary/screens_desktop/authentic_desktop/register_screen.dart';
+import 'settings.dart';
 class HomeScreenDesktop extends StatelessWidget {
   const HomeScreenDesktop({super.key});
 
@@ -12,6 +13,7 @@ class HomeScreenDesktop extends StatelessWidget {
     return Scaffold(
 
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
         actions: [
@@ -39,7 +41,12 @@ class HomeScreenDesktop extends StatelessWidget {
               ),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+              );
+            },
           ),
         ],
       ),
@@ -177,7 +184,7 @@ Widget buildIconGrid(BuildContext context, double width) {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AddWord()),
+                      MaterialPageRoute(builder: (context) => const Vocabulary()),
                     );
                   },
                 ),

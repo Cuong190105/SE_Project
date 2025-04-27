@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../home_phone.dart';
+import '../authentic_phone/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -76,18 +78,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       letterSpacing: 2,
                     ),
                   ),
-                  const Text(
-                    'ngôc chến logo',
-                    style: TextStyle(fontSize: 14, color: Colors.white70),
-                  ),
                   const SizedBox(height: 40),
 
-                  // Registration form
+                  //Form registration
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
+                      color: Colors.white,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -102,11 +100,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Đăng ký tài khoản',
+                            "Đăng ký tài khoản",
                             style: TextStyle(
+                              color: Colors.black,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -115,8 +113,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           TextFormField(
                             controller: _nameController,
                             decoration: InputDecoration(
-                              labelText: 'Họ và tên',
-                              hintText: 'Nhập họ và tên của bạn',
+                              labelText: "Họ và tên",
+                              hintText: "Nhập họ và tên của bạn",
                               prefixIcon: const Icon(Icons.person),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -131,20 +129,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Vui lòng nhập họ và tên';
+                                return "Vui lòng nhập họ và tên";
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 16),
 
-                          // Email field
+                          //email
                           TextFormField(
                             controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'Nhập email của bạn',
+                              labelText: "Email",
+                              hintText: "Nhập email của bạn",
                               prefixIcon: const Icon(Icons.email),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -159,25 +156,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Vui lòng nhập email';
+                                return "Vui lòng nhập email";
                               }
                               if (!RegExp(
                                 r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                               ).hasMatch(value)) {
-                                return 'Email không hợp lệ';
+                                return "Email không hợp lệ";
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 16),
 
-                          // Password field
+                          //password
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
-                              labelText: 'Mật khẩu',
-                              hintText: 'Nhập mật khẩu của bạn',
+                              labelText: "Mật khẩu",
+                              hintText: "Nhập mật khẩu của bạn",
                               prefixIcon: const Icon(Icons.lock),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -214,7 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Confirm password field
+                          //confirm pass
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirmPassword,
@@ -258,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Terms and conditions
+                          //term
                           Row(
                             children: [
                               Checkbox(
@@ -273,7 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Expanded(
                                 child: RichText(
                                   text: TextSpan(
-                                    text: 'Tôi đồng ý với ',
+                                    text: "Tôi đồng ý với ",
                                     style: const TextStyle(
                                       color: Colors.black87,
                                     ),
@@ -301,7 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Register button
+                          //register button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -310,10 +307,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   _agreeToTerms
                                       ? () {
                                         if (_formKey.currentState!.validate()) {
-                                          // Simulate registration
-                                          Navigator.pushReplacementNamed(
+                                          Navigator.push(
                                             context,
-                                            '/home',
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      const HomeScreenPhone(),
+                                            ),
                                           );
                                         }
                                       }
@@ -328,7 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 disabledBackgroundColor: Colors.grey.shade400,
                               ),
                               child: const Text(
-                                'ĐĂNG KÝ',
+                                "ĐĂNG KÝ",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -346,7 +346,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const Text('Đã có tài khoản?'),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(),
+                                    ),
+                                  );
                                 },
                                 child: Text(
                                   'Đăng nhập',

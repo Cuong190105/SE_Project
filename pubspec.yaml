@@ -15,6 +15,7 @@ dependencies:
   file_selector: ^1.0.0
   just_audio: ^0.9.36
   just_audio_windows: ^0.2.2
+  mysql1: ^0.20.0
 
 dev_dependencies:
   flutter_test:

@@ -417,6 +417,16 @@ class _AddSoundButtonState extends State<AddSoundButton> {
   Duration? _duration;
   bool _isPlaying = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _player.playingStream.listen((isPlaying) {
+      setState(() {
+        _isPlaying = isPlaying;
+      });
+    });
+  }
+
   Future<void> _pickAudioFile() async {
     final typeGroup = XTypeGroup(
       label: 'audio',
@@ -470,9 +480,6 @@ class _AddSoundButtonState extends State<AddSoundButton> {
     } else {
       await _player.play();
     }
-    setState(() {
-      _isPlaying = _player.playing;
-    });
   }
 
   @override

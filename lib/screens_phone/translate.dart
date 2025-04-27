@@ -32,12 +32,12 @@ class _TranslateState extends State<Translate> {
   Future<void> _startNodeServer() async {
     var shell = Shell();
 
-    try {
+    /*try {
       //_serverProcess = await Process.start('node', ['D:/cnpm/SE_Project/node_server/server.js']);
       print("Server Node.js đã chạy!");
     } catch (e) {
       print("Lỗi khi chạy server: $e");
-    }
+    }*/
   }
 
   @override
@@ -348,7 +348,7 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
 
   // Hàm gọi API để dịch văn bản
   Future<String> translateText(String text, String targetLang) async {
-    final url = Uri.parse("https://my-translation-api.vercel.app/api/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
+    final url = Uri.parse("https://web-production-26d7.up.railway.app/translate"); // Đổi localhost thành IP nếu chạy trên thiết bị thật
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
