@@ -23,10 +23,15 @@ class _SettingsState extends State<Settings> {
 
   // sửa lại sau khi tích hợp backend nhé bao gồm các file class
 
-  // Khai báo các controller
+  // Khai báo các controller cho database
+  TextEditingController _nameDataController = TextEditingController();
+  TextEditingController _emailDataController = TextEditingController();
+  TextEditingController _addressDataController = TextEditingController();
+  TextEditingController _passwordDataController = TextEditingController();
+  TextEditingController _confirmDataPasswordController = TextEditingController();
+  // Khai báo các controller khi sửa
   TextEditingController _nameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
   TextEditingController _addressController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   TextEditingController _confirmPasswordController = TextEditingController();
@@ -42,35 +47,74 @@ class _SettingsState extends State<Settings> {
   final String _oldImageUrl = 'https://i.pravatar.cc/150';
   String _newImagePath = '';
 
+  // sửa dữ liệu cần sửa
   Future<void> updateUserProfile() async {
     final success = await _userProfileService.updateUser(
       userId: widget.userId,
       fullName: _nameController.text,
       email: _emailController.text,
-      phoneNumber: _phoneController.text,
       address: _addressController.text,
       password: _passwordController.text,
     );
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cập nhật thông tin thành công!')),
+        SnackBar(
+          content: Text('Cập nhật thông tin thành công!'),
+          backgroundColor: Colors.blue, // Màu xanh cho thành công
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cập nhật thông tin thất bại!')),
+        SnackBar(
+          content: Text('Cập nhật thông tin thất bại!'),
+          backgroundColor: Colors.red, // Màu đỏ cho thất bại
+        ),
       );
     }
+  }
+  // tải dữ liệu, cần sửa cho đúng khi tải dữ liệu
+  Future<void> fetchDataFromDatabase() async {
+    await Future.delayed(Duration(seconds: 1)); // Giả lập việc tải dữ liệu mất 3 giây
+
+    // Giả sử đây là dữ liệu lấy từ database, tải lại từ database
+    var data = {
+      'name': 'Nguyễn Văn B',
+      'email': 'nguyen@example.com',
+      'address': 'Hà Nội',
+      'password': 'password123',
+      'confirmPassword': 'password123',
+    };
+
+    // Cập nhật các controller sau khi dữ liệu đã được tải
+    setState(() {
+      _nameDataController.text = data['name']!;
+      _emailDataController.text = data['email']!;
+      _addressDataController.text = data['address']!;
+      _passwordDataController.text = data['password']!;
+      _confirmDataPasswordController.text = data['confirmPassword']!;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDataFromDatabase();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _addressController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+
+    _nameDataController.dispose();
+    _emailDataController.dispose();
+    _addressDataController.dispose();
+    _passwordDataController.dispose();
+    _confirmDataPasswordController.dispose();
     super.dispose();
   }
 
@@ -265,14 +309,14 @@ class _SettingsState extends State<Settings> {
         return changeName();  // Widget đổi tên
       case 'Đổi ảnh đại diện':
         return changeProfileImage();  // Widget đổi ảnh đại diện
-      case 'Đổi Gmail':
-        return changeEmail();  // Widget đổi Gmail
-      case 'Đổi Số điện thoại':
-        return changePhoneNumber();  // Widget đổi Số điện thoại
+      case 'Đổi Email':
+        return changeEmail();  // Widget đổi Email
       case 'Đổi địa chỉ':
         return changeAddress();  // Widget đổi địa chỉ
       case 'Đổi mật khẩu':
-        return changePassword();  // Widget đổi mật khẩu
+        return changePassword(); // Widget đổi mật khẩu
+      case 'Đồng bộ':
+        return synchronize(); // Widget đồng bộ
       case 'Giới thiệu':
         return introduction();  // Widget giới thiệu
       default:
@@ -299,16 +343,10 @@ class _SettingsState extends State<Settings> {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            if (title == "Đăng xuất") {
+            if (isLogout) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const RegisterScreen()),
-              );
-            } else if (title == "Xóa tài khoản") {
-
-              showDialog(
-                context: context,
-                builder: (context) => ConfirmDeleteAccountDialog(),
               );
             } else {
               setState(() {
@@ -350,50 +388,65 @@ class _SettingsState extends State<Settings> {
       width: MediaQuery.of(context).size.width * 0.3,
       height: MediaQuery.of(context).size.height - 170,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Căn lề trái
-          children: [
-            Row(
+      child:  SingleChildScrollView(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Căn lề trái
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150'), //link ảnh user
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Nguyễn Văn A', // tên người dùng
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                    Text(
-                      'nguyenvana@example.com', // gmail
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
+
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: NetworkImage(
+                        'https://i.pravatar.cc/150'), //link ảnh user
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_nameDataController.text==''||_emailDataController.text=='')
+                        ...[ // Sử dụng toán tử spread để đảm bảo là danh sách
+                          CircularProgressIndicator(),
+                        ]
+                       else
+                        ...[
+                        Text(
+                            _nameDataController.text, // tên người dùng
+                            style: TextStyle(fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87),
+                          ),
+                          Text(
+                            _emailDataController.text, // Email
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey.shade600),
+                          ),
+                        ]
+
+                    ],
+                  ),
+                ]
+              ),
+              const SizedBox(height: 10),
 
             // Các nút chức năng
             buildMenuButtonWithIcon(Icons.info_outline, 'Thông tin tài khoản'),
             buildMenuButtonWithIcon(Icons.person_outline, 'Đổi tên'),
             buildMenuButtonWithIcon(Icons.image_outlined, 'Đổi ảnh đại diện'),
-            buildMenuButtonWithIcon(Icons.email_outlined, 'Đổi Gmail'),
-            buildMenuButtonWithIcon(Icons.email_outlined, 'Đổi Số điện thoại'),
-            buildMenuButtonWithIcon(Icons.lock_outline, 'Đổi địa chỉ'),
+            buildMenuButtonWithIcon(Icons.email_outlined, 'Đổi Email'),
+            buildMenuButtonWithIcon(Icons.location_on, 'Đổi địa chỉ'),
             buildMenuButtonWithIcon(Icons.lock_outline, 'Đổi mật khẩu'),
             buildMenuButtonWithIcon(Icons.info, 'Giới thiệu'),
-            buildMenuButtonWithIcon(Icons.delete_outline, 'Xóa tài khoản', isLogout: true),
+            buildMenuButtonWithIcon(Icons.sync, 'Đồng bộ'),
             buildMenuButtonWithIcon(Icons.logout, 'Đăng xuất', isLogout: true),
-          ],
-        ),
+
+            ],
+          ),
       ),
     );
   }
+
+
   //phải
   Widget rightSideWidget() {
     return Container(
@@ -416,6 +469,8 @@ class _SettingsState extends State<Settings> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Đổi tên', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          _buildInfoRow('Họ và tên', _nameDataController.text),
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
@@ -556,15 +611,15 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // Đổi Gmail
+  // Đổi Email
   Widget changeEmail() {
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Đổi Gmail', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          Text('Đổi Email', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          _buildInfoRow('Email', 'nguyenvana@example.com'),
+          _buildInfoRow('Email', _emailDataController.text),
           const SizedBox(height: 20),
           TextFormField(
             controller: _emailController,
@@ -589,39 +644,6 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  // Đổi số điện thoại
-  Widget changePhoneNumber() {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Đổi số điện thoại', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          _buildInfoRow('Số điện thoại', '+84 123 456 789'),
-          const SizedBox(height: 20),
-          TextFormField(
-            controller: _phoneController,
-            decoration: InputDecoration(
-              labelText: 'Số điện thoại mới',
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Vui lòng nhập số điện thoại';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: updateUserProfile,
-            child: Text('Lưu thay đổi'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Đổi địa chỉ
   Widget changeAddress() {
     return Center(
@@ -630,7 +652,7 @@ class _SettingsState extends State<Settings> {
         children: [
           Text('Đổi địa chỉ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          _buildInfoRow('Địa chỉ', 'Hà Nội, Việt Nam'),
+          _buildInfoRow('Địa chỉ', _addressDataController.text),
           const SizedBox(height: 20),
           TextFormField(
             controller: _addressController,
@@ -657,6 +679,9 @@ class _SettingsState extends State<Settings> {
 
   // Đổi mật khẩu
   Widget changePassword() {
+    String _message = ''; // Biến lưu thông báo
+    Color _messageColor = Colors.black; // Màu mặc định cho thông báo
+
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,8 +742,33 @@ class _SettingsState extends State<Settings> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: updateUserProfile,
+            onPressed: () {
+              // Kiểm tra tính hợp lệ và cập nhật thông báo
+              if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+                setState(() {
+                  _message = 'Vui lòng điền đầy đủ thông tin mật khẩu';
+                  _messageColor = Colors.red;
+                });
+              } else if (_passwordController.text != _confirmPasswordController.text) {
+                setState(() {
+                  _message = 'Mật khẩu không khớp';
+                  _messageColor = Colors.red;
+                });
+              } else {
+                // Thực hiện lưu thay đổi và thông báo thành công
+                setState(() {
+                  _message = 'Đổi mật khẩu thành công';
+                  _messageColor = Colors.blue;
+                });
+                updateUserProfile();
+              }
+            },
             child: Text('Lưu thay đổi'),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _message,
+            style: TextStyle(color: _messageColor, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -751,6 +801,34 @@ class _SettingsState extends State<Settings> {
     );
   }
 
+  // hàm tải lại dữ liệu ở đây
+  Widget synchronize() {
+    return Center(
+      child: FutureBuilder<void>(
+        future: fetchDataFromDatabase(), // Dữ liệu sẽ được tải từ đây
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Nếu đang tải, hiển thị vòng quay loading
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            // Nếu có lỗi, hiển thị thông báo lỗi
+            return Text("Đã có lỗi xảy ra: ${snapshot.error}");
+          } else if (snapshot.connectionState == ConnectionState.done) {
+            // Khi dữ liệu đã được tải xong, hiển thị các form điền thông tin
+            return Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(labelText: 'Dữ liệu của bạn đã được cập nhật thành công'),
+                ),
+              ],
+            );
+          } else {
+            return Text('Không có dữ liệu');
+          }
+        },
+      ),
+    );
+  }
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -797,7 +875,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late String fullName = '';
   late String email = '';
-  late String phoneNumber = '';
   late String birthDate = '';
   late String address = '';
 
@@ -813,7 +890,6 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           fullName = userData['fullName'] ?? '';
           email = userData['email'] ?? '';
-          phoneNumber = userData['phoneNumber'] ?? '';
           birthDate = userData['birthDate'] ?? '';
           address = userData['address'] ?? '';
         });
@@ -841,7 +917,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ảnh đại diện - Hình chữ nhật
+
             Container(
               width: 150,
               height: 200,
@@ -857,7 +933,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
             _buildInfoRow('Họ và tên', fullName),
             _buildInfoRow('Email', email),
-            _buildInfoRow('Số điện thoại', phoneNumber),
             _buildInfoRow('Ngày sinh', birthDate),
             _buildInfoRow('Địa chỉ', address),
           ],
@@ -884,79 +959,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-
-// xóa tài khoản
-class ConfirmDeleteAccountDialog extends StatefulWidget {
-  @override
-  _ConfirmDeleteAccountDialogState createState() => _ConfirmDeleteAccountDialogState();
-}
-class _ConfirmDeleteAccountDialogState extends State<ConfirmDeleteAccountDialog> {
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordValid = true;
-
-  bool _checkPassword(String password) {
-    return password == 'yourpassword';  // Thay 'yourpassword' bằng mật khẩu thực tế
-  }
-
-  // Xóa tài khoản
-  void _deleteAccount() {
-    if (_passwordController.text.isEmpty) {
-      setState(() {
-        _isPasswordValid = false;
-      });
-    } else if (_checkPassword(_passwordController.text)) {
-      // Tiến hành xóa tài khoản
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tài khoản đã bị xóa!')),
-      );
-      Navigator.pop(context);  // Đóng hộp thoại xác nhận sau khi xóa
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const RegisterScreen()),  // Sau khi xóa, chuyển về màn hình đăng ký
-      );
-    } else {
-      setState(() {
-        _isPasswordValid = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Xác nhận xóa tài khoản'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Bạn có chắc muốn xóa tài khoản?'),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Nhập mật khẩu của bạn',
-              errorText: _isPasswordValid ? null : 'Mật khẩu không đúng!',
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);  // Đóng hộp thoại mà không làm gì thêm
-          },
-          child: Text('Hủy'),
-        ),
-        TextButton(
-          onPressed: _deleteAccount,
-          child: Text('OK'),
-        ),
-      ],
     );
   }
 }
