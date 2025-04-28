@@ -15,7 +15,6 @@ class UserProfileService {
     required int userId,
     required String fullName,
     required String email,
-    required String phoneNumber,
     required String address,
     required String password,
   }) async {
@@ -25,8 +24,8 @@ class UserProfileService {
 
       // Truy vấn SQL để cập nhật thông tin người dùng
       var result = await conn.query(
-        'UPDATE users SET full_name = ?, email = ?, phone_number = ?, address = ?, password = ? WHERE id = ?',
-        [fullName, email, phoneNumber, address, password, userId],
+        'UPDATE users SET full_name = ?, email = ?, address = ?, password = ? WHERE id = ?',
+        [fullName, email, address, password, userId],
       );
 
       // Kiểm tra số dòng bị ảnh hưởng (cập nhật thành công)

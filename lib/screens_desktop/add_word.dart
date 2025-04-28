@@ -62,9 +62,10 @@ class _AddWordState extends State<AddWord> {
                         onExit: (_) => setState(() => isHoveringIcon = false),
                         child: InkWell(
                           onTap: () {
-                            Navigator.pushReplacement(
+                            Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(builder: (context) => const HomeScreenDesktop()),
+                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
                             );
                           },
                           customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
@@ -94,32 +95,6 @@ class _AddWordState extends State<AddWord> {
                 ],
               ),
             ),
-            /*Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: screenWidth / 2,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(color: Colors.blue.shade100, blurRadius: 5, spreadRadius: 1),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: IconButton(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
-                      onPressed: () {},
-                    ),
-                    hintText: 'Nhập từ cần tìm kiếm',
-                    hintStyle: TextStyle(color: Colors.blue.shade300),
-                    border: InputBorder.none,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),*/
           ],
         ),
         actions: [
