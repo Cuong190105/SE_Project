@@ -9,6 +9,7 @@ class MinigameScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trắc nghiệm', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue.shade700,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

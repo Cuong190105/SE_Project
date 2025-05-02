@@ -1,4 +1,4 @@
-import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/settings_phone.dart';
 import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_phone/minigame_screen_phone.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +56,7 @@ class HomeScreenPhone extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RegisterScreenPhone()),
+                MaterialPageRoute(builder: (context) => SettingsPhone(userId: 1)),
               );
             },
           ),
