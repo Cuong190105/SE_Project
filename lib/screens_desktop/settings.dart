@@ -7,7 +7,7 @@ import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
-import 'user_profile_service.dart';
+import '../services/user_profile_service.dart';
 import 'package:mysql1/mysql1.dart';
 
 class Settings extends StatefulWidget {
