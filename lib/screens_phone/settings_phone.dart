@@ -13,18 +13,19 @@ class SettingsPhone extends StatefulWidget {
 }
 
 class _SettingsPhoneState extends State<SettingsPhone> {
-  // Sample data for UI display
+  // Sample data for UI display - using mock data instead of backend
   String _name = 'Nguyễn Văn B';
   String _email = 'nguyen@example.com';
   String _address = 'Hà Nội';
   String _birthDate = '01/01/1990';
-  
+
   // Controllers for editing
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -32,6 +33,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
   String selectedMenu = 'Thông tin tài khoản';
   final String _profileImageUrl = 'https://i.pravatar.cc/150';
   String _newImagePath = '';
+  Map<String, bool> isHoveredMap = {};
 
   @override
   void initState() {
@@ -40,6 +42,9 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     _nameController.text = _name;
     _emailController.text = _email;
     _addressController.text = _address;
+
+    // Set initial menu to show the menu list
+    selectedMenu = 'Menu';
   }
 
   @override
@@ -85,9 +90,26 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
+  // Mock function to update user profile
+  void _updateUserProfile() {
+    // Update local state with new values
+    setState(() {
+      if (_nameController.text.isNotEmpty) {
+        _name = _nameController.text;
+      }
+      if (_emailController.text.isNotEmpty) {
+        _email = _emailController.text;
+      }
+      if (_addressController.text.isNotEmpty) {
+        _address = _addressController.text;
+      }
+    });
+
+    _showSuccessMessage('Cập nhật thông tin thành công!');
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cài đặt', style: TextStyle(color: Colors.white)),
@@ -145,94 +167,111 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   ],
                 ),
               ),
-              
-              // Settings menu
+
+              // Settings menu and content
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildSettingsCategory('Tài khoản'),
-                    _buildSettingsTile(
-                      icon: Icons.info_outline,
-                      title: 'Thông tin tài khoản',
-                      onTap: () => setState(() => selectedMenu = 'Thông tin tài khoản'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.person_outline,
-                      title: 'Đổi tên',
-                      onTap: () => setState(() => selectedMenu = 'Đổi tên'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.image_outlined,
-                      title: 'Đổi ảnh đại diện',
-                      onTap: () => setState(() => selectedMenu = 'Đổi ảnh đại diện'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.email_outlined,
-                      title: 'Đổi Email',
-                      onTap: () => setState(() => selectedMenu = 'Đổi Email'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.location_on_outlined,
-                      title: 'Đổi địa chỉ',
-                      onTap: () => setState(() => selectedMenu = 'Đổi địa chỉ'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.lock_outline,
-                      title: 'Đổi mật khẩu',
-                      onTap: () => setState(() => selectedMenu = 'Đổi mật khẩu'),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    _buildSettingsCategory('Khác'),
-                    _buildSettingsTile(
-                      icon: Icons.sync,
-                      title: 'Đồng bộ',
-                      onTap: () => setState(() => selectedMenu = 'Đồng bộ'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.info,
-                      title: 'Giới thiệu',
-                      onTap: () => setState(() => selectedMenu = 'Giới thiệu'),
-                    ),
-                    _buildSettingsTile(
-                      icon: Icons.logout,
-                      title: 'Đăng xuất',
-                      textColor: Colors.red,
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreenPhone()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                child: selectedMenu == 'Menu'
+                    ? _buildSettingsMenu()
+                    : Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // Back to menu button
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: TextButton.icon(
+                                icon: Icon(Icons.arrow_back,
+                                    color: Colors.blue.shade700),
+                                label: Text(
+                                  'Quay lại menu',
+                                  style: TextStyle(color: Colors.blue.shade700),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    selectedMenu = 'Menu';
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Content
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: buildRightContent(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
             ],
           ),
         ),
       ),
-      // Show the selected settings content in a new screen
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue.shade700,
-        child: const Icon(Icons.edit, color: Colors.white),
-        onPressed: () {
-          _showSettingsDetail(context);
-        },
-      ),
     );
   }
 
-  void _showSettingsDetail(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SettingsDetailScreen(
-          title: selectedMenu,
-          content: _buildSettingsContent(),
+  // Build the settings menu
+  Widget _buildSettingsMenu() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSettingsCategory('Tài khoản'),
+        _buildSettingsTile(
+          icon: Icons.info_outline,
+          title: 'Thông tin tài khoản',
+          onTap: () => setState(() => selectedMenu = 'Thông tin tài khoản'),
         ),
-      ),
+        _buildSettingsTile(
+          icon: Icons.person_outline,
+          title: 'Đổi tên',
+          onTap: () => setState(() => selectedMenu = 'Đổi tên'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.image_outlined,
+          title: 'Đổi ảnh đại diện',
+          onTap: () => setState(() => selectedMenu = 'Đổi ảnh đại diện'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.email_outlined,
+          title: 'Đổi Email',
+          onTap: () => setState(() => selectedMenu = 'Đổi Email'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.location_on_outlined,
+          title: 'Đổi địa chỉ',
+          onTap: () => setState(() => selectedMenu = 'Đổi địa chỉ'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.lock_outline,
+          title: 'Đổi mật khẩu',
+          onTap: () => setState(() => selectedMenu = 'Đổi mật khẩu'),
+        ),
+        const SizedBox(height: 16),
+        _buildSettingsCategory('Khác'),
+        _buildSettingsTile(
+          icon: Icons.sync,
+          title: 'Đồng bộ',
+          onTap: () => setState(() => selectedMenu = 'Đồng bộ'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.info,
+          title: 'Giới thiệu',
+          onTap: () => setState(() => selectedMenu = 'Giới thiệu'),
+        ),
+        _buildSettingsTile(
+          icon: Icons.logout,
+          title: 'Đăng xuất',
+          textColor: Colors.red,
+          onTap: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreenPhone()),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -275,41 +314,37 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildSettingsContent() {
+  Widget buildRightContent() {
     switch (selectedMenu) {
       case 'Thông tin tài khoản':
-        return _buildProfile();
+        return profile();
       case 'Đổi tên':
-        return _buildChangeName();
+        return changeName();
       case 'Đổi ảnh đại diện':
-        return _buildChangeProfileImage();
+        return changeProfileImage();
       case 'Đổi Email':
-        return _buildChangeEmail();
+        return changeEmail();
       case 'Đổi địa chỉ':
-        return _buildChangeAddress();
+        return changeAddress();
       case 'Đổi mật khẩu':
-        return _buildChangePassword();
+        return changePassword();
       case 'Đồng bộ':
-        return _buildSynchronize();
+        return synchronize();
       case 'Giới thiệu':
-        return _buildIntroduction();
+        return introduction();
       default:
         return Center(
-          child: Text(
-            'Đang phát triển...',
-            style: TextStyle(fontSize: 20, color: Colors.blue.shade700),
-          ),
-        );
+            child: Text('Đang phát triển...', style: TextStyle(fontSize: 20)));
     }
   }
 
-  Widget _buildProfile() {
+  Widget profile() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Thông tin tài khoản',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         Container(
@@ -332,13 +367,13 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildChangeName() {
+  Widget changeName() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Đổi tên',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         _buildInfoRow('Họ và tên', _name),
@@ -349,22 +384,10 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             labelText: 'Họ và tên',
             border: OutlineInputBorder(),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập họ và tên';
-            }
-            return null;
-          },
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _name = _nameController.text;
-            });
-            _showSuccessMessage('Cập nhật tên thành công!');
-            Navigator.pop(context);
-          },
+          onPressed: _updateUserProfile,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
@@ -375,13 +398,13 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildChangeProfileImage() {
+  Widget changeProfileImage() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Đổi ảnh đại diện',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         Row(
@@ -389,8 +412,8 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             Column(
               children: [
                 Container(
-                  width: 120,
-                  height: 160,
+                  width: 100,
+                  height: 130,
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: NetworkImage(_profileImageUrl),
@@ -401,17 +424,19 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('Ảnh hiện tại', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Ảnh hiện tại',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 15),
             Column(
               children: [
                 Stack(
                   children: [
                     Container(
-                      width: 120,
-                      height: 160,
+                      width: 100,
+                      height: 130,
                       decoration: BoxDecoration(
                         image: _newImagePath.isNotEmpty
                             ? DecorationImage(
@@ -426,7 +451,8 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                           ? const Center(
                               child: Text(
                                 'Chưa chọn ảnh',
-                                style: TextStyle(color: Colors.black54),
+                                style: TextStyle(
+                                    color: Colors.black54, fontSize: 12),
                               ),
                             )
                           : null,
@@ -438,12 +464,12 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                         child: GestureDetector(
                           onTap: _removeImage,
                           child: const CircleAvatar(
-                            radius: 12,
+                            radius: 10,
                             backgroundColor: Colors.black54,
                             child: Icon(
                               Icons.close,
                               color: Colors.white,
-                              size: 16,
+                              size: 14,
                             ),
                           ),
                         ),
@@ -451,7 +477,9 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text('Ảnh mới', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Ảnh mới',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
           ],
@@ -471,7 +499,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             ElevatedButton(
               onPressed: () {
                 _showSuccessMessage('Cập nhật ảnh đại diện thành công!');
-                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
@@ -485,13 +512,13 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildChangeEmail() {
+  Widget changeEmail() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Đổi Email',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         _buildInfoRow('Email', _email),
@@ -502,22 +529,10 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             labelText: 'Email mới',
             border: OutlineInputBorder(),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập email';
-            }
-            return null;
-          },
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _email = _emailController.text;
-            });
-            _showSuccessMessage('Cập nhật email thành công!');
-            Navigator.pop(context);
-          },
+          onPressed: _updateUserProfile,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
@@ -528,13 +543,13 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildChangeAddress() {
+  Widget changeAddress() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Đổi địa chỉ',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         _buildInfoRow('Địa chỉ', _address),
@@ -545,22 +560,10 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             labelText: 'Địa chỉ mới',
             border: OutlineInputBorder(),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập địa chỉ';
-            }
-            return null;
-          },
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _address = _addressController.text;
-            });
-            _showSuccessMessage('Cập nhật địa chỉ thành công!');
-            Navigator.pop(context);
-          },
+          onPressed: _updateUserProfile,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
@@ -571,7 +574,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildChangePassword() {
+  Widget changePassword() {
     return StatefulBuilder(
       builder: (context, setState) {
         String message = '';
@@ -582,7 +585,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
           children: [
             const Text(
               'Đổi mật khẩu',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             TextFormField(
@@ -602,12 +605,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 ),
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Vui lòng nhập mật khẩu';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -617,7 +614,9 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 labelText: 'Xác nhận mật khẩu',
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                    _obscureConfirmPassword
+                        ? Icons.visibility
+                        : Icons.visibility_off,
                   ),
                   onPressed: () {
                     setState(() {
@@ -627,25 +626,18 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 ),
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Vui lòng xác nhận mật khẩu';
-                }
-                if (value != _passwordController.text) {
-                  return 'Mật khẩu không khớp';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+                if (_passwordController.text.isEmpty ||
+                    _confirmPasswordController.text.isEmpty) {
                   setState(() {
                     message = 'Vui lòng điền đầy đủ thông tin mật khẩu';
                     messageColor = Colors.red;
                   });
-                } else if (_passwordController.text != _confirmPasswordController.text) {
+                } else if (_passwordController.text !=
+                    _confirmPasswordController.text) {
                   setState(() {
                     message = 'Mật khẩu không khớp';
                     messageColor = Colors.red;
@@ -656,7 +648,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                     messageColor = Colors.blue;
                   });
                   _showSuccessMessage('Đổi mật khẩu thành công!');
-                  Navigator.pop(context);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -668,7 +659,8 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             const SizedBox(height: 10),
             Text(
               message,
-              style: TextStyle(color: messageColor, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: messageColor, fontWeight: FontWeight.bold),
             ),
           ],
         );
@@ -676,18 +668,18 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  Widget _buildSynchronize() {
+  Widget synchronize() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Đồng bộ dữ liệu',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         const Text(
-          'Dữ liệu của bạn đã được cập nhật thành công',
-          style: TextStyle(fontSize: 16, color: Colors.green),
+          'Dữ liệu của bạn sẽ được đồng bộ với máy chủ',
+          style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
         ElevatedButton(
@@ -698,19 +690,19 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Đồng bộ lại'),
+          child: const Text('Đồng bộ ngay'),
         ),
       ],
     );
   }
 
-  Widget _buildIntroduction() {
+  Widget introduction() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Giới thiệu',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -758,50 +750,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// Settings detail screen
-class SettingsDetailScreen extends StatelessWidget {
-  final String title;
-  final Widget content;
-
-  const SettingsDetailScreen({
-    super.key,
-    required this.title,
-    required this.content,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blue.shade700,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade50, Colors.white],
-            stops: const [0.3, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: content,
-            ),
-          ),
-        ),
       ),
     );
   }
