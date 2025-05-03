@@ -8,9 +8,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Search extends StatefulWidget {
+
   TextEditingController controller = TextEditingController();
 
-  Search({Key? key, required this.controller}) : super(key: key);
+  Search({Key? key, required this.controller,}) : super(key: key);
 
   @override
   _Search createState() => _Search();
@@ -82,7 +83,21 @@ class _Search extends State<Search> {
               setState(() {});
             },
             decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search, color: Colors.blue.shade700),
+              prefixIcon: IconButton(
+                icon: Icon(Icons.search, color: Colors.blue.shade700),
+                onPressed: () {
+                  final word = widget.controller.text;
+                  widget.controller.text = '';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Vocabulary(word: word,),
+                      ),
+                    ).then((_) {
+                      widget.controller.clear();
+                    });
+                },
+              ),
               suffixIcon: IconButton(
                 icon: Icon(Icons.clear, color: Colors.blue.shade700),
                 onPressed: () {

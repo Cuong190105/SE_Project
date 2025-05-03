@@ -17,6 +17,8 @@ dependencies:
   just_audio_windows: ^0.2.2
   mysql1: ^0.20.0
   html: ^0.15.4
+  path_provider: ^2.0.1
+  dio: ^5.0.0
 
 dev_dependencies:
   flutter_test:

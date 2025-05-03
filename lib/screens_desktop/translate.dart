@@ -6,7 +6,7 @@ import 'package:process_run/shell.dart';
 import 'dart:async';
 import 'home_desktop.dart';
 import 'search.dart';
-
+import 'settings.dart';
 class Translate extends StatefulWidget {
   const Translate({super.key});
 
@@ -152,7 +152,12 @@ class _TranslateState extends State<Translate> {
                 decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
                 child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+                );
+              },
             ),
           ],
         ),
