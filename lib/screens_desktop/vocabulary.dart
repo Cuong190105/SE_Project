@@ -15,7 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-
+import 'add_word.dart';
 class Vocabulary extends StatefulWidget {
   final String word;
 
@@ -27,11 +27,22 @@ class Vocabulary extends StatefulWidget {
 class _VocabularyState extends State<Vocabulary> {
   TextEditingController _controller = TextEditingController();
   int selectedIndex = 0;
+  late final VocabularyList _vocabularyList;
+  late final RelatedWordsList _relatedWordsList;
 
   @override
   void initState() {
     super.initState();
+    _vocabularyList = VocabularyList(word: widget.word);
+    _relatedWordsList = RelatedWordsList(word: widget.word);
   }
+
+  void dispose() {
+    _vocabularyList == null;
+    _relatedWordsList == null;
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -178,12 +189,16 @@ class _VocabularyState extends State<Vocabulary> {
                           ],
                         ),
                           const SizedBox(height: 50),
-                        Container(
-                          height: screenHeight - 240,
-                         child:  selectedIndex == 0
-                              ? VocabularyList(word: widget.word)
-                              : RelatedWordsList(word: widget.word),
+                          Container(
+                            height: screenHeight - 240,
+                            child: IndexedStack(
+                              index: selectedIndex,
+                              children: [
+                                _vocabularyList,
+                                _relatedWordsList,
+                              ],
                             ),
+                          ),
                           ],
                         ),
 
@@ -295,20 +310,6 @@ class _VocabularyListState extends State<VocabularyList> {
     } catch (e) {
       print('Lỗi tải âm thanh: $e');
       return '';
-    }
-  }
-
-  Future<void> playDownloadedAudio(String audioUrl) async {
-    final audioPath = await downloadAudioFile(audioUrl);
-    if (audioPath.isNotEmpty) {
-      // Khởi tạo AudioPlayer và phát âm thanh từ file đã tải
-      final player = AudioPlayer();
-      try {
-        await player.setFilePath(audioPath); // Sử dụng đường dẫn local
-        await player.play();
-      } catch (e) {
-        print('Lỗi phát âm thanh: $e');
-      }
     }
   }
 
@@ -808,7 +809,32 @@ class _VocabularyListState extends State<VocabularyList> {
         } else if (snapshot.hasError) {
           return Center(child: Text('${snapshot.error}'.replaceAll('Exception: ','')));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('Không tìm thấy dữ liệu'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Không tìm thấy dữ liệu'),
+                SizedBox(height: 20), // Khoảng cách giữa Text và icon
+                GestureDetector(
+                  onTap: () {
+                    // Điều hướng đến trang thêm từ
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddWord()),
+                    );
+                  },
+                  child: Tooltip(
+                    message: 'Đi đến trang thêm từ', // Nội dung tooltip khi di chuột
+                    child: Icon(
+                      Icons.add_circle_outline, // Biểu tượng thêm
+                      size: 50, // Kích thước của biểu tượng
+                      color: Colors.blue, // Màu sắc của biểu tượng
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         } else {
           final data = snapshot.data!;
           return ListView.builder(

@@ -3,6 +3,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'home_desktop.dart';
+import 'settings.dart';
 class AddWord extends StatefulWidget {
   const AddWord({super.key});
 
@@ -113,7 +114,12 @@ class _AddWordState extends State<AddWord> {
               decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+              );
+            },
           ),
         ],
       ),
