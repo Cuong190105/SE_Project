@@ -346,7 +346,7 @@ class _AddWordState extends State<AddWord> {
 
         // Phiên âm
         SizedBox(width: 8),
-        AddSoundButton(size: 821,),
+        AddSoundButton(size: 861,),
       ],
     );
   }
@@ -503,7 +503,7 @@ class _AddSoundButtonState extends State<AddSoundButton> {
   Future<void> _pickAudioFile() async {
     final typeGroup = XTypeGroup(
       label: 'audio',
-      extensions: ['mp3', 'wav', 'm4a', 'aac'],
+      extensions: ['mp3', 'wav', 'm4a', 'aac', 'ogg'],
     );
 
     final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
@@ -558,6 +558,28 @@ class _AddSoundButtonState extends State<AddSoundButton> {
     });
   }
 
+  Future<void> _toggleRePlay() async {
+    if (_player.playing) {
+      await _player.seek(Duration.zero);
+      await _player.play();
+    } else {
+      await _player.play();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _player.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
     _player.dispose();
@@ -590,6 +612,11 @@ class _AddSoundButtonState extends State<AddSoundButton> {
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
               onPressed: _togglePlayPause,
               tooltip: _isPlaying ? 'Tạm dừng' : 'Phát',
+            ),
+            IconButton(
+              icon: Icon(Icons.replay),
+              onPressed: _toggleRePlay,
+              tooltip: 'Phát lại',
             ),
             IconButton(
               icon: Icon(Icons.close),
