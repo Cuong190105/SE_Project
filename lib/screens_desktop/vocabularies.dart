@@ -14,7 +14,7 @@ class Vocabularies extends StatefulWidget {
 class _Vocabularies extends State<Vocabularies> {
 
   late Future<List<Map<String, dynamic>>> _wordDetailsFuture;
-
+  Map<String, dynamic>? _selectedWordData;
 
   Future<List<Map<String, dynamic>>> parseWordDetails() async {
      List<Map<String, dynamic>> vocabularyList = [];
@@ -269,43 +269,55 @@ class _Vocabularies extends State<Vocabularies> {
                   }
                   else {
                     final vocabularyList = List<Map<String, dynamic>>.from(snapshot.data!);
-                    return Expanded(
+                    return _selectedWordData != null
+                        ?  Expanded(
+                        child: SingleChildScrollView(
+                          child: VocabularyList( onBack: () {
+                            setState(() {
+                              _selectedWordData = null;
+                            });
+                          },
+                            wordDetails: _selectedWordData!)
+                              )
+                          )// Giao diện chi tiết từ đã viết trước đó
+                        : Expanded(
                       child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                          child: Wrap(
-                            alignment: WrapAlignment.start,
-                            spacing: 16,
-                            runSpacing: 16,
-                            children: vocabularyList.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final item = entry.value;
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Wrap(
+                          alignment: WrapAlignment.start,
+                          spacing: 16,
+                          runSpacing: 16,
+                          children: vocabularyList.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
 
-                              return SizedBox(
-                                width: 250,
-                                child: VocabularyCard(
-                                  word: item['word'] ?? '',
-                                  meaning: item['meaning'] ?? '',
-                                  onView: () {
-                                    // TODO: xử lý sửa
-                                  },
-                                  onEdit: () {
-                                    // TODO: xử lý sửa
-                                  },
-                                  onDelete: () {
-                                    setState(() {
-                                      vocabularyList.removeAt(index);
-                                      _wordDetailsFuture = Future.value(vocabularyList);
-                                    });
-                                    // TODO: cập nhật lên database nếu cần
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          ),
+                            return SizedBox(
+                              width: 250,
+                              child: VocabularyCard(
+                                word: item['word'] ?? '',
+                                meaning: item['meaning'] ?? '',
+                                onView: () {
+                                  setState(() {
+                                    _selectedWordData = item;
+                                  });
+                                },
+                                onEdit: () {
+                                  // TODO: xử lý sửa
+                                },
+                                onDelete: () {
+                                  setState(() {
+                                    vocabularyList.removeAt(index);
+                                    _wordDetailsFuture = Future.value(vocabularyList);
+                                    // xóa trên database
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     );
+
                   }
 
                 }),
@@ -456,12 +468,12 @@ class VocabularyCard extends StatelessWidget {
       );
   }
 }
-
 class VocabularyList extends StatefulWidget {
   final Map<String, dynamic> wordDetails;
-
+  final VoidCallback onBack;
   const VocabularyList({
     Key? key,
+    required this.onBack,
     required this.wordDetails,
   }) : super(key: key);
 
@@ -472,76 +484,101 @@ class _VocabularyListState extends State<VocabularyList> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: widget.wordDetails.length,
-      itemBuilder: (context, index) {
-        final wordData = widget.wordDetails[index];
-        return Padding(
+    final Map<String, dynamic> data = widget.wordDetails;
+    final List types = data['type'];
+    final List phonetics = data['phonetic'];
+    final List audios = data['audio'];
+    final List meanings = data['meaning'];
+    final List examples = data['example'];
+    final List images = data['imageUrl'];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+       child:  Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: widget.onBack,
+            ),
+            Text(
+                data['word'],
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+
+          ],
+        ),
+    ), Padding(
           padding: const EdgeInsets.symmetric(horizontal: 50),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${wordData['type']}',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => _playPreloadedAudio(wordData['audio'][0]),
-                    child: Row(
+       child:  ListView.builder(
+            itemCount: types.length,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      types[index],
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
                       children: [
-                        Icon(Icons.volume_up, size: 20, color: Colors.black),
-                        const SizedBox(width: 5),
-                        Text(
-                          'US: ${wordData['phonetic'][0]}',
-                          style: const TextStyle(fontStyle: FontStyle.italic),
+                        GestureDetector(
+                          onTap: () => _playPreloadedAudio(audios[index][0]),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.volume_up, size: 20, color: Colors.black),
+                              const SizedBox(width: 5),
+                              Text(
+                                'US: ${phonetics[index][0]}',
+                                style: const TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        GestureDetector(
+                          onTap: () => _playPreloadedAudio(audios[index][1]),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.volume_up, size: 20, color: Colors.black),
+                              const SizedBox(width: 5),
+                              Text(
+                                'UK: ${phonetics[index][1]}',
+                                style: const TextStyle(fontStyle: FontStyle.italic),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 15),
-                  GestureDetector(
-                    onTap: () => _playPreloadedAudio(wordData['audio'][1]),
-                    child: Row(
-                      children: [
-                        Icon(Icons.volume_up, size: 20, color: Colors.black),
-                        const SizedBox(width: 5),
-                        Text(
-                          'UK: ${wordData['phonetic'][1]}',
-                          style: const TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ],
+                    const SizedBox(height: 10),
+                    Text(
+                      'Nghĩa: ${meanings[index]}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(wordData['meaning'].length, (i) {
-                  final examples = wordData['example'][i];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nghĩa: ${wordData['meaning'][i]}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      if (examples.isNotEmpty)
-                        ...examples.map<Widget>((ex) => Text('• $ex', style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic))).toList()
-                      else
-                        const Text('• Không có ví dụ', style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic)),
-                    ],
-                  );
-                }),
-              ),
-              const Divider(),
-            ],
+                    if (examples[index].isNotEmpty)
+                      ...examples[index]
+                          .map<Widget>((ex) => Text('• $ex', style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic)))
+                          .toList()
+                    else
+                      const Text('• Không có ví dụ', style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 10),
+                    Image.network(images[index]),
+                    const Divider(),
+                  ],
+                ),
+              );
+            },
           ),
-        );
-      },
+        )
+      ],
     );
   }
 

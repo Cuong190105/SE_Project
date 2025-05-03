@@ -487,7 +487,6 @@ class _AddWordState extends State<AddWord> {
     );
   }
 }
-
 // Tạo âm thanh
 class AddSoundButton extends StatefulWidget {
 
