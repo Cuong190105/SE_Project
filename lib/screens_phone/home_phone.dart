@@ -1,12 +1,26 @@
 import 'package:eng_dictionary/screens_phone/settings_phone.dart';
 import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_phone/minigame_screen_phone.dart';
+import '../screens_phone/vocabularies.dart';
 import 'package:flutter/material.dart';
 import 'translate.dart';
-import 'add_word.dart';
+import 'search_phone.dart';
 
-class HomeScreenPhone extends StatelessWidget {
+class HomeScreenPhone extends StatefulWidget {
   const HomeScreenPhone({super.key});
+
+  @override
+  State<HomeScreenPhone> createState() => _HomeScreenPhoneState();
+}
+
+class _HomeScreenPhoneState extends State<HomeScreenPhone> {
+  TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +70,8 @@ class HomeScreenPhone extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPhone(userId: 1)),
+                MaterialPageRoute(
+                    builder: (context) => SettingsPhone(userId: 1)),
               );
             },
           ),
@@ -108,30 +123,8 @@ class HomeScreenPhone extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 30),
+                Search(controller: _controller),
 
-                // Search bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.shade100,
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
-                      hintText: 'Nhập từ cần tìm kiếm',
-                      hintStyle: TextStyle(color: Colors.blue.shade300),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 40),
 
                 // Feature buttons grid
@@ -149,22 +142,24 @@ class HomeScreenPhone extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const Translate(),
-                            ),
-                          );
+                                builder: (context) => const Translate()),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
                         icon: Icons.add_circle_outline,
-                        label: 'Thêm từ',
+                        label: 'Kho từ vựng',
                         color: Colors.purple.shade400,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AddWord(),
-                            ),
-                          );
+                                builder: (context) => const Vocabularies()),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
@@ -172,7 +167,13 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Flashcard',
                         color: Colors.teal.shade500,
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => FlashcardScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => FlashcardScreen()),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
@@ -180,7 +181,13 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Minigame',
                         color: Colors.amber.shade700,
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => MinigameScreen()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => MinigameScreen()),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                     ],
@@ -228,6 +235,7 @@ class FeatureButton extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
+              softWrap: false,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

@@ -3,7 +3,7 @@ import 'translate.dart';
 import 'vocabularies.dart';
 import 'vocabulary.dart';
 import 'package:eng_dictionary/screens_desktop/authentic_desktop/register_screen.dart';
-import 'settings.dart';
+import 'settings_phone.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -55,8 +55,11 @@ class _Search extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen width to make search bar responsive
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Container(
-      width: MediaQuery.of(context).size.width / 2,
+      width: screenWidth * 0.9, // Make width 90% of screen width
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -69,6 +72,7 @@ class _Search extends State<Search> {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8), // Add margin for better spacing
       child: Column(
         children: [
           // TextField cho việc tìm kiếm
@@ -91,8 +95,9 @@ class _Search extends State<Search> {
               hintText: 'Nhập từ cần tìm kiếm',
               hintStyle: TextStyle(color: Colors.blue.shade300),
               border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 15), // Add padding for better height
             ),
-            textAlign: TextAlign.center,
+            textAlign: TextAlign.start, // Left align text for better readability
           ),
 
           Container(
@@ -112,7 +117,7 @@ class _Search extends State<Search> {
                   );
                 } else if (snapshot.hasError) {
                   return Container(
-                    width: MediaQuery.of(context).size.width / 2,
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     color: Colors.white,
                     child: Center(
@@ -123,7 +128,10 @@ class _Search extends State<Search> {
                 } else if (snapshot.hasData) {
                   final data = snapshot.data!;
                   return Container(
-                    width: MediaQuery.of(context).size.width / 2,
+                    width: double.infinity, // Use parent width instead of screen width
+                    constraints: BoxConstraints(
+                      maxHeight: 300, // Limit height to prevent excessive scrolling
+                    ),
                     color: Colors.white,
                     child: data.isEmpty
                         ? Padding(
@@ -156,7 +164,12 @@ class _Search extends State<Search> {
                                       ? Colors.grey.shade300
                                       : Colors.transparent,
                                   child: ListTile(
-                                    title: Text(word),
+                                    title: Text(
+                                      word,
+                                      overflow: TextOverflow.ellipsis, // Prevent text overflow
+                                      style: TextStyle(fontSize: 14), // Slightly smaller text
+                                    ),
+                                    dense: true, // Make list tiles more compact
                                     onTap: () {
                                       widget.controller.text = '';
                                       Navigator.push(
