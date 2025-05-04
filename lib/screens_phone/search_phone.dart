@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
 import 'translate.dart';
 import 'vocabularies.dart';
-import 'vocabulary.dart';
+import 'vocabulary_phone.dart';
 import 'package:eng_dictionary/screens_desktop/authentic_desktop/register_screen.dart';
 import 'settings_phone.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class Search extends StatefulWidget {
-  TextEditingController controller = TextEditingController();
+class SearchPhone extends StatefulWidget {
+  final TextEditingController controller;
 
-  Search({Key? key, required this.controller}) : super(key: key);
+  SearchPhone({Key? key, required this.controller}) : super(key: key);
 
   @override
   _Search createState() => _Search();
 }
 
-class _Search extends State<Search> {
+class _Search extends State<SearchPhone> {
   Future<List<String>>? _suggestions;
   Set<int> _hoveredIndexes = {};
+  bool _mounted = true;
 
   @override
   void dispose() {
-    widget.controller.dispose();
+    // Don't dispose the controller here as it's managed by the parent
+    _mounted = false;
     super.dispose();
   }
 
   void _searchWords(String query) {
-    setState(() {
-      _suggestions = fetchSuggestions(query);
-    });
+    if (_mounted) {
+      setState(() {
+        _suggestions = fetchSuggestions(query);
+      });
+    }
   }
 
   Future<List<String>> fetchSuggestions(String query) async {
@@ -74,6 +78,7 @@ class _Search extends State<Search> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       margin: const EdgeInsets.symmetric(horizontal: 8), // Add margin for better spacing
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Prevent column from expanding infinitely
         children: [
           // TextField cho việc tìm kiếm
           TextField(
@@ -150,14 +155,18 @@ class _Search extends State<Search> {
 
                               return MouseRegion(
                                 onEnter: (_) {
-                                  setState(() {
-                                    _hoveredIndexes.add(index);
-                                  });
+                                  if (_mounted) {
+                                    setState(() {
+                                      _hoveredIndexes.add(index);
+                                    });
+                                  }
                                 },
                                 onExit: (_) {
-                                  setState(() {
-                                    _hoveredIndexes.remove(index);
-                                  });
+                                  if (_mounted) {
+                                    setState(() {
+                                      _hoveredIndexes.remove(index);
+                                    });
+                                  }
                                 },
                                 child: Container(
                                   color: isHovered
@@ -171,17 +180,20 @@ class _Search extends State<Search> {
                                     ),
                                     dense: true, // Make list tiles more compact
                                     onTap: () {
-                                      widget.controller.text = '';
+                                      // Clear the text before navigation
+                                      if (_mounted) {
+                                        widget.controller.clear();
+                                        _searchWords(''); // Clear suggestions
+                                      }
+                                      
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => Vocabulary(
+                                          builder: (context) => VocabularyPhone(
                                             word: word,
                                           ),
                                         ),
-                                      ).then((_) {
-                                        widget.controller.clear();
-                                      });
+                                      );
                                     },
                                   ),
                                 ),

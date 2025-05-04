@@ -123,7 +123,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                Search(controller: _controller),
+                SearchPhone(controller: _controller),
 
                 const SizedBox(height: 40),
 

@@ -11,16 +11,16 @@ import 'translate.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
 
-class Vocabulary extends StatefulWidget {
+class VocabularyPhone extends StatefulWidget {
   final String word;
 
-  const Vocabulary({Key? key, required this.word}) : super(key: key);
+  const VocabularyPhone({Key? key, required this.word}) : super(key: key);
 
   @override
   _VocabularyState createState() => _VocabularyState();
 }
 
-class _VocabularyState extends State<Vocabulary> {
+class _VocabularyState extends State<VocabularyPhone> {
   TextEditingController _controller = TextEditingController();
   Map<String, dynamic> _vocabularyData = {};
   bool _isLoading = true;
@@ -33,8 +33,6 @@ class _VocabularyState extends State<Vocabulary> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
     int streakCount = 5; // Placeholder for streak count
     bool _isHovering = false; // Hover effect flag
     bool isHoveringIcon = false; // Hover effect for icon
@@ -43,68 +41,20 @@ class _VocabularyState extends State<Vocabulary> {
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
-        leadingWidth: screenWidth,
-        leading: Stack(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'DICTIONARY',
-                      softWrap: false,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                  // Your back button with hover effect (no changes needed here)
-                  StatefulBuilder(
-                    builder: (context, setState) {
-                      return MouseRegion(
-                        onEnter: (_) => setState(() => isHoveringIcon = true),
-                        onExit: (_) => setState(() => isHoveringIcon = false),
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomeScreenPhone()),
-                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
-                            );
-                          },
-                          customBorder: const CircleBorder(),
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.shade100,
-                                  blurRadius: 2,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.book,
-                              size: 20,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
+        title: Text(
+          'DICTIONARY',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue.shade800,
+            letterSpacing: 2,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.blue.shade700),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: [
           Row(
@@ -137,77 +87,42 @@ class _VocabularyState extends State<Vocabulary> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Column(
-                        children: [
-                          const SizedBox(height: 80),
-
-                          Container(
-                            height: screenHeight - 160,
-                            child: VocabularyList(word: widget.word,),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
-
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                          child: Search(controller: _controller),
+          child: Column(
+            children: [
+              // Word title and search bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Word title
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        widget.word,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                          letterSpacing: 1,
                         ),
                       ),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: StatefulBuilder(
-                          builder: (context, setState) {
-                            return MouseRegion(
-                              onEnter: (_) => setState(() => _isHovering = true),
-                              onExit: (_) => setState(() => _isHovering = false),
-                              child: Material(
-                                color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
-                                borderRadius: BorderRadius.circular(30),
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  borderRadius: BorderRadius.circular(30),
-                                  splashColor: Colors.blue.withOpacity(0.2),
-                                  highlightColor: Colors.blue.withOpacity(0.1),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        buttonBack(context),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          widget.word,
-                                          style: TextStyle(
-                                            fontSize: 30,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.blue.shade700,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                    ],
-                  ),
-                ]
-            ),
+                    ),
+                    
+                    // Search bar
+                    SearchPhone(controller: _controller),
+                  ],
+                ),
+              ),
+              
+              // Divider
+              Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
+              
+              // Word content
+              Expanded(
+                child: VocabularyList(word: widget.word),
+              ),
+            ],
           ),
         ),
       ),
@@ -216,22 +131,6 @@ class _VocabularyState extends State<Vocabulary> {
 
   void _playAudio(String audioUrl) {
     // You can use any audio playing package such as just_audio to play the audio
-  }
-
-  Widget buttonBack(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: IconButton(
-        icon: Icon(Icons.arrow_back, size: 30, color: Colors.blue.shade700),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreenPhone()),
-          );
-        },
-        hoverColor: Colors.grey.shade300.withOpacity(0),
-      ),
-    );
   }
 
 }
@@ -500,5 +399,3 @@ class _VocabularyListState extends State<VocabularyList> {
     );
   }
 }
-
-
