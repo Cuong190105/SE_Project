@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'translate.dart';
+import 'translate_phone.dart';
 import 'vocabularies.dart';
 import 'vocabulary_phone.dart';
 import 'package:eng_dictionary/screens_desktop/authentic_desktop/register_screen.dart';

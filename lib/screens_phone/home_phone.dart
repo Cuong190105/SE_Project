@@ -1,9 +1,9 @@
 import 'package:eng_dictionary/screens_phone/settings_phone.dart';
-import 'package:eng_dictionary/screens_phone/flashcard_screen.dart';
-import 'package:eng_dictionary/screens_phone/minigame_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_screen.dart';
+import 'package:eng_dictionary/screens_phone/minigame/minigame_screen_phone.dart';
 import '../screens_phone/vocabularies.dart';
 import 'package:flutter/material.dart';
-import 'translate.dart';
+import 'translate_phone.dart';
 import 'search_phone.dart';
 
 class HomeScreenPhone extends StatefulWidget {
@@ -29,6 +29,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
+        leading: Container(),
         actions: [
           Container(
             decoration: BoxDecoration(
@@ -142,7 +143,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const Translate()),
+                                builder: (context) => const TranslatePhone()),
                           ).then((_) {
                             _controller.clear();
                           });

@@ -6,7 +6,7 @@ import 'package:process_run/shell.dart';
 import 'dart:async';
 import 'search_phone.dart';
 import 'home_phone.dart';
-import 'translate.dart';
+import 'translate_phone.dart';
 //import 'package:html/parser.dart' as htmlParser;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
@@ -34,8 +34,6 @@ class _VocabularyState extends State<VocabularyPhone> {
   @override
   Widget build(BuildContext context) {
     int streakCount = 5; // Placeholder for streak count
-    bool _isHovering = false; // Hover effect flag
-    bool isHoveringIcon = false; // Hover effect for icon
 
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +44,7 @@ class _VocabularyState extends State<VocabularyPhone> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.blue.shade800,
+            color: Colors.white,
             letterSpacing: 2,
           ),
         ),
@@ -65,14 +63,6 @@ class _VocabularyState extends State<VocabularyPhone> {
               ),
               const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
             ],
-          ),
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
-            ),
-            onPressed: () {},
           ),
         ],
       ),
@@ -95,6 +85,7 @@ class _VocabularyState extends State<VocabularyPhone> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SearchPhone(controller: _controller),
                     // Word title
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
@@ -108,9 +99,6 @@ class _VocabularyState extends State<VocabularyPhone> {
                         ),
                       ),
                     ),
-                    
-                    // Search bar
-                    SearchPhone(controller: _controller),
                   ],
                 ),
               ),
