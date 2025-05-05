@@ -1,200 +1,358 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:path/path.dart';
-import 'dart:async';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
-
-  // Path to the database file
-  String? _dbPath;
+  Database? _db;
 
   DatabaseHelper._init();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('app_database.db');
-    return _database!;
+    if (_db != null) return _db!;
+    _db = await _initDB('flashcards.db');
+    return _db!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    // Get the database directory path for storing the database
-    final dbDir = await _getDatabasesPath();
-    final path = join(dbDir, filePath);
-    _dbPath = path;
-
-    // Ensure the directory exists
-    await Directory(dirname(path)).create(recursive: true);
-
-    // Open the database
-    final db = sqlite3.open(path);
-
-    // Configure and create tables
-    await _onConfigure(db);
-    await _createDB(db);
-
-    return db;
-  }
-
-  Future<String> _getDatabasesPath() async {
-    // For mobile platforms, we could use path_provider
-    // For this implementation, we'll use a simple approach
-    return Directory.systemTemp.path;
-  }
-
-  Future<void> _onConfigure(Database db) async {
-    // Enable foreign key support
-    db.execute('PRAGMA foreign_keys = ON');
-  }
-
-  Future<void> _createDB(Database db) async {
-    // Define your initial tables here
-    db.execute('''
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        email TEXT NOT NULL,
-        password TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    ''');
-
-    // Add other tables if needed
-  }
-
-  // Generic insert method
-  Future<int> insert(String table, Map<String, dynamic> data) async {
-    final db = await database;
-
-    // Build the INSERT statement
-    final columns = data.keys.join(', ');
-    final placeholders = data.keys.map((_) => '?').join(', ');
-    final values = data.values.toList();
-
-    // Execute the statement
-    final stmt = db.prepare(
-        'INSERT OR REPLACE INTO $table ($columns) VALUES ($placeholders)'
-    );
-
+  Future<Database> _initDB(String fileName) async {
+    debugPrint('Initializing database: $fileName');
     try {
-      stmt.execute(values);
-      final id = db.lastInsertRowId;
-      return id;
-    } finally {
-      stmt.dispose();
-    }
-  }
+      Directory documentsDirectory = await getApplicationDocumentsDirectory();
+      String path = join(documentsDirectory.path, fileName);
+      final db = sqlite3.open(path);
 
-  // Generic query method
-  Future<List<Map<String, dynamic>>> query(String table, {
-    List<String>? columns,
-    String? where,
-    List<dynamic>? whereArgs,
-    String? orderBy,
-  }) async {
-    final db = await database;
+      debugPrint('Creating tables...');
+      // Tạo bảng
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS flashcard_sets (
+          set_id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          color INTEGER NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          is_synced INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
 
-    // Build the query
-    final columnStr = columns != null ? columns.join(', ') : '*';
-    var sql = 'SELECT $columnStr FROM $table';
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS flashcards (
+          id TEXT PRIMARY KEY,
+          set_id TEXT NOT NULL,
+          front TEXT NOT NULL,
+          back TEXT NOT NULL,
+          is_learned INTEGER NOT NULL DEFAULT 0,
+          FOREIGN KEY (set_id) REFERENCES flashcard_sets (set_id)
+        )
+      ''');
 
-    if (where != null) {
-      sql += ' WHERE $where';
-    }
-
-    if (orderBy != null) {
-      sql += ' ORDER BY $orderBy';
-    }
-
-    final stmt = db.prepare(sql);
-
-    try {
-      // Execute the query
-      if (whereArgs != null && whereArgs.isNotEmpty) {
-        final result = stmt.select(whereArgs);
-        return _convertResultsToList(result);
+      debugPrint('Checking for sample data...');
+      // Kiểm tra nếu bảng flashcard_sets trống, chèn dữ liệu mẫu
+      final result = db.select('SELECT COUNT(*) as count FROM flashcard_sets');
+      if (result.first['count'] == 0) {
+        debugPrint('Inserting sample flashcard sets...');
+        await _insertSampleFlashcardSets(db);
       } else {
-        final result = stmt.select([]);
-        return _convertResultsToList(result);
-      }
-    } finally {
-      stmt.dispose();
-    }
-  }
-
-  // Helper method to convert ResultSet to List<Map<String, dynamic>>
-  List<Map<String, dynamic>> _convertResultsToList(ResultSet resultSet) {
-    final results = <Map<String, dynamic>>[];
-
-    for (final row in resultSet) {
-      final map = <String, dynamic>{};
-
-      for (final column in row.keys) {
-        map[column] = row[column];
+        debugPrint('Sample data not needed, database already has sets.');
       }
 
-      results.add(map);
+      debugPrint('Database initialization complete.');
+      return db;
+    } catch (e, stackTrace) {
+      debugPrint('Error initializing database: $e\n$stackTrace');
+      rethrow;
     }
-
-    return results;
   }
 
-  // Generic update method
-  Future<int> update(String table, Map<String, dynamic> data, {
-    required String whereClause,
-    required List<dynamic> whereArgs
-  }) async {
-    final db = await database;
-
-    // Build the UPDATE statement
-    final setClause = data.keys.map((key) => '$key = ?').join(', ');
-    final values = [...data.values, ...whereArgs];
-
-    final sql = 'UPDATE $table SET $setClause WHERE $whereClause';
-    final stmt = db.prepare(sql);
-
+  Future<void> _insertSampleFlashcardSets(Database db) async {
     try {
-      stmt.execute(values);
-      return db.getUpdatedRows(); // Returns number of rows affected
-    } finally {
-      stmt.dispose();
+      // Sử dụng transaction để tối ưu hóa chèn nhiều bản ghi
+      db.execute('BEGIN TRANSACTION');
+
+      final now = DateTime.now().toIso8601String();
+
+      // Kiểm tra xem bộ mẫu đã tồn tại chưa
+      final existingSets = db.select('SELECT set_id FROM flashcard_sets WHERE set_id IN (?, ?)', ['animals_001', 'music_001']);
+      final existingSetIds = existingSets.map((row) => row['set_id'] as String).toSet();
+
+      if (!existingSetIds.contains('animals_001')) {
+        // Bộ mẫu 1: Động vật
+        debugPrint('Inserting Animals set...');
+        db.execute('''
+          INSERT INTO flashcard_sets (set_id, name, description, color, created_at, updated_at, is_synced)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', [
+          'animals_001',
+          'Động vật',
+          'Từ vựng về các loài động vật',
+          Colors.blue.shade700.value,
+          now,
+          now,
+          0
+        ]);
+
+        final animalCards = [
+          {'id': 'animal_001', 'front': 'Cat', 'back': 'Mèo'},
+          {'id': 'animal_002', 'front': 'Dog', 'back': 'Chó'},
+          {'id': 'animal_003', 'front': 'Elephant', 'back': 'Voi'},
+          {'id': 'animal_004', 'front': 'Tiger', 'back': 'Hổ'},
+          {'id': 'animal_005', 'front': 'Lion', 'back': 'Sư tử'},
+          {'id': 'animal_006', 'front': 'Bear', 'back': 'Gấu'},
+          {'id': 'animal_007', 'front': 'Wolf', 'back': 'Sói'},
+          {'id': 'animal_008', 'front': 'Fox', 'back': 'Cáo'},
+          {'id': 'animal_009', 'front': 'Deer', 'back': 'Nai'},
+          {'id': 'animal_010', 'front': 'Monkey', 'back': 'Khỉ'},
+        ];
+
+        for (var card in animalCards) {
+          db.execute('''
+            INSERT INTO flashcards (id, set_id, front, back, is_learned)
+            VALUES (?, ?, ?, ?, ?)
+          ''', [
+            card['id'],
+            'animals_001',
+            card['front'],
+            card['back'],
+            0
+          ]);
+        }
+      }
+
+      if (!existingSetIds.contains('music_001')) {
+        // Bộ mẫu 2: Âm nhạc
+        debugPrint('Inserting Music set...');
+        db.execute('''
+          INSERT INTO flashcard_sets (set_id, name, description, color, created_at, updated_at, is_synced)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', [
+          'music_001',
+          'Âm nhạc',
+          'Thuật ngữ âm nhạc cơ bản',
+          Colors.purple.shade700.value,
+          now,
+          now,
+          0
+        ]);
+
+        final musicCards = [
+          {'id': 'music_001', 'front': 'Note', 'back': 'Nốt nhạc'},
+          {'id': 'music_002', 'front': 'Chord', 'back': 'Hợp âm'},
+          {'id': 'music_003', 'front': 'Rhythm', 'back': 'Nhịp điệu'},
+          {'id': 'music_004', 'front': 'Melody', 'back': 'Giai điệu'},
+          {'id': 'music_005', 'front': 'Harmony', 'back': 'Hòa âm'},
+          {'id': 'music_006', 'front': 'Tempo', 'back': 'Nhịp độ'},
+          {'id': 'music_007', 'front': 'Pitch', 'back': 'Cao độ'},
+          {'id': 'music_008', 'front': 'Scale', 'back': 'Gam'},
+          {'id': 'music_009', 'front': 'Key', 'back': 'Tông'},
+          {'id': 'music_010', 'front': 'Beat', 'back': 'Phách'},
+        ];
+
+        for (var card in musicCards) {
+          db.execute('''
+            INSERT INTO flashcards (id, set_id, front, back, is_learned)
+            VALUES (?, ?, ?, ?, ?)
+          ''', [
+            card['id'],
+            'music_001',
+            card['front'],
+            card['back'],
+            0
+          ]);
+        }
+      }
+
+      db.execute('COMMIT');
+      debugPrint('Sample flashcard sets inserted successfully.');
+    } catch (e, stackTrace) {
+      db.execute('ROLLBACK');
+      debugPrint('Error inserting sample flashcard sets: $e\n$stackTrace');
+      rethrow;
     }
   }
 
-  // Generic delete method
-  Future<int> delete(String table, {
-    required String whereClause,
-    required List<dynamic> whereArgs
-  }) async {
+  // Lưu flashcard set
+  Future<void> insertFlashcardSet(FlashcardSet set) async {
     final db = await database;
-
-    final sql = 'DELETE FROM $table WHERE $whereClause';
-    final stmt = db.prepare(sql);
-
     try {
-      stmt.execute(whereArgs);
-      return db.getUpdatedRows(); // Returns number of rows affected
-    } finally {
-      stmt.dispose();
+      db.execute('''
+        INSERT OR REPLACE INTO flashcard_sets (set_id, name, description, color, created_at, updated_at, is_synced)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      ''', [
+        set.id,
+        set.name,
+        set.description,
+        set.color.value,
+        set.createdAt.toIso8601String(),
+        set.updatedAt.toIso8601String(),
+        set.isSynced ? 1 : 0,
+      ]);
+
+      // Xóa thẻ cũ của bộ này
+      db.execute('DELETE FROM flashcards WHERE set_id = ?', [set.id]);
+
+      // Thêm thẻ mới
+      for (var card in set.cards) {
+        db.execute('''
+          INSERT INTO flashcards (id, set_id, front, back, is_learned)
+          VALUES (?, ?, ?, ?, ?)
+        ''', [
+          card.id,
+          set.id,
+          card.frontContent,
+          card.backContent,
+          card.isLearned ? 1 : 0,
+        ]);
+      }
+      debugPrint('Flashcard set ${set.id} inserted successfully.');
+    } catch (e, stackTrace) {
+      debugPrint('Error inserting flashcard set ${set.id}: $e\n$stackTrace');
+      rethrow;
     }
   }
 
-  // Close the database connection
+  // Lấy tất cả flashcard sets
+  Future<List<FlashcardSet>> getFlashcardSets() async {
+    final db = await database;
+    debugPrint('Fetching all flashcard sets...');
+    try {
+      final setRows = db.select('SELECT * FROM flashcard_sets');
+      List<FlashcardSet> sets = [];
+
+      for (var setRow in setRows) {
+        final cardRows = db.select(
+          'SELECT * FROM flashcards WHERE set_id = ?',
+          [setRow['set_id']],
+        );
+
+        sets.add(FlashcardSet(
+          id: setRow['set_id'] as String,
+          name: setRow['name'] as String,
+          description: setRow['description'] as String? ?? '',
+          cards: cardRows
+              .map((cardRow) => Flashcard(
+            id: cardRow['id'] as String,
+            frontContent: cardRow['front'] as String,
+            backContent: cardRow['back'] as String,
+            isLearned: (cardRow['is_learned'] as int) == 1,
+          ))
+              .toList(),
+          color: Color(setRow['color'] as int),
+          progress: cardRows.where((card) => card['is_learned'] == 1).length,
+          createdAt: DateTime.parse(setRow['created_at'] as String),
+          updatedAt: DateTime.parse(setRow['updated_at'] as String),
+          isSynced: (setRow['is_synced'] as int) == 1,
+        ));
+      }
+
+      debugPrint('Fetched ${sets.length} flashcard sets.');
+      return sets;
+    } catch (e, stackTrace) {
+      debugPrint('Error fetching flashcard sets: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  // Lấy các bộ chưa đồng bộ
+  Future<List<FlashcardSet>> getUnsyncedSets() async {
+    final db = await database;
+    debugPrint('Fetching unsynced flashcard sets...');
+    try {
+      final setRows = db.select('SELECT * FROM flashcard_sets WHERE is_synced = 0');
+      List<FlashcardSet> sets = [];
+
+      for (var setRow in setRows) {
+        final cardRows = db.select(
+          'SELECT * FROM flashcards WHERE set_id = ?',
+          [setRow['set_id']],
+        );
+
+        sets.add(FlashcardSet(
+          id: setRow['set_id'] as String,
+          name: setRow['name'] as String,
+          description: setRow['description'] as String? ?? '',
+          cards: cardRows
+              .map((cardRow) => Flashcard(
+            id: cardRow['id'] as String,
+            frontContent: cardRow['front'] as String,
+            backContent: cardRow['back'] as String,
+            isLearned: (cardRow['is_learned'] as int) == 1,
+          ))
+              .toList(),
+          color: Color(setRow['color'] as int),
+          progress: cardRows.where((card) => card['is_learned'] == 1).length,
+          createdAt: DateTime.parse(setRow['created_at'] as String),
+          updatedAt: DateTime.parse(setRow['updated_at'] as String),
+          isSynced: false,
+        ));
+      }
+
+      debugPrint('Fetched ${sets.length} unsynced flashcard sets.');
+      return sets;
+    } catch (e, stackTrace) {
+      debugPrint('Error fetching unsynced flashcard sets: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  // Đánh dấu bộ đã đồng bộ
+  Future<void> markSetAsSynced(String setId) async {
+    final db = await database;
+    debugPrint('Marking set $setId as synced...');
+    try {
+      db.execute(
+        'UPDATE flashcard_sets SET is_synced = 1 WHERE set_id = ?',
+        [setId],
+      );
+      debugPrint('Set $setId marked as synced.');
+    } catch (e, stackTrace) {
+      debugPrint('Error marking set $setId as synced: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  // Xóa flashcard set
+  Future<void> deleteFlashcardSet(String setId) async {
+    final db = await database;
+    debugPrint('Deleting flashcard set $setId...');
+    try {
+      db.execute('DELETE FROM flashcards WHERE set_id = ?', [setId]);
+      db.execute('DELETE FROM flashcard_sets WHERE set_id = ?', [setId]);
+      debugPrint('Flashcard set $setId deleted.');
+    } catch (e, stackTrace) {
+      debugPrint('Error deleting flashcard set $setId: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  // Xóa flashcard
+  Future<void> deleteFlashcard(String cardId) async {
+    final db = await database;
+    debugPrint('Deleting flashcard $cardId...');
+    try {
+      db.execute('DELETE FROM flashcards WHERE id = ?', [cardId]);
+      debugPrint('Flashcard $cardId deleted.');
+    } catch (e, stackTrace) {
+      debugPrint('Error deleting flashcard $cardId: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  // Đóng cơ sở dữ liệu
   Future<void> close() async {
     final db = await database;
-    db.dispose();
-    _database = null;
-  }
-
-  // Delete the entire database
-  Future<void> deleteDatabase() async {
-    if (_dbPath != null) {
-      final file = File(_dbPath!);
-      if (await file.exists()) {
-        await file.delete();
-      }
-      _database = null;
+    debugPrint('Closing database...');
+    try {
+      db.dispose();
+      _db = null;
+      debugPrint('Database closed.');
+    } catch (e, stackTrace) {
+      debugPrint('Error closing database: $e\n$stackTrace');
+      rethrow;
     }
   }
 }

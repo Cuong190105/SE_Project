@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   just_audio_windows
+  sqlite3_flutter_libs
   window_size
 )
 

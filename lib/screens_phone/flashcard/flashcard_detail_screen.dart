@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'flashcard_models.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class FlashcardDetailScreen extends StatefulWidget {
   const FlashcardDetailScreen({super.key});
@@ -9,23 +10,74 @@ class FlashcardDetailScreen extends StatefulWidget {
 }
 
 class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
-  late FlashcardSet flashcardSet;
+  FlashcardSet? flashcardSet;
   int currentCardIndex = 0;
   bool _isFlipped = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final setId = args?['setId'] as String?;
+    _loadFlashcardSet();
+  }
 
-    if (setId != null) {
-      flashcardSet =
-          FlashcardManager.getSetById(setId) ?? FlashcardManager.sets.first;
-    } else {
-      flashcardSet = FlashcardManager.sets.first;
+  Future<void> _loadFlashcardSet() async {
+    debugPrint('Loading flashcard set...');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final setId = args?['setId'] as String?;
+
+      final sets = await FlashcardManager.getSets();
+      if (sets.isEmpty) {
+        debugPrint('No flashcard sets available.');
+        setState(() {
+          flashcardSet = _createEmptySet();
+          _isLoading = false;
+          currentCardIndex = 0;
+          _isFlipped = false;
+        });
+        return;
+      }
+
+      if (setId != null) {
+        flashcardSet = sets.firstWhere(
+              (set) => set.id == setId,
+          orElse: () => sets.first,
+        );
+      } else {
+        flashcardSet = sets.first;
+      }
+
+      debugPrint('Loaded flashcard set: ${flashcardSet!.id}');
+      setState(() {
+        _isLoading = false;
+        currentCardIndex = 0;
+        _isFlipped = false;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Error loading flashcard set: $e\n$stackTrace');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Lỗi tải bộ thẻ: $e';
+      });
     }
+  }
+
+  FlashcardSet _createEmptySet() {
+    return FlashcardSet(
+      id: 'empty',
+      name: 'Bộ thẻ trống',
+      cards: [],
+      color: Colors.blue.shade700,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
   void _flipCard() {
@@ -70,17 +122,31 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (frontController.text.trim().isNotEmpty &&
                   backController.text.trim().isNotEmpty) {
                 setState(() {
-                  FlashcardManager.addCardToSet(
-                    flashcardSet.id,
+                  _isLoading = true;
+                });
+                try {
+                  await FlashcardManager.addCardToSet(
+                    flashcardSet!.id,
                     frontController.text.trim(),
                     backController.text.trim(),
                   );
-                });
-                Navigator.pop(context);
+                  await _loadFlashcardSet();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Thêm thẻ thành công')),
+                  );
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi thêm thẻ: $e')),
+                  );
+                }
               }
             },
             child: const Text('Thêm'),
@@ -92,9 +158,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   void _showEditCardDialog(Flashcard card) {
     final TextEditingController frontController =
-        TextEditingController(text: card.frontContent);
+    TextEditingController(text: card.frontContent);
     final TextEditingController backController =
-        TextEditingController(text: card.backContent);
+    TextEditingController(text: card.backContent);
 
     showDialog(
       context: context,
@@ -126,18 +192,32 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (frontController.text.trim().isNotEmpty &&
                   backController.text.trim().isNotEmpty) {
                 setState(() {
-                  FlashcardManager.updateCard(
-                    flashcardSet.id,
+                  _isLoading = true;
+                });
+                try {
+                  await FlashcardManager.updateCard(
+                    flashcardSet!.id,
                     card.id,
                     frontController.text.trim(),
                     backController.text.trim(),
                   );
-                });
-                Navigator.pop(context);
+                  await _loadFlashcardSet();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Chỉnh sửa thẻ thành công')),
+                  );
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi chỉnh sửa thẻ: $e')),
+                  );
+                }
               }
             },
             child: const Text('Lưu'),
@@ -149,7 +229,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   void _showRenameSetDialog() {
     final TextEditingController nameController =
-        TextEditingController(text: flashcardSet.name);
+    TextEditingController(text: flashcardSet!.name);
 
     showDialog(
       context: context,
@@ -169,13 +249,29 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.trim().isNotEmpty) {
                 setState(() {
-                  FlashcardManager.renameSet(
-                      flashcardSet.id, nameController.text.trim());
+                  _isLoading = true;
                 });
-                Navigator.pop(context);
+                try {
+                  await FlashcardManager.renameSet(
+                    flashcardSet!.id,
+                    nameController.text.trim(),
+                  );
+                  await _loadFlashcardSet();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đổi tên bộ thẻ thành công')),
+                  );
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi đổi tên: $e')),
+                  );
+                }
               }
             },
             child: const Text('Lưu'),
@@ -187,13 +283,48 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = flashcardSet.color;
-    final totalCards = flashcardSet.totalCards;
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Colors.red, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadFlashcardSet,
+                child: Text('Thử lại'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (flashcardSet == null) {
+      return Scaffold(
+        body: Center(child: Text('Không tìm thấy bộ thẻ')),
+      );
+    }
+
+    final color = flashcardSet!.color;
+    final totalCards = flashcardSet!.totalCards;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(flashcardSet.name,
+        title: Text(flashcardSet!.name,
             style: const TextStyle(color: Colors.white)),
+        backgroundColor: color,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
@@ -265,11 +396,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   ElevatedButton.icon(
                     onPressed: currentCardIndex > 0
                         ? () {
-                            setState(() {
-                              currentCardIndex--;
-                              _isFlipped = false;
-                            });
-                          }
+                      setState(() {
+                        currentCardIndex--;
+                        _isFlipped = false;
+                      });
+                    }
                         : null,
                     icon: const Icon(Icons.arrow_back_ios, size: 16),
                     label: const Text('Trước'),
@@ -285,7 +416,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   Row(
                     children: List.generate(
                       min(5, totalCards),
-                      (index) => Container(
+                          (index) => Container(
                         width: 8,
                         height: 8,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -301,11 +432,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   ElevatedButton.icon(
                     onPressed: currentCardIndex < totalCards - 1
                         ? () {
-                            setState(() {
-                              currentCardIndex++;
-                              _isFlipped = false;
-                            });
-                          }
+                      setState(() {
+                        currentCardIndex++;
+                        _isFlipped = false;
+                      });
+                    }
                         : null,
                     icon: const Icon(Icons.arrow_forward_ios, size: 16),
                     label: const Text('Tiếp'),
@@ -332,16 +463,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   }
 
   Widget _buildFlashcard(Color color) {
-    if (flashcardSet.cards.isEmpty) {
+    if (flashcardSet!.cards.isEmpty) {
       return _buildEmptyState(color);
     }
 
-    // Ensure currentCardIndex is valid
-    if (currentCardIndex >= flashcardSet.cards.length) {
-      currentCardIndex = flashcardSet.cards.length - 1;
+    if (currentCardIndex >= flashcardSet!.cards.length) {
+      currentCardIndex = flashcardSet!.cards.length - 1;
     }
 
-    final card = flashcardSet.cards[currentCardIndex];
+    final card = flashcardSet!.cards[currentCardIndex];
 
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -427,11 +557,25 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   child: Checkbox(
                     value: card.isLearned,
                     activeColor: color,
-                    onChanged: (value) {
+                    onChanged: (value) async {
                       setState(() {
-                        FlashcardManager.markCardAsLearned(
-                            flashcardSet.id, card.id, value ?? false);
+                        _isLoading = true;
                       });
+                      try {
+                        await FlashcardManager.markCardAsLearned(
+                          flashcardSet!.id,
+                          card.id,
+                          value ?? false,
+                        );
+                        await _loadFlashcardSet();
+                      } catch (e) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Lỗi đánh dấu thẻ: $e')),
+                        );
+                      }
                     },
                   ),
                 ),
@@ -490,57 +634,73 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Quản lý thẻ - ${flashcardSet.name}'),
+        title: Text('Quản lý thẻ - ${flashcardSet!.name}'),
         content: SizedBox(
           width: double.maxFinite,
-          child: flashcardSet.cards.isEmpty
+          child: flashcardSet!.cards.isEmpty
               ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text('Chưa có thẻ nào'),
-                  ),
-                )
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text('Chưa có thẻ nào'),
+            ),
+          )
               : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: flashcardSet.cards.length,
-                  itemBuilder: (context, index) {
-                    final card = flashcardSet.cards[index];
-                    return ListTile(
-                      title: Text(
-                        card.frontContent,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        card.backContent,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _showEditCardDialog(card);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                FlashcardManager.deleteCard(
-                                    flashcardSet.id, card.id);
-                              });
-                              Navigator.pop(context);
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+            shrinkWrap: true,
+            itemCount: flashcardSet!.cards.length,
+            itemBuilder: (context, index) {
+              final card = flashcardSet!.cards[index];
+              return ListTile(
+                title: Text(
+                  card.frontContent,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                subtitle: Text(
+                  card.backContent,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 20),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _showEditCardDialog(card);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, size: 20),
+                      onPressed: () async {
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        try {
+                          await FlashcardManager.deleteCard(
+                            flashcardSet!.id,
+                            card.id,
+                          );
+                          await _loadFlashcardSet();
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Xóa thẻ thành công')),
+                          );
+                        } catch (e) {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi xóa thẻ: $e')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
         actions: [
           TextButton(
@@ -551,9 +711,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
       ),
     );
   }
-}
 
-// Helper function to get minimum of two integers
-int min(int a, int b) {
-  return a < b ? a : b;
+  // Helper function to get minimum of two integers
+  int min(int a, int b) {
+    return a < b ? a : b;
+  }
 }

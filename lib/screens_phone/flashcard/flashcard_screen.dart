@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'flashcard_models.dart';
 import 'flashcard_detail_screen.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class FlashcardScreen extends StatefulWidget {
   const FlashcardScreen({super.key});
@@ -10,26 +11,73 @@ class FlashcardScreen extends StatefulWidget {
 }
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
+  bool _isLoading = true;
+  List<FlashcardSet> _sets = [];
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
-    FlashcardManager.loadSampleData();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    debugPrint('Loading flashcard data...');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await FlashcardManager.syncOnStartup().timeout(
+        Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('Sync on startup timed out');
+          throw Exception('Không thể đồng bộ với server');
+        },
+      );
+      _sets = await FlashcardManager.getSets();
+      debugPrint('Loaded ${_sets.length} flashcard sets');
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Error loading flashcard data: $e\n$stackTrace');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Lỗi tải dữ liệu: $e';
+      });
+    }
   }
 
   void _showCreateSetDialog() {
     final TextEditingController nameController = TextEditingController();
+    final TextEditingController descController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Tạo bộ thẻ mới'),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Tên bộ thẻ',
-            hintText: 'Nhập tên cho bộ thẻ mới',
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Tên bộ thẻ',
+                hintText: 'Nhập tên cho bộ thẻ mới',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                labelText: 'Mô tả',
+                hintText: 'Nhập mô tả cho bộ thẻ',
+              ),
+              maxLines: 2,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -37,12 +85,32 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.trim().isNotEmpty) {
                 setState(() {
-                  FlashcardManager.createNewSet(nameController.text.trim());
+                  _isLoading = true;
                 });
-                Navigator.pop(context);
+                try {
+                  await FlashcardManager.createNewSet(
+                    nameController.text.trim(),
+                    descController.text.trim(),
+                  );
+                  _sets = await FlashcardManager.getSets();
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tạo bộ thẻ thành công')),
+                  );
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi tạo bộ thẻ: $e')),
+                  );
+                }
               }
             },
             child: const Text('Tạo'),
@@ -54,7 +122,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   void _showRenameSetDialog(String setId, String currentName) {
     final TextEditingController nameController =
-        TextEditingController(text: currentName);
+    TextEditingController(text: currentName);
 
     showDialog(
       context: context,
@@ -74,12 +142,29 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.trim().isNotEmpty) {
                 setState(() {
-                  FlashcardManager.renameSet(setId, nameController.text.trim());
+                  _isLoading = true;
                 });
-                Navigator.pop(context);
+                try {
+                  await FlashcardManager.renameSet(setId, nameController.text.trim());
+                  _sets = await FlashcardManager.getSets();
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đổi tên thành công')),
+                  );
+                } catch (e) {
+                  setState(() {
+                    _isLoading = false;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi đổi tên: $e')),
+                  );
+                }
               }
             },
             child: const Text('Lưu'),
@@ -96,7 +181,27 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         title: const Text('Flashcard', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue.shade700,
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage != null
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.red, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: Text('Thử lại'),
+            ),
+          ],
+        ),
+      )
+          : Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -123,7 +228,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${FlashcardManager.sets.length} bộ',
+                    '${_sets.length} bộ',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -142,8 +247,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 mainAxisSpacing: 16,
                 childAspectRatio: 0.8,
               ),
-              itemCount:
-                  FlashcardManager.sets.length + 1, // sets + 1 add new button
+              itemCount: _sets.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return _buildAddNewSetCard(context);
@@ -200,7 +304,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
   }
 
   Widget _buildFlashcardSetCard(BuildContext context, int index) {
-    final set = FlashcardManager.sets[index];
+    final set = _sets[index];
     final color = set.color;
 
     return Card(
@@ -215,8 +319,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               settings: RouteSettings(arguments: {'setId': set.id}),
             ),
           ).then((_) {
-            // Refresh when returning from detail screen
-            setState(() {});
+            _loadData(); // Làm mới dữ liệu khi quay lại
           });
         },
         borderRadius: BorderRadius.circular(16),
@@ -256,18 +359,35 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                           builder: (context) => AlertDialog(
                             title: const Text('Xóa bộ thẻ'),
                             content:
-                                Text('Bạn có chắc muốn xóa bộ "${set.name}"?'),
+                            Text('Bạn có chắc muốn xóa bộ "${set.name}"?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
                                 child: const Text('Hủy'),
                               ),
                               ElevatedButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   setState(() {
-                                    FlashcardManager.deleteSet(set.id);
+                                    _isLoading = true;
                                   });
-                                  Navigator.pop(context);
+                                  try {
+                                    await FlashcardManager.deleteSet(set.id);
+                                    _sets = await FlashcardManager.getSets();
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Xóa bộ thẻ thành công')),
+                                    );
+                                  } catch (e) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Lỗi xóa bộ thẻ: $e')),
+                                    );
+                                  }
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red,

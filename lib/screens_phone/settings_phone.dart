@@ -3,7 +3,8 @@ import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 import '../screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:eng_dictionary/back_end/services/user_service.dart';
-import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Giả định có AuthService
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
 
 class SettingsPhone extends StatefulWidget {
   final int userId;
@@ -21,7 +22,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Controllers for editing
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _oldPasswordController = TextEditingController();
@@ -52,7 +52,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     super.dispose();
   }
 
-  // Lấy thông tin người dùng từ backend
   Future<void> _fetchUserInfo() async {
     setState(() {
       _isLoading = true;
@@ -77,7 +76,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     });
   }
 
-  // Chọn ảnh đại diện
   Future<void> _pickImage() async {
     final XTypeGroup typeGroup = XTypeGroup(
       label: 'images',
@@ -111,14 +109,12 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     }
   }
 
-  // Xóa ảnh đã chọn (trước khi lưu)
   void _removeImage() {
     setState(() {
       _newImagePath = '';
     });
   }
 
-  // Hiển thị thông báo thành công
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -128,7 +124,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  // Hiển thị thông báo lỗi
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -161,7 +156,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         child: SafeArea(
           child: Column(
             children: [
-              // User profile header
               Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.blue.shade100,
@@ -199,12 +193,8 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   ],
                 ),
               ),
-
-              // Loading indicator
               if (_isLoading)
                 const Center(child: CircularProgressIndicator()),
-
-              // Error message
               if (_errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -213,8 +203,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                     style: const TextStyle(color: Colors.red, fontSize: 14),
                   ),
                 ),
-
-              // Settings menu and content
               Expanded(
                 child: selectedMenu == 'Menu'
                     ? _buildSettingsMenu()
@@ -222,7 +210,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      // Back to menu button
                       Align(
                         alignment: Alignment.topLeft,
                         child: TextButton.icon(
@@ -241,8 +228,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Content
                       Expanded(
                         child: SingleChildScrollView(
                           child: buildRightContent(),
@@ -259,7 +244,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 
-  // Build the settings menu
   Widget _buildSettingsMenu() {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -525,8 +509,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 ),
                 const SizedBox(height: 10),
                 const Text('Ảnh hiện tại',
-                    style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
             const SizedBox(width: 15),
@@ -578,8 +561,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 ),
                 const SizedBox(height: 10),
                 const Text('Ảnh mới',
-                    style:
-                    TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
           ],
@@ -780,7 +762,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'Vui lòng điền đầy đủ thông tin';
+        _errorMessage = 'Vui lòng đ suspicions đầy đủ thông tin';
       });
       return;
     }
@@ -826,7 +808,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
       _errorMessage = null;
     });
     try {
-      // Giả định AuthService có hàm logout
       final result = await AuthService.logout();
       if (result['success']) {
         Navigator.pushReplacement(
@@ -855,7 +836,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Đồng bộ streak và dữ liệu từ vựng với máy chủ.',
+          'Đồng bộ flashcard và dữ liệu từ vựng với máy chủ.',
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
@@ -878,7 +859,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
       _isLoading = true;
       _errorMessage = null;
     });
-    final result = await UserService.updateStreak(5); // Giả định streak là 5
+    final result = await FlashcardManager.syncToServer();
     if (result['success']) {
       _showSuccessMessage(result['message']);
     } else {
@@ -940,7 +921,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
       child: Row(
         children: [
           Text(
-            '$label: ',
+            '$label: #',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Expanded(
