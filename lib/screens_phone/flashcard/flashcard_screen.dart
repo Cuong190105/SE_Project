@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens_phone/flashcard_models.dart';
-import '../screens_phone/flashcard_detail_screen.dart';
+import 'flashcard_models.dart';
+import 'flashcard_detail_screen.dart';
 
 class FlashcardScreen extends StatefulWidget {
   const FlashcardScreen({super.key});
@@ -95,14 +95,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       appBar: AppBar(
         title: const Text('Flashcard', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue.shade700,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.sort, color: Colors.white),
-            onPressed: () {
-              // Sort flashcard sets
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [

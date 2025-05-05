@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens_phone/flashcard_models.dart';
+import 'flashcard_models.dart';
 
 class FlashcardDetailScreen extends StatefulWidget {
   const FlashcardDetailScreen({super.key});

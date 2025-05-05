@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:just_audio/just_audio.dart';
@@ -10,10 +12,18 @@ class AddWord extends StatefulWidget {
 }
 
 class _AddWordState extends State<AddWord> {
-
   String? _selectedTuLoai;
-  final List<String> _dsTuLoai = ['Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
-    'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'];
+  final List<String> _dsTuLoai = [
+    'Danh từ',
+    'Động từ',
+    'Tính từ',
+    'Trạng từ',
+    'Giới từ',
+    'Liên từ',
+    'Thán từ',
+    'Đại từ',
+    'Từ hạn định',
+  ];
   List<Widget> meaningBoxes = [];
 
   @override
@@ -45,7 +55,11 @@ class _AddWordState extends State<AddWord> {
                   color: Colors.blue.shade100,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.person, color: Colors.blue.shade700, size: 24),
+                child: Icon(
+                  Icons.person,
+                  color: Colors.blue.shade700,
+                  size: 24,
+                ),
               ),
               onPressed: () {},
             ),
@@ -73,7 +87,11 @@ class _AddWordState extends State<AddWord> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.local_fire_department, color: Colors.orange, size: 28),
+                Icon(
+                  Icons.local_fire_department,
+                  color: Colors.orange,
+                  size: 28,
+                ),
                 SizedBox(width: 4),
                 Text(
                   "$streakCount",
@@ -88,7 +106,6 @@ class _AddWordState extends State<AddWord> {
           ),
         ],
       ),
-
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -105,14 +122,20 @@ class _AddWordState extends State<AddWord> {
                 Align(
                   alignment: Alignment.topLeft,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
                     child: StatefulBuilder(
                       builder: (context, setState) {
                         return MouseRegion(
                           onEnter: (_) => setState(() => _isHovering = true),
                           onExit: (_) => setState(() => _isHovering = false),
                           child: Material(
-                            color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
+                            color:
+                                _isHovering
+                                    ? Colors.grey.shade300
+                                    : Colors.transparent,
                             borderRadius: BorderRadius.circular(30),
                             child: InkWell(
                               onTap: () {
@@ -122,7 +145,10 @@ class _AddWordState extends State<AddWord> {
                               splashColor: Colors.blue.withOpacity(0.2),
                               highlightColor: Colors.blue.withOpacity(0.1),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                  vertical: 4.0,
+                                ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -152,51 +178,66 @@ class _AddWordState extends State<AddWord> {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
-
                       // Từ vựng
                       TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Từ vựng',
-                        hintStyle: TextStyle(color: Colors.blue.shade300),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
+                        decoration: InputDecoration(
+                          hintText: 'Từ vựng',
+                          hintStyle: TextStyle(color: Colors.blue.shade300),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.blue,
+                            ), // Viền xanh khi chưa focus
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Colors.blue,
+                              width: 2.0,
+                            ), // Viền xanh khi focus
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
-                        ),
+                        maxLines: 1, // Không cho xuống dòng
                       ),
-                      maxLines: 1, // Không cho xuống dòng
-                    ),
                       SizedBox(height: 10, width: screenWidth),
 
                       // Từ loại
                       Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Từ loại: ',
-                        style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Từ loại: ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          // Nút chọn từ loại với hiệu ứng hover
+                          DropdownButton<String>(
+                            hint: Text(
+                              "Chọn từ loại",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                            value: _selectedTuLoai,
+                            items:
+                                _dsTuLoai.map((loai) {
+                                  return DropdownMenuItem(
+                                    value: loai,
+                                    child: Text(loai),
+                                  );
+                                }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedTuLoai = value;
+                              });
+                            },
+                            //underline: SizedBox(), // Ẩn đường gạch dưới mặc định
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 8),
-                      // Nút chọn từ loại với hiệu ứng hover
-                      DropdownButton<String>(
-                        hint: Text("Chọn từ loại", style: TextStyle(fontSize: 16, color: Colors.blue.shade900),),
-                        value: _selectedTuLoai,
-                        items: _dsTuLoai.map((loai) {
-                          return DropdownMenuItem(
-                            value: loai,
-                            child: Text(loai),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedTuLoai = value;
-                          });
-                        },
-                        //underline: SizedBox(), // Ẩn đường gạch dưới mặc định
-                      ),
-                    ],
-                  ),
                       SizedBox(height: 10, width: screenWidth),
 
                       // phiên âm
@@ -205,14 +246,16 @@ class _AddWordState extends State<AddWord> {
                         children: [
                           Text(
                             'Phiên âm UK: ',
-                            style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
 
                           SizedBox(width: 8),
                           // Phiên âm
                           AddSoundButton(),
-
-
                         ],
                       ),
                       SizedBox(height: 10, width: screenWidth),
@@ -221,14 +264,16 @@ class _AddWordState extends State<AddWord> {
                         children: [
                           Text(
                             'Phiên âm US: ',
-                            style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
 
                           SizedBox(width: 8),
                           // Phiên âm
                           AddSoundButton(),
-
-
                         ],
                       ),
                       SizedBox(height: 10, width: screenWidth),
@@ -238,34 +283,39 @@ class _AddWordState extends State<AddWord> {
 
                       // xóa thêm nghĩa
                       Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10), // cách viền trái
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    if (meaningBoxes.isNotEmpty && meaningBoxes.length > 1) {
-                                      meaningBoxes.removeLast();
-                                    }
-                                  });
-                                },
-                                child: Text('Xóa ý nghĩa'),
-                              ),
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 10,
+                            ), // cách viền trái
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (meaningBoxes.isNotEmpty &&
+                                      meaningBoxes.length > 1) {
+                                    meaningBoxes.removeLast();
+                                  }
+                                });
+                              },
+                              child: Text('Xóa ý nghĩa'),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 10), // cách viền phải
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    meaningBoxes.add(meaningBox());
-                                  });
-                                },
-                                child: Text('Thêm ý nghĩa'),
-                              ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              right: 10,
+                            ), // cách viền phải
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  meaningBoxes.add(meaningBox());
+                                });
+                              },
+                              child: Text('Thêm ý nghĩa'),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10, width: screenWidth),
 
                       __buildLabeledTextField('Từ đồng nghĩa'),
@@ -284,14 +334,12 @@ class _AddWordState extends State<AddWord> {
                         child: Text('Lưu từ vựng'),
                       ),
                     ],
-              ),
-            ),
-
+                  ),
+                ),
                 const SizedBox(height: 24),
               ],
             ),
           ),
-
         ),
       ),
     );
@@ -307,10 +355,13 @@ class _AddWordState extends State<AddWord> {
           Navigator.pop(context); // Quay lại màn hình trước đó
         },
 
-        hoverColor: Colors.grey.shade300.withOpacity(0),              // Màu nền khi di chuột vào
+        hoverColor: Colors.grey.shade300.withOpacity(
+          0,
+        ), // Màu nền khi di chuột vào
       ),
     );
   }
+
   // ô nghĩa và ví dụ
   Widget meaningBox() {
     return Padding(
@@ -327,15 +378,21 @@ class _AddWordState extends State<AddWord> {
       ),
     );
   }
+
   Widget _buildLabeledTextField(String label) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox( // Cố định chiều rộng phần label
+        SizedBox(
+          // Cố định chiều rộng phần label
           width: 90, // Bạn có thể điều chỉnh phù hợp
           child: Text(
             '$label:',
-            style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.blue.shade900,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         Expanded(
@@ -366,6 +423,7 @@ class _AddWordState extends State<AddWord> {
       ],
     );
   }
+
   // đồng, trái nghĩa
   Widget __buildLabeledTextField(String label) {
     return Column(
@@ -373,7 +431,11 @@ class _AddWordState extends State<AddWord> {
       children: [
         Text(
           '$label:',
-          style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.blue.shade900,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         SizedBox(height: 5),
         Container(
@@ -389,7 +451,7 @@ class _AddWordState extends State<AddWord> {
             ],
           ),
           padding: EdgeInsets.symmetric(horizontal: 10),
-          child:  TextField(
+          child: TextField(
             decoration: InputDecoration(
               hintStyle: TextStyle(color: Colors.blue.shade300),
               border: InputBorder.none,
@@ -401,7 +463,6 @@ class _AddWordState extends State<AddWord> {
       ],
     );
   }
-
 }
 
 // Tạo âm thanh
@@ -409,18 +470,34 @@ class AddSoundButton extends StatefulWidget {
   @override
   _AddSoundButtonState createState() => _AddSoundButtonState();
 }
+
 class _AddSoundButtonState extends State<AddSoundButton> {
-  final AudioPlayer _player = AudioPlayer();
+  late final AudioPlayer _player = AudioPlayer();
   String? _filePath;
   String? _fileName;
   Duration? _duration;
   bool _isPlaying = false;
 
   Future<void> _pickAudioFile() async {
-    final typeGroup = XTypeGroup(
-      label: 'audio',
-      extensions: ['mp3', 'wav', 'm4a', 'aac'],
-    );
+    XTypeGroup typeGroup;
+
+    if (Platform.isAndroid) {
+      typeGroup = XTypeGroup(
+        label: 'audio',
+        extensions: ['mp3', 'wav', 'm4a', 'aac'],
+      );
+    } else if (Platform.isIOS) {
+      typeGroup = XTypeGroup(
+        label: 'audio',
+        uniformTypeIdentifiers: ['public.audio'],
+      );
+    } else {
+      // Nếu không phải Android hay iOS, có thể có tùy chọn khác
+      typeGroup = XTypeGroup(
+        label: 'audio',
+        extensions: ['mp3', 'wav', 'm4a', 'aac'],
+      );
+    }
 
     final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
 
@@ -439,15 +516,14 @@ class _AddSoundButtonState extends State<AddSoundButton> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Đã chọn file âm thanh: ${file.name} thành công',
-                style: TextStyle(color: Colors.white), // chữ trắng
-              ),
-              backgroundColor: Colors.blue,
+          SnackBar(
+            content: Text(
+              'Đã chọn file âm thanh: ${file.name} thành công',
+              style: TextStyle(color: Colors.white), // chữ trắng
             ),
+            backgroundColor: Colors.blue,
+          ),
         );
-
       } catch (e) {
         print('Lỗi khi tải file: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -491,15 +567,15 @@ class _AddSoundButtonState extends State<AddSoundButton> {
       child: Row(
         children: [
           if (_filePath != null) ...[
-          Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width - 300,
-            ),
-             child: Text(
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width - 300,
+              ),
+              child: Text(
                 "🎵 ${_shortenFileName(_fileName ?? "")}",
                 overflow: TextOverflow.ellipsis,
               ),
-          ),
+            ),
             const SizedBox(width: 8),
             Text("🕒 ${_duration?.inSeconds ?? '...'}s"),
             IconButton(
@@ -532,4 +608,3 @@ class _AddSoundButtonState extends State<AddSoundButton> {
     );
   }
 }
-
