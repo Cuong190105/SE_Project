@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 import '../screens_phone/authentic_phone/login_screen_phone.dart';
+import 'package:eng_dictionary/back_end/services/user_service.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Giả định có AuthService
 
 class SettingsPhone extends StatefulWidget {
   final int userId;
@@ -13,37 +15,30 @@ class SettingsPhone extends StatefulWidget {
 }
 
 class _SettingsPhoneState extends State<SettingsPhone> {
-  // Sample data for UI display - using mock data instead of backend
-  String _name = 'Nguyễn Văn B';
-  String _email = 'nguyen@example.com';
-  String _address = 'Hà Nội';
-  String _birthDate = '01/01/1990';
+  String _name = '';
+  String _email = '';
+  String _profileImageUrl = 'https://i.pravatar.cc/150';
+  bool _isLoading = false;
+  String? _errorMessage;
 
   // Controllers for editing
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   String selectedMenu = 'Thông tin tài khoản';
-  final String _profileImageUrl = 'https://i.pravatar.cc/150';
   String _newImagePath = '';
   Map<String, bool> isHoveredMap = {};
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with sample data
-    _nameController.text = _name;
-    _emailController.text = _email;
-    _addressController.text = _address;
-
-    // Set initial menu to show the menu list
+    _fetchUserInfo();
     selectedMenu = 'Menu';
   }
 
@@ -51,13 +46,38 @@ class _SettingsPhoneState extends State<SettingsPhone> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _addressController.dispose();
+    _oldPasswordController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // Mock function for image selection
+  // Lấy thông tin người dùng từ backend
+  Future<void> _fetchUserInfo() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final result = await UserService.getUserInfo();
+    if (result['success']) {
+      setState(() {
+        _name = result['data']['name'] ?? 'Unknown';
+        _email = result['data']['email'] ?? 'Unknown';
+        _profileImageUrl = result['data']['avatar'] ?? _profileImageUrl;
+        _nameController.text = _name;
+        _emailController.text = _email;
+      });
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  // Chọn ảnh đại diện
   Future<void> _pickImage() async {
     final XTypeGroup typeGroup = XTypeGroup(
       label: 'images',
@@ -69,43 +89,53 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     if (file != null) {
       setState(() {
         _newImagePath = file.path;
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final result = await UserService.updateAvatar(File(file.path));
+      if (result['success']) {
+        setState(() {
+          _profileImageUrl = result['avatar'];
+          _newImagePath = '';
+        });
+        _showSuccessMessage('Cập nhật ảnh đại diện thành công!');
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
+      setState(() {
+        _isLoading = false;
       });
     }
   }
 
-  // Mock function to remove selected image
+  // Xóa ảnh đã chọn (trước khi lưu)
   void _removeImage() {
     setState(() {
       _newImagePath = '';
     });
   }
 
-  // Mock function to show success message
+  // Hiển thị thông báo thành công
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.green,
       ),
     );
   }
 
-  // Mock function to update user profile
-  void _updateUserProfile() {
-    // Update local state with new values
-    setState(() {
-      if (_nameController.text.isNotEmpty) {
-        _name = _nameController.text;
-      }
-      if (_emailController.text.isNotEmpty) {
-        _email = _emailController.text;
-      }
-      if (_addressController.text.isNotEmpty) {
-        _address = _addressController.text;
-      }
-    });
-
-    _showSuccessMessage('Cập nhật thông tin thành công!');
+  // Hiển thị thông báo lỗi
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -139,7 +169,9 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundImage: NetworkImage(_profileImageUrl),
+                      backgroundImage: _newImagePath.isNotEmpty
+                          ? FileImage(File(_newImagePath))
+                          : NetworkImage(_profileImageUrl) as ImageProvider,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -168,42 +200,57 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 ),
               ),
 
+              // Loading indicator
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator()),
+
+              // Error message
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                  ),
+                ),
+
               // Settings menu and content
               Expanded(
                 child: selectedMenu == 'Menu'
                     ? _buildSettingsMenu()
                     : Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            // Back to menu button
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: TextButton.icon(
-                                icon: Icon(Icons.arrow_back,
-                                    color: Colors.blue.shade700),
-                                label: Text(
-                                  'Quay lại menu',
-                                  style: TextStyle(color: Colors.blue.shade700),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    selectedMenu = 'Menu';
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Content
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: buildRightContent(),
-                              ),
-                            ),
-                          ],
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Back to menu button
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: TextButton.icon(
+                          icon: Icon(Icons.arrow_back,
+                              color: Colors.blue.shade700),
+                          label: Text(
+                            'Quay lại menu',
+                            style: TextStyle(color: Colors.blue.shade700),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedMenu = 'Menu';
+                              _errorMessage = null;
+                            });
+                          },
                         ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: buildRightContent(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -221,55 +268,66 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         _buildSettingsTile(
           icon: Icons.info_outline,
           title: 'Thông tin tài khoản',
-          onTap: () => setState(() => selectedMenu = 'Thông tin tài khoản'),
+          onTap: () => setState(() {
+            selectedMenu = 'Thông tin tài khoản';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.person_outline,
           title: 'Đổi tên',
-          onTap: () => setState(() => selectedMenu = 'Đổi tên'),
+          onTap: () => setState(() {
+            selectedMenu = 'Đổi tên';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.image_outlined,
           title: 'Đổi ảnh đại diện',
-          onTap: () => setState(() => selectedMenu = 'Đổi ảnh đại diện'),
+          onTap: () => setState(() {
+            selectedMenu = 'Đổi ảnh đại diện';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.email_outlined,
           title: 'Đổi Email',
-          onTap: () => setState(() => selectedMenu = 'Đổi Email'),
-        ),
-        _buildSettingsTile(
-          icon: Icons.location_on_outlined,
-          title: 'Đổi địa chỉ',
-          onTap: () => setState(() => selectedMenu = 'Đổi địa chỉ'),
+          onTap: () => setState(() {
+            selectedMenu = 'Đổi Email';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.lock_outline,
           title: 'Đổi mật khẩu',
-          onTap: () => setState(() => selectedMenu = 'Đổi mật khẩu'),
+          onTap: () => setState(() {
+            selectedMenu = 'Đổi mật khẩu';
+            _errorMessage = null;
+          }),
         ),
         const SizedBox(height: 16),
         _buildSettingsCategory('Khác'),
         _buildSettingsTile(
           icon: Icons.sync,
           title: 'Đồng bộ',
-          onTap: () => setState(() => selectedMenu = 'Đồng bộ'),
+          onTap: () => setState(() {
+            selectedMenu = 'Đồng bộ';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.info,
           title: 'Giới thiệu',
-          onTap: () => setState(() => selectedMenu = 'Giới thiệu'),
+          onTap: () => setState(() {
+            selectedMenu = 'Giới thiệu';
+            _errorMessage = null;
+          }),
         ),
         _buildSettingsTile(
           icon: Icons.logout,
           title: 'Đăng xuất',
           textColor: Colors.red,
-          onTap: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreenPhone()),
-            );
-          },
+          onTap: _logout,
         ),
       ],
     );
@@ -324,8 +382,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         return changeProfileImage();
       case 'Đổi Email':
         return changeEmail();
-      case 'Đổi địa chỉ':
-        return changeAddress();
       case 'Đổi mật khẩu':
         return changePassword();
       case 'Đồng bộ':
@@ -347,22 +403,24 @@ class _SettingsPhoneState extends State<SettingsPhone> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(_profileImageUrl),
-              fit: BoxFit.cover,
+        Center(
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: _newImagePath.isNotEmpty
+                    ? FileImage(File(_newImagePath))
+                    : NetworkImage(_profileImageUrl) as ImageProvider,
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(60),
             ),
-            borderRadius: BorderRadius.circular(60),
           ),
         ),
         const SizedBox(height: 20),
         _buildInfoRow('Họ và tên', _name),
         _buildInfoRow('Email', _email),
-        _buildInfoRow('Ngày sinh', _birthDate),
-        _buildInfoRow('Địa chỉ', _address),
       ],
     );
   }
@@ -381,21 +439,63 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         TextFormField(
           controller: _nameController,
           decoration: const InputDecoration(
-            labelText: 'Họ và tên',
+            labelText: 'Họ và tên mới',
             border: OutlineInputBorder(),
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập tên';
+            }
+            return null;
+          },
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _updateUserProfile,
+          onPressed: _isLoading ? null : _updateName,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Lưu thay đổi'),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Lưu thay đổi'),
         ),
       ],
     );
+  }
+
+  Future<void> _updateName() async {
+    if (_nameController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập tên';
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final result = await UserService.changeName(_nameController.text);
+    if (result['success']) {
+      setState(() {
+        _name = _nameController.text;
+      });
+      _showSuccessMessage(result['message']);
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Widget changeProfileImage() {
@@ -426,7 +526,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 const SizedBox(height: 10),
                 const Text('Ảnh hiện tại',
                     style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
             const SizedBox(width: 15),
@@ -440,21 +540,21 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                       decoration: BoxDecoration(
                         image: _newImagePath.isNotEmpty
                             ? DecorationImage(
-                                image: FileImage(File(_newImagePath)),
-                                fit: BoxFit.cover,
-                              )
+                          image: FileImage(File(_newImagePath)),
+                          fit: BoxFit.cover,
+                        )
                             : null,
                         borderRadius: BorderRadius.circular(8),
                         color: Colors.grey[200],
                       ),
                       child: _newImagePath.isEmpty
                           ? const Center(
-                              child: Text(
-                                'Chưa chọn ảnh',
-                                style: TextStyle(
-                                    color: Colors.black54, fontSize: 12),
-                              ),
-                            )
+                        child: Text(
+                          'Chưa chọn ảnh',
+                          style: TextStyle(
+                              color: Colors.black54, fontSize: 12),
+                        ),
+                      )
                           : null,
                     ),
                     if (_newImagePath.isNotEmpty)
@@ -479,32 +579,28 @@ class _SettingsPhoneState extends State<SettingsPhone> {
                 const SizedBox(height: 10),
                 const Text('Ảnh mới',
                     style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
               ],
             ),
           ],
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
         const SizedBox(height: 20),
         Row(
           children: [
             ElevatedButton(
-              onPressed: _pickImage,
+              onPressed: _isLoading ? null : _pickImage,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,
                 foregroundColor: Colors.white,
               ),
               child: const Text('Chọn ảnh mới'),
-            ),
-            const SizedBox(width: 10),
-            ElevatedButton(
-              onPressed: () {
-                _showSuccessMessage('Cập nhật ảnh đại diện thành công!');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Lưu thay đổi'),
             ),
           ],
         ),
@@ -521,7 +617,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        _buildInfoRow('Email', _email),
+        _buildInfoRow('Email hiện tại', _email),
         const SizedBox(height: 20),
         TextFormField(
           controller: _emailController,
@@ -529,143 +625,224 @@ class _SettingsPhoneState extends State<SettingsPhone> {
             labelText: 'Email mới',
             border: OutlineInputBorder(),
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập email';
+            }
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              return 'Email không hợp lệ';
+            }
+            return null;
+          },
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _updateUserProfile,
+          onPressed: _isLoading ? null : _updateEmail,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Lưu thay đổi'),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Lưu thay đổi'),
         ),
       ],
     );
   }
 
-  Widget changeAddress() {
+  Future<void> _updateEmail() async {
+    if (_emailController.text.isEmpty ||
+        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+            .hasMatch(_emailController.text)) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập email hợp lệ';
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final result = await UserService.changeEmail(_emailController.text);
+    if (result['success']) {
+      setState(() {
+        _email = _emailController.text;
+      });
+      _showSuccessMessage(result['message']);
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Widget changePassword() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Đổi địa chỉ',
+          'Đổi mật khẩu',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
-        _buildInfoRow('Địa chỉ', _address),
-        const SizedBox(height: 20),
         TextFormField(
-          controller: _addressController,
-          decoration: const InputDecoration(
-            labelText: 'Địa chỉ mới',
-            border: OutlineInputBorder(),
+          controller: _oldPasswordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Mật khẩu cũ',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+            border: const OutlineInputBorder(),
           ),
         ),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Mật khẩu mới',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: _confirmPasswordController,
+          obscureText: _obscureConfirmPassword,
+          decoration: InputDecoration(
+            labelText: 'Xác nhận mật khẩu',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                });
+              },
+            ),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _updateUserProfile,
+          onPressed: _isLoading ? null : _updatePassword,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Lưu thay đổi'),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Lưu thay đổi'),
         ),
       ],
     );
   }
 
-  Widget changePassword() {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        String message = '';
-        Color messageColor = Colors.black;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Đổi mật khẩu',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Mật khẩu mới',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirmPassword,
-              decoration: InputDecoration(
-                labelText: 'Xác nhận mật khẩu',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirmPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    });
-                  },
-                ),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (_passwordController.text.isEmpty ||
-                    _confirmPasswordController.text.isEmpty) {
-                  setState(() {
-                    message = 'Vui lòng điền đầy đủ thông tin mật khẩu';
-                    messageColor = Colors.red;
-                  });
-                } else if (_passwordController.text !=
-                    _confirmPasswordController.text) {
-                  setState(() {
-                    message = 'Mật khẩu không khớp';
-                    messageColor = Colors.red;
-                  });
-                } else {
-                  setState(() {
-                    message = 'Đổi mật khẩu thành công';
-                    messageColor = Colors.blue;
-                  });
-                  _showSuccessMessage('Đổi mật khẩu thành công!');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Lưu thay đổi'),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              message,
-              style:
-                  TextStyle(color: messageColor, fontWeight: FontWeight.bold),
-            ),
-          ],
-        );
-      },
+  Future<void> _updatePassword() async {
+    if (_oldPasswordController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Vui lòng điền đầy đủ thông tin';
+      });
+      return;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _errorMessage = 'Mật khẩu không khớp';
+      });
+      return;
+    }
+    if (_passwordController.text.length < 6) {
+      setState(() {
+        _errorMessage = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+      });
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final result = await UserService.changePassword(
+      _oldPasswordController.text,
+      _passwordController.text,
+      _confirmPasswordController.text,
     );
+    if (result['success']) {
+      _showSuccessMessage(result['message']);
+      _oldPasswordController.clear();
+      _passwordController.clear();
+      _confirmPasswordController.clear();
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _logout() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      // Giả định AuthService có hàm logout
+      final result = await AuthService.logout();
+      if (result['success']) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreenPhone()),
+        );
+      } else {
+        _showErrorMessage(result['message']);
+      }
+    } catch (e) {
+      _showErrorMessage('Lỗi đăng xuất: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Widget synchronize() {
@@ -678,22 +855,40 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Dữ liệu của bạn sẽ được đồng bộ với máy chủ',
+          'Đồng bộ streak và dữ liệu từ vựng với máy chủ.',
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: () {
-            _showSuccessMessage('Đã đồng bộ dữ liệu thành công!');
-          },
+          onPressed: _isLoading ? null : _syncData,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Đồng bộ ngay'),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Đồng bộ ngay'),
         ),
       ],
     );
+  }
+
+  Future<void> _syncData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    final result = await UserService.updateStreak(5); // Giả định streak là 5
+    if (result['success']) {
+      _showSuccessMessage(result['message']);
+    } else {
+      setState(() {
+        _errorMessage = result['message'];
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Widget introduction() {
@@ -706,7 +901,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Đây là ứng dụng giúp bạn học tiếng Anh hiệu quả với nhiều tính năng hữu ích như từ điển, dịch văn bản, flashcard, và các trò chơi nhỏ để luyện tập.',
+          'Dictionary là ứng dụng học tiếng Anh với các tính năng như tra từ, dịch văn bản, flashcard, và minigame. Chúng tôi giúp bạn học từ vựng hiệu quả và thú vị!',
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 20),
@@ -719,10 +914,15 @@ class _SettingsPhoneState extends State<SettingsPhone> {
           'Phát triển bởi: Nhóm SE',
           style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
         ),
+        const SizedBox(height: 10),
+        const Text(
+          'Liên hệ: support@dictionaryapp.com',
+          style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+        ),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: () {
-            // Handle learn more action
+            // Mở trang web hoặc gửi email hỗ trợ
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade700,

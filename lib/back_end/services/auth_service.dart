@@ -126,7 +126,7 @@ class AuthService {
   }
 
   // Đăng xuất
-  static Future<bool> logout() async {
+  static Future<Map<String, dynamic>> logout() async {
     try {
       await ApiService.post('logout', {});
 
@@ -134,12 +134,18 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('access_token');
 
-      return true;
+      return {
+        'success': true,
+        'message': 'Đăng xuất thành công',
+      };
     } catch (e) {
-      print('Lỗi đăng xuất: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'Lỗi đăng xuất: $e',
+      };
     }
   }
+
 
   // Kiểm tra đã đăng nhập chưa
   static Future<bool> isLoggedIn() async {
