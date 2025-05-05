@@ -1,6 +1,8 @@
+// forgotpassword_screen_phone.dart
 import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
 
 enum Step { emailEntry, pinVerification, newPassword, success }
 
@@ -18,58 +20,160 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
   final _pinController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _obsecurePassword = true;
+  bool _obscurePassword = true;
+  bool _isLoading = false;
 
   Step _currentStep = Step.emailEntry;
-
-  String? _generatedPin;
   String? _errorMessage;
+  String? _resetToken; // Lưu token từ API verify-reset
+  String? _savedEmail; // Lưu email để sử dụng lại
 
   @override
   void dispose() {
     _emailController.dispose();
+    _pinController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // Giả lập mã pin giả
-  String generatedPin() {
-    return "123456";
-  }
-
-  void _sendResetPin() {
+  // Gửi yêu cầu đặt lại mật khẩu
+  Future<void> _sendResetRequest() async {
     if (_formKey.currentState!.validate()) {
-      _generatedPin = generatedPin();
-
-      print('PIN sent to ${_emailController.text}: $_generatedPin');
-
       setState(() {
-        _currentStep = Step.pinVerification;
+        _isLoading = true;
         _errorMessage = null;
       });
-    }
-  }
 
-  void _verifyPin() {
-    if (_formKey.currentState!.validate()) {
-      if (_pinController.text == _generatedPin) {
+      try {
+        final result = await AuthService.forgotPassword(_emailController.text.trim());
+        if (result['success']) {
+          setState(() {
+            _savedEmail = _emailController.text.trim();
+            _currentStep = Step.pinVerification;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'])),
+          );
+        } else {
+          setState(() {
+            _errorMessage = result['message'];
+          });
+        }
+      } catch (e) {
         setState(() {
-          _currentStep = Step.newPassword;
-          _errorMessage = null;
+          _errorMessage = e.toString();
         });
-      } else {
+      } finally {
         setState(() {
-          _errorMessage = 'Mã PIN không đúng. Vui lòng thử lại.';
+          _isLoading = false;
         });
       }
     }
   }
 
-  void _resetPassword() {
+  // Xác minh mã OTP
+  Future<void> _verifyPin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _currentStep = Step.success;
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        final result = await AuthService.verifyResetCode(
+          _savedEmail!,
+          _pinController.text.trim(),
+        );
+        if (result['success']) {
+          setState(() {
+            _resetToken = result['token'];
+            _currentStep = Step.newPassword;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'])),
+          );
+        } else {
+          setState(() {
+            _errorMessage = result['message'];
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Đặt lại mật khẩu
+  Future<void> _resetPassword() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      try {
+        final result = await AuthService.resetPassword(
+          _savedEmail!,
+          _resetToken!,
+          _newPasswordController.text,
+          _confirmPasswordController.text,
+        );
+        if (result['success']) {
+          setState(() {
+            _currentStep = Step.success;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'])),
+          );
+        } else {
+          setState(() {
+            _errorMessage = result['message'];
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Gửi lại mã OTP
+  Future<void> _resendPin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await AuthService.forgotPassword(_savedEmail!);
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -153,13 +257,11 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
       case Step.emailEntry:
         return _buildEmailForm();
       case Step.pinVerification:
-        return _buildPinVerficationForm();
+        return _buildPinVerificationForm();
       case Step.newPassword:
         return _buildNewPasswordForm();
       case Step.success:
         return _buildSuccessMessage();
-      default:
-        return _buildEmailForm(); // Default case to satisfy non-nullable return type
     }
   }
 
@@ -182,8 +284,6 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
             style: TextStyle(color: Colors.black54),
           ),
           const SizedBox(height: 24),
-
-          //email
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
@@ -203,25 +303,35 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
               if (value == null || value.isEmpty) {
                 return 'Vui lòng nhập email';
               }
-              if (!RegExp(
-                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-              ).hasMatch(value)) {
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
                 return 'Email không hợp lệ';
               }
               return null;
             },
           ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.red, fontSize: 14),
+            ),
+          ],
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _sendResetPin,
+              onPressed: _isLoading ? null : _sendResetRequest,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: const Text(
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : const Text(
                 'XÁC NHẬN',
                 style: TextStyle(
                   fontSize: 20,
@@ -236,23 +346,25 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
     );
   }
 
-  Widget _buildPinVerficationForm() {
+  Widget _buildPinVerificationForm() {
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Text(
-            'XÁC THỰC MÃ PIN',
+            'XÁC THỰC MÃ OTP',
             style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
-            'Chúng tôi đã gửi mã pin có 6 chữ số tới ${_emailController.text}. Vui lòng nhập mã để tiếp tục',
+            'Chúng tôi đã gửi mã OTP tới ${_savedEmail}. Vui lòng nhập mã để tiếp tục',
             style: TextStyle(color: Colors.black),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           PinCodeTextField(
@@ -286,25 +398,27 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Vui lòng nhập mã PIN';
+                return 'Vui lòng nhập mã OTP';
               }
               if (value.length != 6) {
-                return 'Mã PIN phải có 6 số';
-              }
-              if (_errorMessage != null) {
-                return _errorMessage;
+                return 'Mã OTP phải có 6 số';
               }
               return null;
             },
           ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.red, fontSize: 14),
+            ),
+          ],
           const SizedBox(height: 24),
-
-          // Verify PIN button
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _verifyPin,
+              onPressed: _isLoading ? null : _verifyPin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,
                 foregroundColor: Colors.white,
@@ -313,7 +427,9 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
                 ),
                 elevation: 5,
               ),
-              child: const Text(
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : const Text(
                 'XÁC THỰC',
                 style: TextStyle(
                   fontSize: 16,
@@ -324,14 +440,12 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Resend PIN
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text('Không nhận được mã?'),
               TextButton(
-                onPressed: _sendResetPin,
+                onPressed: _isLoading ? null : _resendPin,
                 child: Text(
                   'Gửi lại',
                   style: TextStyle(
@@ -362,41 +476,40 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
           const SizedBox(height: 16),
           const Text(
             'Hãy đặt mật khẩu mới cho tài khoản của bạn',
-            style: TextStyle(
-              color: Colors.black87,
-            ),
+            style: TextStyle(color: Colors.black87),
           ),
           const SizedBox(height: 24),
           TextFormField(
             controller: _newPasswordController,
-            obscureText: _obsecurePassword,
+            obscureText: _obscurePassword,
             decoration: InputDecoration(
-                labelText: 'Mật khẩu mới',
-                hintText: 'Nhập mật khẩu mới',
-                prefixIcon: Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obsecurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obsecurePassword = !_obsecurePassword;
-                    });
-                  },
+              labelText: 'Mật khẩu mới',
+              hintText: 'Nhập mật khẩu mới',
+              prefixIcon: Icon(Icons.lock),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.blue.shade700, width: 2))),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+              ),
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Vui lòng nhập mật khẩu';
               }
               if (value.length < 8) {
-                return 'Mật khẩu phải ít nhất 8 kí tự';
+                return 'Mật khẩu phải ít nhất 8 ký tự';
               }
               return null;
             },
@@ -404,18 +517,29 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _confirmPasswordController,
-            obscureText: true,
+            obscureText: _obscurePassword,
             decoration: InputDecoration(
-                labelText: 'Xác nhận mật khẩu',
-                hintText: 'Nhập lại mật khẩu mới',
-                prefixIcon: Icon(Icons.lock_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              labelText: 'Xác nhận mật khẩu',
+              hintText: 'Nhập lại mật khẩu mới',
+              prefixIcon: Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
                 ),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.blue.shade700, width: 2))),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue.shade700, width: 2),
+              ),
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Vui lòng xác nhận mật khẩu';
@@ -426,26 +550,38 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
               return null;
             },
           ),
+          if (_errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: Colors.red, fontSize: 14),
+            ),
+          ],
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-                onPressed: _resetPassword,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade700,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    )),
-                child: const Text(
-                  'XÁC NHẬN',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1),
-                )),
-          )
+              onPressed: _isLoading ? null : _resetPassword,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                'XÁC NHẬN',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -483,7 +619,10 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
           height: 50,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreenPhone()));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreenPhone()),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue.shade700,

@@ -50,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final deviceName = await _getDeviceName();
-      final success = await AuthService.register(
+      final result = await AuthService.register(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
@@ -58,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         deviceName,
       );
 
-      if (success) {
+      if (result['success']) {
         // Đăng ký thành công, chuyển đến trang home
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/HomeScreenDesktop');

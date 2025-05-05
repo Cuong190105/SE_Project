@@ -21,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
-  bool _isLoading = false; // Thêm biến để kiểm soát trạng thái loading
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -55,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
 
       try {
         final deviceName = await _getDeviceName();
-        final success = await AuthService.register(
+        final result = await AuthService.register(
           _nameController.text.trim(),
           _emailController.text.trim(),
           _passwordController.text,
@@ -63,21 +63,32 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
           deviceName,
         );
 
-        if (success) {
+        if (result['success']) {
           // Đăng ký thành công
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đăng ký thành công!')),
+            SnackBar(
+              content: Text(
+                  'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.'),
+            ),
           );
+          // Gợi ý gửi lại email xác thực nếu cần
+          await Future.delayed(Duration(seconds: 2));
+          final resendResult = await AuthService.resendVerificationEmail();
+          if (resendResult['success']) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(resendResult['message'])),
+            );
+          }
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => HomeScreenPhone(),
+              builder: (context) => LoginScreenPhone(),
             ),
           );
         } else {
           // Đăng ký thất bại
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đăng ký thất bại. Vui lòng thử lại.')),
+            SnackBar(content: Text(result['message'])),
           );
         }
       } catch (e) {
@@ -92,6 +103,10 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
           });
         }
       }
+    } else if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Vui lòng đồng ý với Điều khoản dịch vụ')),
+      );
     }
   }
 
@@ -147,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                   ),
                   const SizedBox(height: 40),
 
-                  //Form registration
+                  // Form registration
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -203,7 +218,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                           ),
                           const SizedBox(height: 16),
 
-                          //email
+                          // Email
                           TextFormField(
                             controller: _emailController,
                             decoration: InputDecoration(
@@ -235,7 +250,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                           ),
                           const SizedBox(height: 16),
 
-                          //password
+                          // Password
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -278,7 +293,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                           ),
                           const SizedBox(height: 16),
 
-                          //confirm pass
+                          // Confirm password
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirmPassword,
@@ -322,7 +337,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                           ),
                           const SizedBox(height: 16),
 
-                          //term
+                          // Terms
                           Row(
                             children: [
                               Checkbox(
@@ -365,7 +380,7 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                           ),
                           const SizedBox(height: 24),
 
-                          //register button
+                          // Register button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
