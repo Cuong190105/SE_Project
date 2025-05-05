@@ -1,5 +1,6 @@
 import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:flutter/material.dart';
+import 'database_SQLite/database_helper.dart';
 import 'screens_desktop/home_desktop.dart';
 import 'screens_phone/home_phone.dart';
 import 'authentic/register_screen.dart';
@@ -13,6 +14,9 @@ import 'screens_phone/flashcard/flashcard_models.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Đảm bảo flashcard mẫu được chèn
+  await DatabaseHelper.instance.database; // Khởi tạo DB trước
+  await DatabaseHelper.instance.ensureSampleFlashcards();
   // Đồng bộ flashcard khi khởi động
   await FlashcardManager.syncOnStartup();
 
@@ -39,6 +43,7 @@ class MainApp extends StatelessWidget {
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
         home: SplashScreen(),
+        //SplashScreen(),
       );
     }
   }

@@ -50,13 +50,13 @@ class _LoginScreenState extends State<LoginScreenPhone> {
 
       try {
         final deviceName = await _getDeviceName();
-        final success = await AuthService.login(
+        final result = await AuthService.login(
           _emailController.text.trim(),
           _passwordController.text,
           deviceName,
         );
 
-        if (success) {
+        if (result['success']) {
           // Đăng nhập thành công
           Navigator.pushReplacement(
             context,

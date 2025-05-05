@@ -35,6 +35,7 @@ dependencies:
   pin_code_fields: ^8.0.0
   html: ^0.15.4
   intl: ^0.18.1
+  connectivity_plus: ^6.0.5
 
 dev_dependencies:
   flutter_test:

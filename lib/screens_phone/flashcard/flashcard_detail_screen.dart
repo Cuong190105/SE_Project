@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'flashcard_models.dart';
-import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter/foundation.dart';
 
 class FlashcardDetailScreen extends StatefulWidget {
   const FlashcardDetailScreen({super.key});
@@ -23,7 +23,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   }
 
   Future<void> _loadFlashcardSet() async {
-    debugPrint('Loading flashcard set...');
+    debugPrint('Đang tải bộ thẻ...');
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -35,12 +35,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
       final sets = await FlashcardManager.getSets();
       if (sets.isEmpty) {
-        debugPrint('No flashcard sets available.');
+        debugPrint('Không có bộ thẻ nào cho người dùng hiện tại.');
         setState(() {
-          flashcardSet = _createEmptySet();
           _isLoading = false;
-          currentCardIndex = 0;
-          _isFlipped = false;
+          _errorMessage = 'Chưa có bộ thẻ nào. Nhấn + để tạo bộ thẻ mới.';
         });
         return;
       }
@@ -54,30 +52,19 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         flashcardSet = sets.first;
       }
 
-      debugPrint('Loaded flashcard set: ${flashcardSet!.id}');
+      debugPrint('Đã tải bộ thẻ: ${flashcardSet!.id}');
       setState(() {
         _isLoading = false;
         currentCardIndex = 0;
         _isFlipped = false;
       });
     } catch (e, stackTrace) {
-      debugPrint('Error loading flashcard set: $e\n$stackTrace');
+      debugPrint('Lỗi tải bộ thẻ: $e\n$stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Lỗi tải bộ thẻ: $e';
+        _errorMessage = 'Không thể tải bộ thẻ. Vui lòng kiểm tra kết nối và thử lại.';
       });
     }
-  }
-
-  FlashcardSet _createEmptySet() {
-    return FlashcardSet(
-      id: 'empty',
-      name: 'Bộ thẻ trống',
-      cards: [],
-      color: Colors.blue.shade700,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
   }
 
   void _flipCard() {
@@ -123,6 +110,13 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              if (flashcardSet == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Vui lòng tạo bộ thẻ trước')),
+                );
+                Navigator.pop(context);
+                return;
+              }
               if (frontController.text.trim().isNotEmpty &&
                   backController.text.trim().isNotEmpty) {
                 setState(() {
@@ -229,7 +223,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   void _showRenameSetDialog() {
     final TextEditingController nameController =
-    TextEditingController(text: flashcardSet!.name);
+    TextEditingController(text: flashcardSet?.name ?? '');
 
     showDialog(
       context: context,
@@ -250,6 +244,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              if (flashcardSet == null) {
+                Navigator.pop(context);
+                return;
+              }
               if (nameController.text.trim().isNotEmpty) {
                 setState(() {
                   _isLoading = true;
@@ -314,6 +312,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     if (flashcardSet == null) {
       return Scaffold(
         body: Center(child: Text('Không tìm thấy bộ thẻ')),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.blue.shade700,
+          child: const Icon(Icons.add, color: Colors.white),
+          onPressed: null, // Vô hiệu hóa nút khi không có bộ thẻ
+        ),
       );
     }
 
@@ -457,7 +460,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: color,
         child: const Icon(Icons.add, color: Colors.white),
-        onPressed: _showAddCardDialog,
+        onPressed: flashcardSet == null ? null : _showAddCardDialog,
       ),
     );
   }
@@ -712,7 +715,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     );
   }
 
-  // Helper function to get minimum of two integers
   int min(int a, int b) {
     return a < b ? a : b;
   }

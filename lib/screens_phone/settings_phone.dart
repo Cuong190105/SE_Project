@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:eng_dictionary/back_end/services/user_service.dart';
@@ -7,9 +8,9 @@ import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
 
 class SettingsPhone extends StatefulWidget {
-  final int userId;
+  final String userEmail;
 
-  const SettingsPhone({super.key, required this.userId});
+  const SettingsPhone({super.key, required this.userEmail});
 
   @override
   State<SettingsPhone> createState() => _SettingsPhoneState();
@@ -656,6 +657,10 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     if (result['success']) {
       setState(() {
         _email = _emailController.text;
+        // Cập nhật user_email trong SharedPreferences
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setString('user_email', _emailController.text);
+        });
       });
       _showSuccessMessage(result['message']);
     } else {
@@ -762,7 +767,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'Vui lòng đ suspicions đầy đủ thông tin';
+        _errorMessage = 'Vui lòng điền đầy đủ thông tin';
       });
       return;
     }
@@ -921,7 +926,7 @@ class _SettingsPhoneState extends State<SettingsPhone> {
       child: Row(
         children: [
           Text(
-            '$label: #',
+            '$label: ',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Expanded(

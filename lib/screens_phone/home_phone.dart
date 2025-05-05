@@ -1,7 +1,8 @@
 import 'package:eng_dictionary/screens_phone/settings_phone.dart';
 import 'package:eng_dictionary/screens_phone/flashcard/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_phone/minigame/minigame_screen_phone.dart';
-import '../screens_phone/vocabularies.dart';
+import 'package:eng_dictionary/screens_phone/vocabularies.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'translate_phone.dart';
 import 'search_phone.dart';
@@ -15,6 +16,22 @@ class HomeScreenPhone extends StatefulWidget {
 
 class _HomeScreenPhoneState extends State<HomeScreenPhone> {
   TextEditingController _controller = TextEditingController();
+  int streakCount = 0;
+  String? userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final email = await AuthService.getUserEmail();
+    setState(() {
+      userEmail = email;
+      streakCount = 5; // TODO: Thay bằng logic lấy streak từ server hoặc local
+    });
+  }
 
   @override
   void dispose() {
@@ -24,7 +41,6 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
 
   @override
   Widget build(BuildContext context) {
-    int streakCount = 5;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -63,8 +79,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
             icon: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-              color: Colors.blue.shade100,
-              shape: BoxShape.circle,
+                color: Colors.blue.shade100,
+                shape: BoxShape.circle,
               ),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
@@ -72,7 +88,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => SettingsPhone(userId: 1)),
+                  builder: (context) => SettingsPhone(userEmail: userEmail ?? ''),
+                ),
               );
             },
           ),
@@ -93,7 +110,6 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // App logo and name
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -125,10 +141,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                 ),
                 const SizedBox(height: 30),
                 SearchPhone(controller: _controller),
-
                 const SizedBox(height: 40),
-
-                // Feature buttons grid
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 2,
@@ -143,7 +156,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const TranslatePhone()),
+                              builder: (context) => const TranslatePhone(),
+                            ),
                           ).then((_) {
                             _controller.clear();
                           });
@@ -157,7 +171,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const Vocabularies()),
+                              builder: (context) => const Vocabularies(),
+                            ),
                           ).then((_) {
                             _controller.clear();
                           });
@@ -171,7 +186,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => FlashcardScreen()),
+                              builder: (context) => FlashcardScreen(),
+                            ),
                           ).then((_) {
                             _controller.clear();
                           });
@@ -185,7 +201,8 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => MinigameScreen()),
+                              builder: (context) => MinigameScreen(),
+                            ),
                           ).then((_) {
                             _controller.clear();
                           });
@@ -229,19 +246,19 @@ class FeatureButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             Icon(icon, size: 40, color: color),
-        const SizedBox(height: 16),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
+            const SizedBox(height: 16),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
           ],
         ),
       ),

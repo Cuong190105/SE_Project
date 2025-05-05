@@ -1,8 +1,8 @@
-// forgotpassword_screen_phone.dart
 import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
 
 enum Step { emailEntry, pinVerification, newPassword, success }
 
@@ -25,8 +25,8 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
 
   Step _currentStep = Step.emailEntry;
   String? _errorMessage;
-  String? _resetToken; // Lưu token từ API verify-reset
-  String? _savedEmail; // Lưu email để sử dụng lại
+  String? _resetToken;
+  String? _savedEmail;
 
   @override
   void dispose() {
@@ -37,7 +37,6 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
     super.dispose();
   }
 
-  // Gửi yêu cầu đặt lại mật khẩu
   Future<void> _sendResetRequest() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -72,7 +71,6 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
     }
   }
 
-  // Xác minh mã OTP
   Future<void> _verifyPin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -110,7 +108,6 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
     }
   }
 
-  // Đặt lại mật khẩu
   Future<void> _resetPassword() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -126,6 +123,8 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
           _confirmPasswordController.text,
         );
         if (result['success']) {
+          // Đồng bộ flashcard sau khi đặt lại mật khẩu
+          await FlashcardManager.syncOnStartup();
           setState(() {
             _currentStep = Step.success;
           });
@@ -149,7 +148,6 @@ class _ForgotpasswordScreenPhoneState extends State<ForgotpasswordScreenPhone> {
     }
   }
 
-  // Gửi lại mã OTP
   Future<void> _resendPin() async {
     setState(() {
       _isLoading = true;

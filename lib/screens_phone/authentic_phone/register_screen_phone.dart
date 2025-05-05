@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../home_phone.dart';
-import 'login_screen_phone.dart';
-import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
-import 'package:device_info_plus/device_info_plus.dart'; // Thêm package này
+import 'package:eng_dictionary/screens_phone/home_phone.dart';
+import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
 class RegisterScreenPhone extends StatefulWidget {
@@ -22,6 +23,8 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
   bool _isLoading = false;
+  bool _canResendEmail = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -32,7 +35,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
     super.dispose();
   }
 
-  // Hàm để lấy tên thiết bị
   Future<String> _getDeviceName() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
@@ -46,11 +48,11 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
     }
   }
 
-  // Hàm xử lý đăng ký
   Future<void> _handleRegister() async {
     if (_formKey.currentState!.validate() && _agreeToTerms) {
       setState(() {
         _isLoading = true;
+        _errorMessage = null;
       });
 
       try {
@@ -64,38 +66,36 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
         );
 
         if (result['success']) {
-          // Đăng ký thành công
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                  'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.'),
-            ),
-          );
-          // Gợi ý gửi lại email xác thực nếu cần
-          await Future.delayed(Duration(seconds: 2));
-          final resendResult = await AuthService.resendVerificationEmail();
-          if (resendResult['success']) {
+          // Đồng bộ flashcard nếu server tự động đăng nhập
+          if (await AuthService.isLoggedIn()) {
+            await FlashcardManager.syncOnStartup();
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreenPhone()),
+            );
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(resendResult['message'])),
+              SnackBar(
+                content: Text(
+                    'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.'),
+              ),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LoginScreenPhone(),
+              ),
             );
           }
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => LoginScreenPhone(),
-            ),
-          );
         } else {
-          // Đăng ký thất bại
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'])),
-          );
+          setState(() {
+            _errorMessage = result['message'];
+          });
         }
       } catch (e) {
-        // Xử lý lỗi
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: ${e.toString()}')),
-        );
+        setState(() {
+          _errorMessage = 'Lỗi: ${e.toString()}';
+        });
       } finally {
         if (mounted) {
           setState(() {
@@ -104,9 +104,53 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
         }
       }
     } else if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vui lòng đồng ý với Điều khoản dịch vụ')),
+      setState(() {
+        _errorMessage = 'Vui lòng đồng ý với Điều khoản dịch vụ';
+      });
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    if (!_canResendEmail) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _canResendEmail = false;
+    });
+
+    try {
+      final result = await AuthService.resendVerificationEmail(
+        _emailController.text.trim(),
       );
+
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Lỗi: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Cho phép gửi lại sau 30 giây
+        Future.delayed(Duration(seconds: 30), () {
+          if (mounted) {
+            setState(() {
+              _canResendEmail = true;
+            });
+          }
+        });
+      }
     }
   }
 
@@ -137,7 +181,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo and app name
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -161,8 +204,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                     ),
                   ),
                   const SizedBox(height: 40),
-
-                  // Form registration
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -190,8 +231,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // Name field
                           TextFormField(
                             controller: _nameController,
                             decoration: InputDecoration(
@@ -217,8 +256,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             },
                           ),
                           const SizedBox(height: 16),
-
-                          // Email
                           TextFormField(
                             controller: _emailController,
                             decoration: InputDecoration(
@@ -249,8 +286,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             },
                           ),
                           const SizedBox(height: 16),
-
-                          // Password
                           TextFormField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
@@ -292,8 +327,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             },
                           ),
                           const SizedBox(height: 16),
-
-                          // Confirm password
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: _obscureConfirmPassword,
@@ -336,8 +369,6 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             },
                           ),
                           const SizedBox(height: 16),
-
-                          // Terms
                           Row(
                             children: [
                               Checkbox(
@@ -378,9 +409,14 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                               ),
                             ],
                           ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              style: TextStyle(color: Colors.red, fontSize: 14),
+                            ),
+                          ],
                           const SizedBox(height: 24),
-
-                          // Register button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -410,8 +446,25 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // Login link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Không nhận được email xác thực?'),
+                              TextButton(
+                                onPressed: _canResendEmail && !_isLoading
+                                    ? _resendVerificationEmail
+                                    : null,
+                                child: Text(
+                                  'Gửi lại',
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

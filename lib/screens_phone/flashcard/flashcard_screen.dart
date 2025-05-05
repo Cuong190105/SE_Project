@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'flashcard_models.dart';
 import 'flashcard_detail_screen.dart';
-import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter/foundation.dart';
 
 class FlashcardScreen extends StatefulWidget {
   const FlashcardScreen({super.key});
@@ -319,7 +319,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               settings: RouteSettings(arguments: {'setId': set.id}),
             ),
           ).then((_) {
-            _loadData(); // Làm mới dữ liệu khi quay lại
+            _loadData();
           });
         },
         borderRadius: BorderRadius.circular(16),
@@ -431,14 +431,32 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    set.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          set.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (set.isSample)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Text(
+                            'Mẫu',
+                            style: TextStyle(
+                              color: Colors.blue.shade700,
+                              fontStyle: FontStyle.italic,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text('${set.totalCards} thẻ',
