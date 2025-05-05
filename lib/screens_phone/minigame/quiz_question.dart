@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/services.dart' show rootBundle;
 
 class QuizQuestion {
   final String question;
@@ -22,59 +23,88 @@ enum QuestionType {
   fillInTheBlank,
 }
 
+class Vocabulary {
+  final String word;
+  final String definition;
+
+  Vocabulary({required this.word, required this.definition});
+}
+
 class QuizManager {
-  static final List<QuizQuestion> _questions = [
-    QuizQuestion(
-      question: 'What is the meaning of "Gay"?',
-      options: ['Đẹp trai', 'Vai gãy', 'con chó', 'con gà'],
-      correctAnswerIndex: 1,
-      explanation: '"Gay" means "Vai gãy" in Vietnamese.',
-    ),
-    QuizQuestion(
-      question: 'Ai đẹp trai nhất nhóm".',
-      options: ['Tuấn', 'Giống câu A', 'Giống câu B', 'Cả 3 đáp án trên'],
-      correctAnswerIndex: 3,
-      explanation: '"No need explanation',
-    ),
-    QuizQuestion(
-      question: 'What does "supercalifragilisticexpialidocious" mean?',
-      options: ['Tuyệt vời', 'ko biết', 'buồn', 'vui'],
-      correctAnswerIndex: 0,
-      explanation:
-          '"supercalifragilisticexpialidocious" means "tuyệt vời" in Vietnamese.',
-    ),
-    QuizQuestion(
-      question: '1 + 1 = ?".',
-      options: ['2', '3', '4', '5'],
-      correctAnswerIndex: 0,
-      explanation: '"2',
-    ),
-    QuizQuestion(
-      question: 'Bạn có gay ko?',
-      options: ['có', 'có', 'có', 'có'],
-      correctAnswerIndex: 0,
-      explanation: '"ok',
-    ),
-  ];
+  static List<Vocabulary> _vocabulary = [];
 
-  static List<QuizQuestion> getRandomQuestions(int count) {
-    if (count >= _questions.length) {
-      return List.from(_questions);
+  // Tải từ vựng từ file JSON
+  static Future<void> loadVocabulary() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/vocabulary.json');
+      final List<dynamic> jsonData = jsonDecode(jsonString);
+      _vocabulary = jsonData.map((json) => Vocabulary(
+        word: json['word'],
+        definition: json['definition'],
+      )).toList();
+    } catch (e) {
+      print('Lỗi khi tải từ vựng: $e');
+      // Dữ liệu dự phòng
+      _vocabulary = [
+        Vocabulary(word: 'Happy', definition: 'Vui vẻ'),
+        Vocabulary(word: 'Sad', definition: 'Buồn bã'),
+        Vocabulary(word: 'Angry', definition: 'Tức giận'),
+        Vocabulary(word: 'Tired', definition: 'Mệt mỏi'),
+        Vocabulary(word: 'Big', definition: 'Lớn'),
+        Vocabulary(word: 'Small', definition: 'Nhỏ'),
+        Vocabulary(word: 'Fast', definition: 'Nhanh'),
+        Vocabulary(word: 'Slow', definition: 'Chậm'),
+        Vocabulary(word: 'Beautiful', definition: 'Xinh đẹp'),
+        Vocabulary(word: 'Ugly', definition: 'Xấu xí'),
+        Vocabulary(word: 'Strong', definition: 'Mạnh mẽ'),
+        Vocabulary(word: 'Weak', definition: 'Yếu đuối'),
+      ];
     }
+  }
 
+  // Tạo 10 câu hỏi trắc nghiệm ngẫu nhiên
+  static List<QuizQuestion> generateQuizQuestions() {
     final random = Random();
-    final List<QuizQuestion> selectedQuestions = [];
-    final List<int> indices =
-        List.generate(_questions.length, (index) => index);
+    final List<QuizQuestion> questions = [];
+    final List<int> selectedIndices = [];
 
-    // Shuffle the indices
-    indices.shuffle(random);
-
-    // Take the first 'count' indices
-    for (int i = 0; i < count; i++) {
-      selectedQuestions.add(_questions[indices[i]]);
+    // Chọn 10 từ ngẫu nhiên
+    while (selectedIndices.length < 10 && selectedIndices.length < _vocabulary.length) {
+      final index = random.nextInt(_vocabulary.length);
+      if (!selectedIndices.contains(index)) {
+        selectedIndices.add(index);
+      }
     }
 
-    return selectedQuestions;
+    for (int i = 0; i < selectedIndices.length; i++) {
+      final vocab = _vocabulary[selectedIndices[i]];
+      final correctDefinition = vocab.definition;
+      final options = [correctDefinition];
+
+      // Chọn 3 đáp án sai ngẫu nhiên
+      while (options.length < 4) {
+        final wrongIndex = random.nextInt(_vocabulary.length);
+        final wrongDefinition = _vocabulary[wrongIndex].definition;
+        if (wrongIndex != selectedIndices[i] && !options.contains(wrongDefinition)) {
+          options.add(wrongDefinition);
+        }
+      }
+
+      // Xáo trộn đáp án
+      options.shuffle(random);
+      final correctAnswerIndex = options.indexOf(correctDefinition);
+
+      questions.add(
+        QuizQuestion(
+          question: 'Nghĩa của từ "${vocab.word}" là gì?',
+          options: options,
+          correctAnswerIndex: correctAnswerIndex,
+          explanation: 'Từ "${vocab.word}" có nghĩa là "$correctDefinition" trong tiếng Việt.',
+          type: QuestionType.multipleChoice,
+        ),
+      );
+    }
+
+    return questions;
   }
 }

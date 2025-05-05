@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'quiz_question.dart';
+import 'dart:async';
 
 class QuizGameScreenPhone extends StatefulWidget {
   const QuizGameScreenPhone({super.key});
@@ -9,44 +10,98 @@ class QuizGameScreenPhone extends StatefulWidget {
 }
 
 class _QuizGameScreenState extends State<QuizGameScreenPhone> {
-  late QuizQuestion currentQuestion;
+  late List<QuizQuestion> questions;
+  int currentQuestionIndex = 0;
   int? selectedAnswerIndex;
   bool isAnswerChecked = false;
   int correctAnswers = 0;
   int totalAnswered = 0;
+  int timeLeft = 30;
+  Timer? timer;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Get a random question to start
-    currentQuestion = QuizManager.getRandomQuestions(1).first;
+    loadQuestions();
+  }
+
+  Future<void> loadQuestions() async {
+    await QuizManager.loadVocabulary();
+    setState(() {
+      questions = QuizManager.generateQuizQuestions();
+      isLoading = false;
+      startTimer();
+    });
+  }
+
+  void startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (timeLeft > 0) {
+          timeLeft--;
+        } else {
+          timer.cancel();
+          checkAnswer(-1); // Hết giờ, coi như trả lời sai
+        }
+      });
+    });
   }
 
   void checkAnswer(int index) {
     if (isAnswerChecked) return;
 
+    timer?.cancel();
     setState(() {
       selectedAnswerIndex = index;
       isAnswerChecked = true;
       totalAnswered++;
 
-      if (index == currentQuestion.correctAnswerIndex) {
+      if (index == questions[currentQuestionIndex].correctAnswerIndex) {
         correctAnswers++;
       }
     });
   }
 
   void nextQuestion() {
-    setState(() {
-      // random câu hỏi
-      currentQuestion = QuizManager.getRandomQuestions(1).first;
-      selectedAnswerIndex = null;
-      isAnswerChecked = false;
-    });
+    timer?.cancel();
+    if (currentQuestionIndex + 1 >= questions.length) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QuizResultScreen(
+            correctAnswers: correctAnswers,
+            totalQuestions: totalAnswered,
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        currentQuestionIndex++;
+        selectedAnswerIndex = null;
+        isAnswerChecked = false;
+        timeLeft = 30;
+        startTimer();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final currentQuestion = questions[currentQuestionIndex];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade700,
@@ -59,6 +114,21 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
           children: [
             const SizedBox(height: 24),
 
+            // Timer
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Thời gian: $timeLeft giây',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Question
             Container(
               padding: const EdgeInsets.all(16),
@@ -70,9 +140,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
               child: Column(
                 children: [
                   Text(
-                    currentQuestion.type == QuestionType.multipleChoice
-                        ? 'Chọn đáp án đúng'
-                        : 'Điền từ thích hợp',
+                    'Câu ${currentQuestionIndex + 1}/10',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -101,7 +169,6 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
                   final isCorrect = index == currentQuestion.correctAnswerIndex;
                   final isSelected = index == selectedAnswerIndex;
 
-                  // Determine the button color based on selection and correctness
                   Color? buttonColor;
                   Color? textColor;
                   IconData? trailingIcon;
@@ -121,15 +188,11 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12.0),
                     child: ElevatedButton(
-                      onPressed:
-                          isAnswerChecked ? null : () => checkAnswer(index),
+                      onPressed: isAnswerChecked ? null : () => checkAnswer(index),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor ?? Colors.white,
                         foregroundColor: textColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
@@ -139,9 +202,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
                             width: 2,
                           ),
                         ),
-                        elevation: isAnswerChecked && (isCorrect || isSelected)
-                            ? 4
-                            : 1,
+                        elevation: isAnswerChecked && (isCorrect || isSelected) ? 4 : 1,
                       ),
                       child: Row(
                         children: [
@@ -176,7 +237,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
               ),
             ),
 
-            // Explanation when answer is checked
+            // Explanation
             if (isAnswerChecked && currentQuestion.explanation.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
@@ -217,14 +278,86 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Tiếp theo',
-                  style: TextStyle(
+                child: Text(
+                  currentQuestionIndex + 1 == questions.length ? 'Kết thúc' : 'Tiếp theo',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class QuizResultScreen extends StatelessWidget {
+  final int correctAnswers;
+  final int totalQuestions;
+
+  const QuizResultScreen({
+    super.key,
+    required this.correctAnswers,
+    required this.totalQuestions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Kết quả', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue.shade700,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Bạn trả lời đúng $correctAnswers/$totalQuestions câu!',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QuizGameScreenPhone(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Chơi lại',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey.shade300,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Quay lại',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
       ),
