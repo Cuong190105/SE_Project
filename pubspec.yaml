@@ -36,6 +36,9 @@ dependencies:
   html: ^0.15.4
   intl: ^0.18.1
   connectivity_plus: ^6.0.5
+  test: ^1.24.0
+  mockito: ^5.4.2
+  build_runner: ^2.4.6
 
 dev_dependencies:
   flutter_test:
