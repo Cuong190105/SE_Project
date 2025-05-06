@@ -13,6 +13,7 @@ class Vocabularies extends StatefulWidget {
   @override
   _Vocabularies createState() => _Vocabularies();
 }
+
 class _Vocabularies extends State<Vocabularies> {
 
   late Future<List<Map<String, dynamic>>> _wordDetailsFuture;
@@ -52,9 +53,7 @@ class _Vocabularies extends State<Vocabularies> {
   @override
   void initState() {
     super.initState();
-    _wordDetailsFuture = parseWordDetails();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -64,78 +63,71 @@ class _Vocabularies extends State<Vocabularies> {
     bool _isHovering = false; // hiệu ứng khi di chuột trở về
     bool _isHoveringT = false; // hiệu ứng khi di chuột trở về
     bool isHoveringIcon = false;
-
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.blue.shade300,
-              elevation: 0,
-              leadingWidth: screenWidth,
-              leading: Stack(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue.shade300,
+        elevation: 0,
+        leadingWidth: screenWidth,
+        leading: Stack(
+          children: [
+            Center(
+              child: Column(
                 children: [
-                  Center(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'DICTIONARY',
-                            softWrap: false,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade800,
-                              letterSpacing: 2,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      'DICTIONARY',
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                  StatefulBuilder(
+                    builder: (context, setState) {
+
+                      return MouseRegion(
+                        onEnter: (_) => setState(() => isHoveringIcon = true),
+                        onExit: (_) => setState(() => isHoveringIcon = false),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeScreenDesktop()),
+                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
+                            );
+                          },
+                          customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.shade100,
+                                  blurRadius: 2,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.book,
+                              size: 20,
+                              color: Colors.blue.shade700,
                             ),
                           ),
                         ),
-                        StatefulBuilder(
-                          builder: (context, setState) {
-                            return MouseRegion(
-                              onEnter: (_) =>
-                                  setState(() => isHoveringIcon = true),
-                              onExit: (_) =>
-                                  setState(() => isHoveringIcon = false),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(builder: (
-                                        context) => const HomeScreenDesktop()),
-                                        (
-                                        route) => false, // Điều này sẽ loại bỏ toàn bộ các trang trong stack
-                                  );
-                                },
-                                customBorder: const CircleBorder(),
-                                // Để hiệu ứng nhấn bo tròn đúng hình
-                                child: Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: isHoveringIcon
-                                        ? Colors.grey.shade300
-                                        : Colors.white, // Hover đổi màu
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blue.shade100,
-                                        blurRadius: 2,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.book,
-                                    size: 20,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  /*Align(
+                ],
+              ),
+            ),
+            /*Align(
               alignment: Alignment.center,
               child: Container(
                 width: screenWidth / 2,
@@ -161,40 +153,28 @@ class _Vocabularies extends State<Vocabularies> {
                 ),
               ),
             ),*/
-                ],
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Text(
+                "$streakCount",
+                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              actions: [
-                Row(
-                  children: [
-                    Text(
-                      "$streakCount",
-                      style: const TextStyle(fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    const Icon(
-                        Icons.local_fire_department, color: Colors.orange,
-                        size: 32),
-                  ],
-                ),
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                        color: Colors.blue.shade100, shape: BoxShape.circle),
-                    child: Icon(
-                        Icons.person, color: Colors.blue.shade700, size: 20),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) =>
-                          Settings(userId: 1)),
-                    );
-                  },
-                ),
-              ],
+              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
+            ],
+          ),
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
+              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
+            onPressed: () {},
+          ),
+        ],
+      ),
 
             body: Container(
               decoration: BoxDecoration(
@@ -253,7 +233,7 @@ class _Vocabularies extends State<Vocabularies> {
                                           ),
                                         ],
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
                               );
@@ -319,23 +299,27 @@ class _Vocabularies extends State<Vocabularies> {
                                     // xóa trên database
                                   });
                                 },
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    );
 
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                   }
                 }),
                     const SizedBox(height: 24),
                   ],
                 ),
 
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
-          );
-        }
+          ),
+
+        ),
+      ),
+    );
+  }
 
   // Nút quay lại
   Widget buttonBack(BuildContext context) {
@@ -1922,4 +1906,5 @@ class _UpdateWordState extends State<UpdateWord> {
   }
 
 }
+
 

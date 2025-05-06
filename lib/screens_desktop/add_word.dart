@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_desktop.dart';
 import 'settings.dart';
 
@@ -157,10 +158,13 @@ class _AddWordState extends State<AddWord> {
               decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {
+            onPressed: () async {
+              // Lấy userEmail từ SharedPreferences
+              final prefs = await SharedPreferences.getInstance();
+              final userEmail = prefs.getString('user_email') ?? 'default@example.com';
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+                MaterialPageRoute(builder: (context) => SettingsPhone(userEmail: userEmail)),
               );
             },
           ),
@@ -234,6 +238,7 @@ class _AddWordState extends State<AddWord> {
                     children: [
 
                       // Từ vựng
+
                       TextField (
                         controller: wordController,
                         decoration: InputDecoration(
@@ -245,9 +250,8 @@ class _AddWordState extends State<AddWord> {
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
                         ),
+                        maxLines: 1, // Không cho xuống dòng
                       ),
-                      maxLines: 1, // Không cho xuống dòng
-                    ),
                       SizedBox(height: 10, width: screenWidth),
 
                       ...meaningBoxes,
@@ -255,6 +259,7 @@ class _AddWordState extends State<AddWord> {
 
                       // xóa thêm nghĩa
                       Row(
+
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Padding(
@@ -279,8 +284,9 @@ class _AddWordState extends State<AddWord> {
                                 child: Text('Thêm ý nghĩa'),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10, width: screenWidth),
 
                       __buildLabeledTextField('Từ đồng nghĩa', controller: synonym),
@@ -314,8 +320,8 @@ class _AddWordState extends State<AddWord> {
                         child: Text('Lưu từ vựng'),
                       ),
                     ],
-              ),
-            ),
+                  ),
+                ),
 
                 const SizedBox(height: 24),
               ],
@@ -468,6 +474,7 @@ class _AddWordState extends State<AddWord> {
 
         // Phiên âm
         SizedBox(width: 8),
+
         AddSoundButton(size: 861, audioPlayer: audioPlayer,),
       ],
     );
@@ -779,13 +786,13 @@ class _AddSoundButtonState extends State<AddSoundButton> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Đã chọn file âm thanh: ${file.name} thành công',
-                style: TextStyle(color: Colors.white), // chữ trắng
-              ),
-              backgroundColor: Colors.blue,
+          SnackBar(
+            content: Text(
+              'Đã chọn file âm thanh: ${file.name} thành công',
+              style: TextStyle(color: Colors.white), // chữ trắng
             ),
+            backgroundColor: Colors.blue,
+          ),
         );
 
       } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'translate.dart';
 import 'vocabularies.dart';
 import 'vocabulary.dart';
@@ -9,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'search.dart';
 import 'package:eng_dictionary/screens_desktop/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_desktop/minigame_screen_phone.dart';
+
 class HomeScreenDesktop extends StatefulWidget {
   const HomeScreenDesktop({super.key});
 
@@ -56,10 +58,13 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
               ),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {
+            onPressed: () async {
+              // Lấy userEmail từ SharedPreferences
+              final prefs = await SharedPreferences.getInstance();
+              final userEmail = prefs.getString('user_email') ?? 'default@example.com';
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+                MaterialPageRoute(builder: (context) => SettingsPhone(userEmail: userEmail)),
               );
             },
           ),
@@ -180,6 +185,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                     height: (availableHeight-space)/2,
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => FlashcardScreen()));
+
                     },
                   ),
                   FeatureButton(

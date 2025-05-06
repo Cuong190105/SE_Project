@@ -8,17 +8,15 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class Search extends StatefulWidget {
-
   TextEditingController controller = TextEditingController();
 
-  Search({Key? key, required this.controller,}) : super(key: key);
+  Search({Key? key, required this.controller}) : super(key: key);
 
   @override
   _Search createState() => _Search();
 }
+
 class _Search extends State<Search> {
-
-
   Future<List<String>>? _suggestions;
   Set<int> _hoveredIndexes = {};
 
@@ -55,11 +53,9 @@ class _Search extends State<Search> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    return  Container(
+    return Container(
       width: MediaQuery.of(context).size.width / 2,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -136,7 +132,8 @@ class _Search extends State<Search> {
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     color: Colors.white,
                     child: Center(
-                      child: Text('${snapshot.error}', style: TextStyle(color: Colors.red)),
+                      child: Text('${snapshot.error}',
+                          style: TextStyle(color: Colors.red)),
                     ),
                   );
                 } else if (snapshot.hasData) {
@@ -146,49 +143,54 @@ class _Search extends State<Search> {
                     color: Colors.white,
                     child: data.isEmpty
                         ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Center(
-                        child: Text('Không tìm thấy định nghĩa.', style: TextStyle(color: Colors.red)),
-                      ),
-                    )
-                        : ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        final word = data[index];
-                        final isHovered = _hoveredIndexes.contains(index);
-
-                        return MouseRegion(
-                          onEnter: (_) {
-                            setState(() {
-                              _hoveredIndexes.add(index);
-                            });
-                          },
-                          onExit: (_) {
-                            setState(() {
-                              _hoveredIndexes.remove(index);
-                            });
-                          },
-                          child: Container(
-                            color: isHovered ? Colors.grey.shade300 : Colors.transparent,
-                            child: ListTile(
-                              title: Text(word),
-                              onTap: () {
-                                widget.controller.text = '';
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Vocabulary(word: word,),
-                                  ),
-                                ).then((_) {
-                                  widget.controller.clear();
-                                });
-                              },
+                            padding: const EdgeInsets.all(20),
+                            child: Center(
+                              child: Text('Không tìm thấy định nghĩa.',
+                                  style: TextStyle(color: Colors.red)),
                             ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: data.length,
+                            itemBuilder: (context, index) {
+                              final word = data[index];
+                              final isHovered = _hoveredIndexes.contains(index);
+
+                              return MouseRegion(
+                                onEnter: (_) {
+                                  setState(() {
+                                    _hoveredIndexes.add(index);
+                                  });
+                                },
+                                onExit: (_) {
+                                  setState(() {
+                                    _hoveredIndexes.remove(index);
+                                  });
+                                },
+                                child: Container(
+                                  color: isHovered
+                                      ? Colors.grey.shade300
+                                      : Colors.transparent,
+                                  child: ListTile(
+                                    title: Text(word),
+                                    onTap: () {
+                                      widget.controller.text = '';
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => Vocabulary(
+                                            word: word,
+                                          ),
+                                        ),
+                                      ).then((_) {
+                                        widget.controller.clear();
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   );
                 } else {
                   return SizedBox();
@@ -201,3 +203,4 @@ class _Search extends State<Search> {
   }
 
 }
+
