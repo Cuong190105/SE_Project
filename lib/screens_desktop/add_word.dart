@@ -5,24 +5,67 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_desktop.dart';
 import 'settings.dart';
+
 class AddWord extends StatefulWidget {
   const AddWord({super.key});
 
   @override
   _AddWordState createState() => _AddWordState();
 }
-
 class _AddWordState extends State<AddWord> {
 
+
+  final wordController = TextEditingController();
+  final List<ValueNotifier<String>> selectedTypes = [];
+  final List<List<TextEditingController>> phoneticControllers = [];
+  final List<List<ValueNotifier<AudioPlayer>>> audioPlayers = [];
+  final List<TextEditingController> meaningControllers = [];
+  final List<List<TextEditingController>> exampleControllers = [];
+  final List<ValueNotifier<List<Uint8List>>> images = [];
+  final TextEditingController synonym = TextEditingController();
+  final TextEditingController antonym = TextEditingController();
+  final TextEditingController family = TextEditingController();
+  final TextEditingController phrase = TextEditingController();
+  final List<Map<String, dynamic>> means = [];
   String? _selectedTuLoai;
   final List<String> _dsTuLoai = ['Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
     'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'];
   List<Widget> meaningBoxes = [];
-
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
-    meaningBoxes.add(meaningBox());
+    _addNewMeaningBox();
+  }
+
+  @override
+  void dispose() {
+
+    wordController.dispose();
+
+    for (final phoneticPair in phoneticControllers) {
+      for (final controller in phoneticPair) {
+        controller.dispose();
+      }
+    }
+
+    for (final controller in meaningControllers) {
+      controller.dispose();
+    }
+
+    for (final exampleList in exampleControllers) {
+      for (final controller in exampleList) {
+        controller.dispose();
+      }
+    }
+
+    for (final playerPair in audioPlayers) {
+      for (final player in playerPair) {
+        player.dispose();
+      }
+    }
+
+    super.dispose();
   }
 
   @override
@@ -67,7 +110,7 @@ class _AddWordState extends State<AddWord> {
                             Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(builder: (context) => const HomeScreenDesktop()),
-                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
+                                  (route) => false,
                             );
                           },
                           customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
@@ -138,7 +181,9 @@ class _AddWordState extends State<AddWord> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
+            child: Stack(
+              children: [
+          SingleChildScrollView(
             child: Column(
               children: [
                 Align(
@@ -193,16 +238,17 @@ class _AddWordState extends State<AddWord> {
                     children: [
 
                       // Từ vựng
-                      TextField(
+
+                      TextField (
+                        controller: wordController,
                         decoration: InputDecoration(
-                          hintText: 'Từ vựng',
-                          hintStyle: TextStyle(color: Colors.blue.shade300),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
-                          ),
+                        hintText: 'Từ vựng',
+                        hintStyle: TextStyle(color: Colors.blue.shade300),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
                         ),
                         maxLines: 1, // Không cho xuống dòng
                       ),
@@ -213,48 +259,63 @@ class _AddWordState extends State<AddWord> {
 
                       // xóa thêm nghĩa
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 110), // cách viền trái
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  if (meaningBoxes.isNotEmpty && meaningBoxes.length > 1) {
-                                    meaningBoxes.removeLast();
-                                  }
-                                });
-                              },
-                              child: Text('Xóa ý nghĩa'),
+
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 110), // cách viền trái
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _removeNewMeaningBox();
+                                  });
+                                },
+                                child: Text('Xóa ý nghĩa'),
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 25), // cách viền phải
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  meaningBoxes.add(meaningBox());
-                                });
-                              },
-                              child: Text('Thêm ý nghĩa'),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 25), // cách viền phải
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _addNewMeaningBox();
+                                  });
+                                },
+                                child: Text('Thêm ý nghĩa'),
+                              ),
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 10, width: screenWidth),
 
-                      __buildLabeledTextField('Từ đồng nghĩa'),
+                      __buildLabeledTextField('Từ đồng nghĩa', controller: synonym),
                       SizedBox(height: 10, width: screenWidth),
-                      __buildLabeledTextField('Từ trái nghĩa'),
+                      __buildLabeledTextField('Từ trái nghĩa', controller: antonym),
                       SizedBox(height: 10, width: screenWidth),
-                      __buildLabeledTextField('Họ từ vựng'),
+                      __buildLabeledTextField('Họ từ vựng', controller: family),
                       SizedBox(height: 10, width: screenWidth),
-                      __buildLabeledTextField('Cụm từ'),
+                      __buildLabeledTextField('Cụm từ', controller: phrase),
                       SizedBox(height: 10, width: screenWidth),
 
                       ElevatedButton(
                         onPressed: () {
-                          // đẩy dữ liệu, dữ liệu lưu cục bộ
+                          if (wordController.text.isEmpty) {
+                            // Hiển thị thông báo lỗi
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Vui lòng điền từ vựng!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } else {
+                            _saveVocabulary();
+                            printData();
+                            // đẩy dữ liệu, dữ liệu lưu cục bộ
+                          }
                         },
                         child: Text('Lưu từ vựng'),
                       ),
@@ -266,10 +327,62 @@ class _AddWordState extends State<AddWord> {
               ],
             ),
           ),
-
+                if (_isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.5), // Màu đen mờ
+                    child: Center(
+                      child: CircularProgressIndicator(), // Vòng xoay
+                    ),
+                  ),
+              ]
+          ),
         ),
       ),
     );
+  }
+
+
+  // Hàm để bắt đầu lưu từ vựng
+  Future<void> _saveVocabulary() async {
+    setState(() {
+      _isLoading = true; // Bật chế độ loading
+    });
+
+    try {
+      // Mô phỏng hành động lưu từ vựng (chờ dữ liệu hoặc gửi yêu cầu)
+      await Future.delayed(Duration(seconds: 2)); // Giả lập việc lưu dữ liệu (thực tế có thể là các hàm như gọi API)
+
+      setState(() {
+        _isLoading = false; // Tắt chế độ loading
+      });
+
+      // Điều hướng trở lại trang Home
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreenDesktop()),
+            (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
+      );
+
+      // Thông báo thành công (nền xanh)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dữ liệu đã được lưu thành công!'),
+          backgroundColor: Colors.blue, // Màu nền xanh khi thành công
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false; // Tắt chế độ loading nếu có lỗi
+      });
+
+      // Thông báo thất bại (nền đỏ)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lưu dữ liệu thất bại!'),
+          backgroundColor: Colors.red, // Màu nền đỏ khi thất bại
+        ),
+      );
+    }
   }
 
   // Nút quay lại
@@ -317,7 +430,11 @@ class _AddWordState extends State<AddWord> {
     );
   }
   //phiêm âm
-  Widget transcription(String name) {
+  Widget transcription(
+      String name,
+       {required ValueNotifier<AudioPlayer> audioPlayer,
+        required TextEditingController controller,
+      }) {
     return  Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -344,6 +461,7 @@ class _AddWordState extends State<AddWord> {
           ),
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: TextField(
+            controller: controller,
             decoration: InputDecoration(
               //hintText: 'Nhập ${label.toLowerCase()}...',
               hintStyle: TextStyle(color: Colors.blue.shade300),
@@ -356,43 +474,155 @@ class _AddWordState extends State<AddWord> {
 
         // Phiên âm
         SizedBox(width: 8),
-        AddSoundButton(size: 821,),
+
+        AddSoundButton(size: 861, audioPlayer: audioPlayer,),
       ],
     );
   }
   // ô nghĩa và ví dụ
-  Widget meaningBox() {
+  Widget meaningBox(
+      {
+        required ValueNotifier<String> selectedType,
+        required TextEditingController meaningController,
+        required TextEditingController example1Controller,
+        required TextEditingController example2Controller,
+        required TextEditingController phoneticUkController,
+        required TextEditingController phoneticUsController,
+        required List<ValueNotifier<AudioPlayer>> audioPlayers,
+        required ValueNotifier<List<Uint8List>> imageByte,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          typeWord(),
+          // Loại từ
+          ValueListenableBuilder<String>(
+            valueListenable: selectedType,
+            builder: (context, value, _) {
+              return DropdownButton<String>(
+                hint: Text("Chọn từ loại", style: TextStyle(fontSize: 16, color: Colors.blue.shade900)),
+                value: value.isEmpty ? null : value,
+                items: _dsTuLoai.map((loai) {
+                  return DropdownMenuItem(
+                    value: loai,
+                    child: Text(loai),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  selectedType.value = value!;
+                },
+              );
+            },
+          ),
+
           SizedBox(height: 10),
-          transcription('Phiên âm UK: '),
+
+          // Phiên âm UK
+          transcription('Phiên âm UK:',audioPlayer:  audioPlayers[0], controller: phoneticUkController),
           SizedBox(height: 10),
-          transcription('Phiên âm US: '),
+
+          // Phiên âm US
+          transcription('Phiên âm US:',audioPlayer:  audioPlayers[1], controller: phoneticUsController),
           SizedBox(height: 10),
-          Row (
-              children: [
-                Expanded(
-                    child: _buildLabeledTextField('Nghĩa')),
-                SizedBox(width: 8),
-                AddSoundButton(size: 900),
-              ]
+
+          // Nghĩa + nút âm thanh
+          Row(
+            children: [
+              Expanded(child: _buildLabeledTextField('Nghĩa', controller: meaningController)),
+              SizedBox(width: 8),
+              AddSoundButton(size: 900, audioPlayer: audioPlayers[2],),
+            ],
           ),
           SizedBox(height: 10),
-          _buildLabeledTextField('Ví dụ 1'),
+
+          // Ví dụ
+          _buildLabeledTextField('Ví dụ 1', controller: example1Controller),
           SizedBox(height: 10),
-          _buildLabeledTextField('Ví dụ 2'),
+          _buildLabeledTextField('Ví dụ 2', controller: example2Controller),
           SizedBox(height: 10),
-          Center(child: InputSection(),),
+
+          Center(child: InputSection(images: imageByte,)),
         ],
       ),
     );
   }
+  void _addNewMeaningBox() {
+    final Map<String, dynamic> mean= {};
+    final TextEditingController  meaningController = TextEditingController();
+    final TextEditingController example1Controller = TextEditingController();
+    final TextEditingController example2Controller = TextEditingController();
+    final TextEditingController phoneticUsController = TextEditingController();
+    final TextEditingController phoneticUkController = TextEditingController();
+    final selectedType = ValueNotifier<String>("");
+    final List<ValueNotifier<AudioPlayer>> audioPlayer
+    = [ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer())];
+    final ValueNotifier<List<Uint8List>> image =  ValueNotifier([]);
+    setState(() {
+
+      meaningBoxes.add(meaningBox(
+          selectedType: selectedType,
+          meaningController: meaningController,
+          example1Controller: example1Controller,
+          example2Controller: example2Controller,
+          phoneticUkController: phoneticUkController,
+          phoneticUsController: phoneticUsController,
+          audioPlayers: audioPlayer,
+          imageByte: image));
+
+      selectedTypes.add(selectedType);
+      phoneticControllers.add([phoneticUkController, phoneticUsController]); // Phiên âm UK và US
+      audioPlayers.add(audioPlayer); //  cho UK và US và nghĩa
+      meaningControllers.add(meaningController); // Điều khiển nghĩa
+      exampleControllers.add([example1Controller, example2Controller]); // Ví dụ 1 và ví dụ 2
+      images.add(image); // Điều khiển cho URL hình ảnh
+
+      mean['type'] = selectedType.value;
+      List<TextEditingController> phoneticsList = [phoneticUsController, phoneticUkController];
+      mean['phonetic'] = phoneticsList;
+      mean['meaning'] = meaningController;
+      List<TextEditingController> examplesList = [example1Controller, example2Controller];
+      mean['example'] = examplesList;
+      mean['audio'] = audioPlayer;
+
+      means.add(mean);
+
+    });
+  }
+  void _removeNewMeaningBox() {
+    if (means.isEmpty || meaningBoxes.length == 1) return;
+
+    setState(() {
+      // Lấy dữ liệu cuối cùng
+      final mean = means.removeLast();
+
+      // Giải phóng các controller văn bản
+      (mean['meaning'] as TextEditingController).dispose();
+      for (var controller in mean['example'] as List<TextEditingController>) {
+        controller.dispose();
+      }
+      for (var controller in mean['phonetic'] as List<TextEditingController>) {
+        controller.dispose();
+      }
+
+      // Giải phóng AudioPlayer
+      for (var player in mean['audio'] as List<AudioPlayer>) {
+        player.dispose();
+      }
+
+      // Xóa khỏi các danh sách liên quan
+      meaningControllers.removeLast();
+      exampleControllers.removeLast();
+      phoneticControllers.removeLast();
+      audioPlayers.removeLast();
+      images.removeLast();
+      selectedTypes.removeLast();
+      meaningBoxes.removeLast();
+    });
+  }
+
   // vd
-  Widget _buildLabeledTextField(String label) {
+  Widget _buildLabeledTextField(String label,  {required TextEditingController controller}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -418,6 +648,7 @@ class _AddWordState extends State<AddWord> {
             ),
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: TextField(
+              controller: controller,
               decoration: InputDecoration(
                 //hintText: 'Nhập ${label.toLowerCase()}...',
                 hintStyle: TextStyle(color: Colors.blue.shade300),
@@ -432,7 +663,7 @@ class _AddWordState extends State<AddWord> {
     );
   }
   // đồng, trái nghĩa
-  Widget __buildLabeledTextField(String label) {
+  Widget __buildLabeledTextField(String label, {required TextEditingController controller}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -455,6 +686,7 @@ class _AddWordState extends State<AddWord> {
           ),
           padding: EdgeInsets.symmetric(horizontal: 10),
           child:  TextField(
+            controller: controller,
             decoration: InputDecoration(
               hintStyle: TextStyle(color: Colors.blue.shade300),
               border: InputBorder.none,
@@ -466,44 +698,66 @@ class _AddWordState extends State<AddWord> {
       ],
     );
   }
-  // nút thêm từ
-  Widget add_word(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddWord()),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          shape: CircleBorder(), // Hình tròn
-          padding: EdgeInsets.all(20), // Kích thước nút
-        ),
-        child: Text(
-          '+', // Dấu cộng
-          style: TextStyle(
-            fontSize: 30, // Kích thước chữ
-            color: Colors.white, // Màu chữ
-          ),
-        ),
-      ),
-    );
+
+  Future<void> printData() async {
+
+    print('wordController: ${wordController.text}');
+
+    for (int i = 0; i < selectedTypes.length; i++) {
+      print('\nselectedTypes[$i]: ${selectedTypes[i].value}');
+
+      for (int j = 0; j < phoneticControllers[i].length; j++) {
+        final controller = phoneticControllers[i][j];
+        print('phoneticControllers[$i][$j]: ${controller.text}');
+      }
+
+      for (int j = 0; j < audioPlayers[i].length; j++) {
+        final player = audioPlayers[i][j];
+
+        final duration = await player.value.duration;
+        if (duration == null) {
+          print('audioPlayers[$i][$j] has no audio loaded');
+        } else {
+          print('audioPlayers[$i][$j] has audio, duration: $duration');
+        }
+      }
+
+      print('meaningControllers[$i]: ${meaningControllers[i].text}');
+
+      for (int j = 0; j < exampleControllers[i].length; j++) {
+        final controller = exampleControllers[i][j];
+        print('exampleControllers[$i][$j]: ${controller.text}');
+      }
+
+          print("image: Có ${images[i].value.length} ảnh:");
+
+    }
+
+    print('synonymController: ${synonym.text}');
+    print('antonymController: ${antonym.text}');
+    print('familyController: ${family.text}');
+    print('phraseController: ${phrase.text}');
+
   }
+
 }
 // Tạo âm thanh
 class AddSoundButton extends StatefulWidget {
 
   final double size;
+  final ValueNotifier<AudioPlayer> audioPlayer;
 
-  const AddSoundButton({Key? key, required this.size}) : super(key: key);
-
+  const AddSoundButton({
+    Key? key,
+    required this.size,
+    required this.audioPlayer,
+  }) : super(key: key);
   @override
   _AddSoundButtonState createState() => _AddSoundButtonState();
 }
 class _AddSoundButtonState extends State<AddSoundButton> {
 
-  final AudioPlayer _player = AudioPlayer();
+  late final ValueNotifier<AudioPlayer> _player;
   String? _filePath;
   String? _fileName;
   Duration? _duration;
@@ -519,10 +773,10 @@ class _AddSoundButtonState extends State<AddSoundButton> {
 
     if (file != null) {
       try {
-        await _player.stop(); // Dừng file cũ nếu có
-        await _player.setFilePath(file.path);
+        await _player.value.stop(); // Dừng file cũ nếu có
+        await _player.value.setFilePath(file.path);
 
-        final duration = await _player.durationFuture;
+        final duration = await _player.value.durationFuture;
 
         setState(() {
           _filePath = file.path;
@@ -557,30 +811,30 @@ class _AddSoundButtonState extends State<AddSoundButton> {
   }
 
   Future<void> _togglePlayPause() async {
-    if (_player.playing) {
-      await _player.pause();
+    if (_player.value.playing) {
+      await _player.value.pause();
     } else {
-      await _player.play();
+      await _player.value.play();
     }
     setState(() {
-      _isPlaying = _player.playing;
+      _isPlaying = _player.value.playing;
     });
   }
 
   Future<void> _toggleRePlay() async {
-    if (_player.playing) {
-      await _player.seek(Duration.zero);
-      await _player.play();
+    if (_player.value.playing) {
+      await _player.value.seek(Duration.zero);
+      await _player.value.play();
     } else {
-      await _player.play();
+      await _player.value.play();
     }
   }
 
   @override
   void initState() {
     super.initState();
-
-    _player.processingStateStream.listen((state) {
+    _player = widget.audioPlayer;
+    _player.value.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) {
         setState(() {
           _isPlaying = false;
@@ -630,7 +884,14 @@ class _AddSoundButtonState extends State<AddSoundButton> {
             IconButton(
               icon: Icon(Icons.close),
               onPressed: () async {
-                await _player.stop();
+                await _player.value.stop();
+
+                final oldPlayer = _player.value;
+                final newPlayer = AudioPlayer();
+                _player.value = newPlayer;
+
+                oldPlayer.dispose();
+
                 setState(() {
                   _filePath = null;
                   _fileName = null;
@@ -653,13 +914,28 @@ class _AddSoundButtonState extends State<AddSoundButton> {
 }
 // tạo hình ảnh
 class InputSection extends StatefulWidget {
+  final ValueNotifier<List<Uint8List>> images;
+
+  const InputSection({Key? key, required this.images}) : super(key: key);
   @override
   State<InputSection> createState() => _InputSectionState();
 }
 class _InputSectionState extends State<InputSection> {
-  final List<Uint8List> _images = [];
+
+  late ValueNotifier<List<Uint8List>> images;
 
   bool _isHovering = false;
+
+  @override
+  void initState() {
+    images = widget.images;
+  }
+
+  @override
+  void dispose() {
+    images.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage() async {
     final XFile? file = await openFile(
@@ -668,14 +944,16 @@ class _InputSectionState extends State<InputSection> {
     if (file != null) {
       final Uint8List bytes = await file.readAsBytes();
       setState(() {
-        _images.add(bytes);
+        widget.images.value.add(bytes); // cập nhật dữ liệu gốc
+        widget.images.notifyListeners(); // thông báo thay đổi
       });
     }
   }
 
   void _removeImage(int index) {
     setState(() {
-      _images.removeAt(index);
+      widget.images.value.removeAt(index);
+      widget.images.notifyListeners(); // cập nhật dữ liệu gốc
     });
   }
 
@@ -684,129 +962,78 @@ class _InputSectionState extends State<InputSection> {
     const double imageWidth = 120;
     const double imageHeight = 160;
 
-    return Row(
-      children: [
-        SizedBox(width: 100),
-        Expanded(
-          child: Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (int i = 0; i < _images.length; i++)
-                Stack(
-                  children: [
-                    Container(
-                      width: imageWidth,
-                      height: imageHeight,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        color: Colors.grey.shade200,
-                      ),
-                      child: Image.memory(_images[i], fit: BoxFit.cover),
-                    ),
-                    Positioned(
-                      top: 2,
-                      right: 2,
-                      child: GestureDetector(
-                        onTap: () => _removeImage(i),
-                        child: Container(
+    return ValueListenableBuilder<List<Uint8List>>(
+      valueListenable: widget.images,
+      builder: (context, images, _) {
+        return Row(
+          children: [
+            SizedBox(width: 100),
+            Expanded(
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (int i = 0; i < images.length; i++)
+                    Stack(
+                      children: [
+                        Container(
+                          width: imageWidth,
+                          height: imageHeight,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.black54,
+                            border: Border.all(color: Colors.grey),
+                            color: Colors.grey.shade200,
                           ),
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.close, color: Colors.white, size: 16),
+                          child: Image.memory(images[i], fit: BoxFit.cover),
+                        ),
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            onTap: () => _removeImage(i),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black54,
+                              ),
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.close, color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  MouseRegion(
+                    onEnter: (_) => setState(() => _isHovering = true),
+                    onExit: (_) => setState(() => _isHovering = false),
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: imageWidth,
+                        height: imageHeight,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _isHovering ? Colors.blue : Colors.blue.shade100,
+                            width: 2,
+                          ),
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.add,
+                            size: 40,
+                            color: _isHovering ? Colors.blue : Colors.blue.shade100,
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-
-              MouseRegion(
-                onEnter: (_) => setState(() => _isHovering = true),
-                onExit: (_) => setState(() => _isHovering = false),
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: imageWidth,
-                    height: imageHeight,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: _isHovering ? Colors.blue : Colors.blue.shade100,
-                        width: 2,
-                      ),
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.add,
-                        size: 40,
-                        color: _isHovering ? Colors.blue : Colors.blue.shade100,
-                      ),
-                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-// thẻ từ vựng
-class VocabCard extends StatelessWidget {
-  final String word;
-  final String meaning1;
-  final String audioUrl1;
-  final String meaning2;
-  final String audioUrl2;
-
-  final AudioPlayer _player = AudioPlayer();
-
-  VocabCard({
-    required this.word,
-    required this.meaning1,
-    required this.audioUrl1,
-    required this.meaning2,
-    required this.audioUrl2,
-  });
-
-  void _play(String url) async {
-    try {
-      await _player.setUrl(url);
-      _player.play();
-    } catch (e) {
-      print("Error playing audio: $e");
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.all(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(word, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            Row(
-              children: [
-                Expanded(child: Text(meaning1)),
-                IconButton(icon: Icon(Icons.volume_up), onPressed: () => _play(audioUrl1)),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(child: Text(meaning2)),
-                IconButton(icon: Icon(Icons.volume_up), onPressed: () => _play(audioUrl2)),
-              ],
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 }
