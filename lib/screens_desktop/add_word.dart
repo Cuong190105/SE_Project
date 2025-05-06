@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_desktop.dart';
 import 'settings.dart';
 class AddWord extends StatefulWidget {
@@ -114,10 +115,13 @@ class _AddWordState extends State<AddWord> {
               decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
               child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
-            onPressed: () {
+            onPressed: () async {
+              // Lấy userEmail từ SharedPreferences
+              final prefs = await SharedPreferences.getInstance();
+              final userEmail = prefs.getString('user_email') ?? 'default@example.com';
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => Settings(userId: 1)),
+                MaterialPageRoute(builder: (context) => SettingsPhone(userEmail: userEmail)),
               );
             },
           ),

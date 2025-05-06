@@ -1,4 +1,5 @@
 import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/authentic_phone/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'database_SQLite/database_helper.dart';
 import 'screens_desktop/home_desktop.dart';
@@ -7,7 +8,6 @@ import 'package:window_size/window_size.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'back_end/test_api.dart';
-import 'package:eng_dictionary/authentic/splash_screen.dart';
 import 'screens_phone/flashcard/flashcard_models.dart';
 
 void main() async {

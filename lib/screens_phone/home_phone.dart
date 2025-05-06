@@ -1,4 +1,3 @@
-import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen.dart';
 import 'package:eng_dictionary/screens_phone/settings_phone.dart';
 import 'package:eng_dictionary/screens_phone/flashcard/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_phone/minigame/minigame_screen_phone.dart';
@@ -12,8 +11,6 @@ class HomeScreenPhone extends StatefulWidget {
   const HomeScreenPhone({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    int streakCount = 5;
   State<HomeScreenPhone> createState() => _HomeScreenPhoneState();
 }
 
@@ -143,33 +140,6 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                   ),
                 ),
                 const SizedBox(height: 30),
-
-                // Search bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.shade100,
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
-                      hintText: 'Nhập từ cần tìm kiếm',
-                      hintStyle: TextStyle(color: Colors.blue.shade300),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Feature buttons grid
                 SearchPhone(controller: _controller),
                 const SizedBox(height: 40),
                 Expanded(
@@ -195,16 +165,12 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                       ),
                       FeatureButton(
                         icon: Icons.add_circle_outline,
-                        label: 'Thêm từ',
                         label: 'Kho từ vựng',
                         color: Colors.purple.shade400,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const AddWord(),
-                            ),
-                          );
                               builder: (context) => const Vocabularies(),
                             ),
                           ).then((_) {
