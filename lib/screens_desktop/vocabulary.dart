@@ -16,6 +16,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'add_word.dart';
+
 class Vocabulary extends StatefulWidget {
   final String word;
 
@@ -360,7 +361,6 @@ class _VocabularyListState extends State<VocabularyList> {
       final h2Element = section.querySelector('h2');
       return h2Element != null && h2Element.text.trim() == 'Tiếng Anh';
     }).toList();
-
 
     for (var section in filteredSections) {
       // Lấy tất cả các phần tử <section> con trong section đã lọc

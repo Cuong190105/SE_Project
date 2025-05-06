@@ -190,18 +190,18 @@ class _AddWordState extends State<AddWord> {
 
                       // Từ vựng
                       TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Từ vựng',
-                        hintStyle: TextStyle(color: Colors.blue.shade300),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
+                        decoration: InputDecoration(
+                          hintText: 'Từ vựng',
+                          hintStyle: TextStyle(color: Colors.blue.shade300),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
-                        ),
+                        maxLines: 1, // Không cho xuống dòng
                       ),
-                      maxLines: 1, // Không cho xuống dòng
-                    ),
                       SizedBox(height: 10, width: screenWidth),
 
                       ...meaningBoxes,
@@ -209,34 +209,34 @@ class _AddWordState extends State<AddWord> {
 
                       // xóa thêm nghĩa
                       Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 110), // cách viền trái
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    if (meaningBoxes.isNotEmpty && meaningBoxes.length > 1) {
-                                      meaningBoxes.removeLast();
-                                    }
-                                  });
-                                },
-                                child: Text('Xóa ý nghĩa'),
-                              ),
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 110), // cách viền trái
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (meaningBoxes.isNotEmpty && meaningBoxes.length > 1) {
+                                    meaningBoxes.removeLast();
+                                  }
+                                });
+                              },
+                              child: Text('Xóa ý nghĩa'),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 25), // cách viền phải
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    meaningBoxes.add(meaningBox());
-                                  });
-                                },
-                                child: Text('Thêm ý nghĩa'),
-                              ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 25), // cách viền phải
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  meaningBoxes.add(meaningBox());
+                                });
+                              },
+                              child: Text('Thêm ý nghĩa'),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
                       SizedBox(height: 10, width: screenWidth),
 
                       __buildLabeledTextField('Từ đồng nghĩa'),
@@ -255,8 +255,8 @@ class _AddWordState extends State<AddWord> {
                         child: Text('Lưu từ vựng'),
                       ),
                     ],
-              ),
-            ),
+                  ),
+                ),
 
                 const SizedBox(height: 24),
               ],
@@ -352,7 +352,7 @@ class _AddWordState extends State<AddWord> {
 
         // Phiên âm
         SizedBox(width: 8),
-        AddSoundButton(size: 861,),
+        AddSoundButton(size: 821,),
       ],
     );
   }
@@ -370,12 +370,12 @@ class _AddWordState extends State<AddWord> {
           transcription('Phiên âm US: '),
           SizedBox(height: 10),
           Row (
-          children: [
-            Expanded(
-                child: _buildLabeledTextField('Nghĩa')),
+              children: [
+                Expanded(
+                    child: _buildLabeledTextField('Nghĩa')),
                 SizedBox(width: 8),
                 AddSoundButton(size: 900),
-          ]
+              ]
           ),
           SizedBox(height: 10),
           _buildLabeledTextField('Ví dụ 1'),
@@ -528,13 +528,13 @@ class _AddSoundButtonState extends State<AddSoundButton> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Đã chọn file âm thanh: ${file.name} thành công',
-                style: TextStyle(color: Colors.white), // chữ trắng
-              ),
-              backgroundColor: Colors.blue,
+          SnackBar(
+            content: Text(
+              'Đã chọn file âm thanh: ${file.name} thành công',
+              style: TextStyle(color: Colors.white), // chữ trắng
             ),
+            backgroundColor: Colors.blue,
+          ),
         );
 
       } catch (e) {
@@ -718,32 +718,32 @@ class _InputSectionState extends State<InputSection> {
                   ],
                 ),
 
-                MouseRegion(
-                  onEnter: (_) => setState(() => _isHovering = true),
-                  onExit: (_) => setState(() => _isHovering = false),
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: imageWidth,
-                      height: imageHeight,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _isHovering ? Colors.blue : Colors.blue.shade100,
-                          width: 2,
-                        ),
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(4),
+              MouseRegion(
+                onEnter: (_) => setState(() => _isHovering = true),
+                onExit: (_) => setState(() => _isHovering = false),
+                child: GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: imageWidth,
+                    height: imageHeight,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: _isHovering ? Colors.blue : Colors.blue.shade100,
+                        width: 2,
                       ),
-                      child: Center(
-                        child: Icon(
-                          Icons.add,
-                          size: 40,
-                          color: _isHovering ? Colors.blue : Colors.blue.shade100,
-                        ),
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add,
+                        size: 40,
+                        color: _isHovering ? Colors.blue : Colors.blue.shade100,
                       ),
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),

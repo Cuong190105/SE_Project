@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'search.dart';
 import 'package:eng_dictionary/screens_desktop/flashcard_screen.dart';
 import 'package:eng_dictionary/screens_desktop/minigame_screen_phone.dart';
+
 class HomeScreenDesktop extends StatefulWidget {
   const HomeScreenDesktop({super.key});
 
@@ -180,6 +181,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                     height: (availableHeight-space)/2,
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => FlashcardScreen()));
+
                     },
                   ),
                   FeatureButton(

@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'user_profile_service.dart';
+import '../services/user_profile_service.dart';
 import 'package:mysql1/mysql1.dart';
 
 class Settings extends StatefulWidget {
@@ -23,7 +24,7 @@ class _SettingsState extends State<Settings> {
 
   // sửa lại sau khi tích hợp backend nhé bao gồm các file class
 
-  // Khai báo các controller từ database
+  // Khai báo các controller cho database
   TextEditingController _nameDataController = TextEditingController();
   TextEditingController _emailDataController = TextEditingController();
   TextEditingController _addressDataController = TextEditingController();
@@ -42,7 +43,6 @@ class _SettingsState extends State<Settings> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _obscureOldPassword = true;
 
   String selectedMenu = 'Thông tin tài khoản';
   Map<String, bool> isHoveredMap = {};
@@ -50,7 +50,7 @@ class _SettingsState extends State<Settings> {
   final String _oldImageUrl = 'https://i.pravatar.cc/150';
   String _newImagePath = '';
 
-  // sửa dữ liệu cần sửa update lên database
+  // sửa dữ liệu cần sửa
   Future<void> updateUserProfile() async {
     final success = await _userProfileService.updateUser(
       userId: widget.userId,
@@ -76,7 +76,7 @@ class _SettingsState extends State<Settings> {
       );
     }
   }
-  // tải dữ liệu, cần sửa cho đúng khi c database
+  // tải dữ liệu, cần sửa cho đúng khi tải dữ liệu
   Future<void> fetchDataFromDatabase() async {
     await Future.delayed(Duration(seconds: 1)); // Giả lập việc tải dữ liệu mất 3 giây
 
@@ -393,7 +393,7 @@ class _SettingsState extends State<Settings> {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
       child:  SingleChildScrollView(
           child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start, // Căn lề trái
               children: [
 
               Row(
@@ -408,7 +408,7 @@ class _SettingsState extends State<Settings> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (_nameDataController.text==''||_emailDataController.text=='')
-                        ...[
+                        ...[ // Sử dụng toán tử spread để đảm bảo là danh sách
                           CircularProgressIndicator(),
                         ]
                        else
@@ -691,35 +691,6 @@ class _SettingsState extends State<Settings> {
         children: [
           Text('Đổi mật khẩu', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-
-          // Thêm ô nhập mật khẩu cũ
-          TextFormField(
-            controller: _oldPasswordController,
-            obscureText: _obscureOldPassword,
-            decoration: InputDecoration(
-              labelText: 'Mật khẩu cũ',
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureOldPassword ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureOldPassword = !_obscureOldPassword;
-                  });
-                },
-              ),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Vui lòng nhập mật khẩu cũ';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 10),
-
-          // Mật khẩu mới
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
@@ -745,8 +716,6 @@ class _SettingsState extends State<Settings> {
             },
           ),
           const SizedBox(height: 10),
-
-          // Xác nhận mật khẩu
           TextFormField(
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
@@ -775,14 +744,10 @@ class _SettingsState extends State<Settings> {
             },
           ),
           const SizedBox(height: 20),
-
-          // Nút lưu thay đổi
           ElevatedButton(
             onPressed: () {
               // Kiểm tra tính hợp lệ và cập nhật thông báo
-              if (_oldPasswordController.text.isEmpty ||
-                  _passwordController.text.isEmpty ||
-                  _confirmPasswordController.text.isEmpty) {
+              if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
                 setState(() {
                   _message = 'Vui lòng điền đầy đủ thông tin mật khẩu';
                   _messageColor = Colors.red;
@@ -804,8 +769,6 @@ class _SettingsState extends State<Settings> {
             child: Text('Lưu thay đổi'),
           ),
           const SizedBox(height: 10),
-
-          // Hiển thị thông báo
           Text(
             _message,
             style: TextStyle(color: _messageColor, fontWeight: FontWeight.bold),

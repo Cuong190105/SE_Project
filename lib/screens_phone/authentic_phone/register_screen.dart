@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../home_phone.dart';
 import '../authentic_phone/login_screen.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
+import 'dart:io';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -26,6 +29,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  // Lấy tên thiết bị cho đăng ký
+  Future<String> _getDeviceName() async {
+    try {
+      return Platform.localHostname;
+    } catch (e) {
+      return 'flutter_device';
+    }
+  }
+
+  // Xử lý đăng ký
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate() || !_agreeToTerms) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final deviceName = await _getDeviceName();
+      final result = await AuthService.register(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+        _confirmPasswordController.text,
+        deviceName,
+      );
+
+      if (result['success']) {
+        // Đăng ký thành công, chuyển đến trang home
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/HomeScreenDesktop');
+        }
+      } else {
+        // Đăng ký thất bại
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đăng ký thất bại. Vui lòng thử lại.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Xử lý lỗi
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đăng ký thất bại: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -228,7 +295,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 onPressed: () {
                                   setState(() {
                                     _obscureConfirmPassword =
-                                        !_obscureConfirmPassword;
+                                    !_obscureConfirmPassword;
                                   });
                                 },
                               ),
@@ -303,21 +370,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             width: double.infinity,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed:
-                                  _agreeToTerms
-                                      ? () {
-                                        if (_formKey.currentState!.validate()) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) =>
-                                                      const HomeScreenPhone(),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                      : null,
+                              onPressed: _isLoading || !_agreeToTerms
+                                  ? null
+                                  : _handleRegister,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue.shade700,
                                 foregroundColor: Colors.white,
@@ -327,8 +382,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 elevation: 5,
                                 disabledBackgroundColor: Colors.grey.shade400,
                               ),
-                              child: const Text(
-                                "ĐĂNG KÝ",
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              )
+                                  : const Text(
+                                'ĐĂNG KÝ',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

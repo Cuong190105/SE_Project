@@ -11,39 +11,13 @@ class Vocabularies extends StatefulWidget {
   @override
   _Vocabularies createState() => _Vocabularies();
 }
+
 class _Vocabularies extends State<Vocabularies> {
-
-  late Future<List<Map<String, dynamic>>> _wordDetailsFuture;
-  Map<String, dynamic>? _selectedWordData;
-
-  Future<List<Map<String, dynamic>>> parseWordDetails() async {
-     List<Map<String, dynamic>> vocabularyList = [];
-    await Future.delayed(Duration(seconds: 2)); // Mô phỏng chờ tải dữ liệu
-    final data =  [
-      {'word': 'applefffffffffffffffffffffffffffffff', 'type': ['Danh từ', 'Động từ'],
-        'phonetic': [['/us1/','uk1'],['/us2/','uk2']],
-        'audio' : [[AudioPlayer(), AudioPlayer()],[AudioPlayer(), AudioPlayer()]],
-        'meaning': ['quả táo','đu đu'], 'example': [['v1','vd2'], ['v1','vd2']],
-        'imageUrl': ['https://i.pravatar.cc/150','https://i.pravatar.cc/151']},
-
-      {'word': 'tomato', 'type': ['Danh từ', 'Động từ'],
-        'phonetic': [['/us1/','uk1'],['/us2/','uk2']],
-        'audio' : [[AudioPlayer(), AudioPlayer()],[AudioPlayer(), AudioPlayer()]],
-        'meaning': ['cà chua','đu đu'], 'example': [['v1','vd2'], ['v1','vd2']],
-        'imageUrl': ['https://i.pravatar.cc/150','https://i.pravatar.cc/151']},
-
-      // Thêm nhiều từ khác...
-    ];
-    vocabularyList = data;
-    return vocabularyList;
-  }
 
   @override
   void initState() {
     super.initState();
-    _wordDetailsFuture = parseWordDetails();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -53,78 +27,71 @@ class _Vocabularies extends State<Vocabularies> {
     bool _isHovering = false; // hiệu ứng khi di chuột trở về
     bool _isHoveringT = false; // hiệu ứng khi di chuột trở về
     bool isHoveringIcon = false;
-
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.blue.shade300,
-              elevation: 0,
-              leadingWidth: screenWidth,
-              leading: Stack(
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue.shade300,
+        elevation: 0,
+        leadingWidth: screenWidth,
+        leading: Stack(
+          children: [
+            Center(
+              child: Column(
                 children: [
-                  Center(
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'DICTIONARY',
-                            softWrap: false,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade800,
-                              letterSpacing: 2,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      'DICTIONARY',
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                  StatefulBuilder(
+                    builder: (context, setState) {
+
+                      return MouseRegion(
+                        onEnter: (_) => setState(() => isHoveringIcon = true),
+                        onExit: (_) => setState(() => isHoveringIcon = false),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HomeScreenDesktop()),
+                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
+                            );
+                          },
+                          customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.shade100,
+                                  blurRadius: 2,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.book,
+                              size: 20,
+                              color: Colors.blue.shade700,
                             ),
                           ),
                         ),
-                        StatefulBuilder(
-                          builder: (context, setState) {
-                            return MouseRegion(
-                              onEnter: (_) =>
-                                  setState(() => isHoveringIcon = true),
-                              onExit: (_) =>
-                                  setState(() => isHoveringIcon = false),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(builder: (
-                                        context) => const HomeScreenDesktop()),
-                                        (
-                                        route) => false, // Điều này sẽ loại bỏ toàn bộ các trang trong stack
-                                  );
-                                },
-                                customBorder: const CircleBorder(),
-                                // Để hiệu ứng nhấn bo tròn đúng hình
-                                child: Container(
-                                  padding: const EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    color: isHoveringIcon
-                                        ? Colors.grey.shade300
-                                        : Colors.white, // Hover đổi màu
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.blue.shade100,
-                                        blurRadius: 2,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.book,
-                                    size: 20,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  /*Align(
+                ],
+              ),
+            ),
+            /*Align(
               alignment: Alignment.center,
               child: Container(
                 width: screenWidth / 2,
@@ -150,185 +117,113 @@ class _Vocabularies extends State<Vocabularies> {
                 ),
               ),
             ),*/
-                ],
+          ],
+        ),
+        actions: [
+          Row(
+            children: [
+              Text(
+                "$streakCount",
+                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              actions: [
-                Row(
-                  children: [
-                    Text(
-                      "$streakCount",
-                      style: const TextStyle(fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    const Icon(
-                        Icons.local_fire_department, color: Colors.orange,
-                        size: 32),
-                  ],
-                ),
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                        color: Colors.blue.shade100, shape: BoxShape.circle),
-                    child: Icon(
-                        Icons.person, color: Colors.blue.shade700, size: 20),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) =>
-                          Settings(userId: 1)),
-                    );
-                  },
-                ),
-              ],
+              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
+            ],
+          ),
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
+              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
             ),
+            onPressed: () {},
+          ),
+        ],
+      ),
 
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.blue.shade50, Colors.white],
-                  stops: const [0.3, 1.0],
-                ),
-              ),
-              child: SafeArea(
-
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      child: Row(
-                        children: [
-                          // Phần bên trái: nút quay lại + tiêu đề
-                          StatefulBuilder(
-                            builder: (context, setState) {
-                              return MouseRegion(
-                                onEnter: (_) =>
-                                    setState(() => _isHovering = true),
-                                onExit: (_) =>
-                                    setState(() => _isHovering = false),
-                                child: Material(
-                                  color: _isHovering
-                                      ? Colors.grey.shade300
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(30),
-                                  child: InkWell(
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                    },
-                                    borderRadius: BorderRadius.circular(30),
-                                    splashColor: Colors.blue.withOpacity(0.2),
-                                    highlightColor: Colors.blue.withOpacity(
-                                        0.1),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0, vertical: 4.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          buttonBack(context),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Kho từ vựng',
-                                            style: TextStyle(
-                                              fontSize: 22,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.blue.shade700,
-                                              letterSpacing: 1,
-                                            ),
-                                          ),
-                                        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Row(
+                    children: [
+                      // Phần bên trái: nút quay lại + tiêu đề
+                      StatefulBuilder(
+                        builder: (context, setState) {
+                          return MouseRegion(
+                            onEnter: (_) => setState(() => _isHovering = true),
+                            onExit: (_) => setState(() => _isHovering = false),
+                            child: Material(
+                              color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
+                              borderRadius: BorderRadius.circular(30),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                                borderRadius: BorderRadius.circular(30),
+                                splashColor: Colors.blue.withOpacity(0.2),
+                                highlightColor: Colors.blue.withOpacity(0.1),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      buttonBack(context),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Kho từ vựng',
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade700,
+                                          letterSpacing: 1,
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-
-                          // Spacer đẩy nút + sang phải
-                          Spacer(),
-                          // Nút dấu cộng
-                          add_button(context),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _wordDetailsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Lỗi: ${snapshot.error}'));
-                  }
-                  else {
-                    final vocabularyList = List<Map<String, dynamic>>.from(snapshot.data!);
-                    return _selectedWordData != null
-                        ?  Expanded(
-                        child: SingleChildScrollView(
-                          child: VocabularyList( onBack: () {
-                            setState(() {
-                              _selectedWordData = null;
-                            });
-                          },
-                            wordDetails: _selectedWordData!)
-                              )
-                          )// Giao diện chi tiết từ đã viết trước đó
-                        : Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                        child: Wrap(
-                          alignment: WrapAlignment.start,
-                          spacing: 16,
-                          runSpacing: 16,
-                          children: vocabularyList.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-
-                            return SizedBox(
-                              width: 250,
-                              child: VocabularyCard(
-                                word: item['word'] ?? '',
-                                meaning: item['meaning'] ?? '',
-                                onView: () {
-                                  setState(() {
-                                    _selectedWordData = item;
-                                  });
-                                },
-                                onEdit: () {
-                                  // TODO: xử lý sửa
-                                },
-                                onDelete: () {
-                                  setState(() {
-                                    vocabularyList.removeAt(index);
-                                    _wordDetailsFuture = Future.value(vocabularyList);
-                                    // xóa trên database
-                                  });
-                                },
                               ),
-                            );
-                          }).toList(),
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    );
 
-                  }
+                      // Spacer đẩy nút + sang phải
+                      Spacer(),
+                      // Nút dấu cộng
+                      add_button(context),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: Column(
+                    children: [
 
-                }),
-                    const SizedBox(height: 24),
-                  ],
+                    ],
+                  ),
                 ),
 
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
-          );
-        }
+          ),
+
+        ),
+      ),
+    );
+  }
 
   // Nút quay lại
   Widget buttonBack(BuildContext context) {
@@ -593,3 +488,4 @@ class _VocabularyListState extends State<VocabularyList> {
 }
 
 
+}

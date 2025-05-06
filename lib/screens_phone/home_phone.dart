@@ -1,18 +1,54 @@
 import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen.dart';
+import 'package:eng_dictionary/screens_phone/settings_phone.dart';
+import 'package:eng_dictionary/screens_phone/flashcard/flashcard_screen.dart';
+import 'package:eng_dictionary/screens_phone/minigame/minigame_screen_phone.dart';
+import 'package:eng_dictionary/screens_phone/vocabularies.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'translate.dart';
-import 'add_word.dart';
+import 'translate_phone.dart';
+import 'search_phone.dart';
 
-class HomeScreenPhone extends StatelessWidget {
+class HomeScreenPhone extends StatefulWidget {
   const HomeScreenPhone({super.key});
 
   @override
   Widget build(BuildContext context) {
     int streakCount = 5;
+  State<HomeScreenPhone> createState() => _HomeScreenPhoneState();
+}
+
+class _HomeScreenPhoneState extends State<HomeScreenPhone> {
+  TextEditingController _controller = TextEditingController();
+  int streakCount = 0;
+  String? userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final email = await AuthService.getUserEmail();
+    setState(() {
+      userEmail = email;
+      streakCount = 5; // TODO: Thay bằng logic lấy streak từ server hoặc local
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
+        leading: Container(),
         actions: [
           Container(
             decoration: BoxDecoration(
@@ -44,7 +80,7 @@ class HomeScreenPhone extends StatelessWidget {
           ),
           IconButton(
             icon: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.shade100,
                 shape: BoxShape.circle,
@@ -54,7 +90,9 @@ class HomeScreenPhone extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                MaterialPageRoute(
+                  builder: (context) => SettingsPhone(userEmail: userEmail ?? ''),
+                ),
               );
             },
           ),
@@ -75,7 +113,6 @@ class HomeScreenPhone extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 10),
-                // App logo and name
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -133,6 +170,8 @@ class HomeScreenPhone extends StatelessWidget {
                 const SizedBox(height: 40),
 
                 // Feature buttons grid
+                SearchPhone(controller: _controller),
+                const SizedBox(height: 40),
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 2,
@@ -147,14 +186,17 @@ class HomeScreenPhone extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const Translate(),
+                              builder: (context) => const TranslatePhone(),
                             ),
-                          );
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
                         icon: Icons.add_circle_outline,
                         label: 'Thêm từ',
+                        label: 'Kho từ vựng',
                         color: Colors.purple.shade400,
                         onTap: () {
                           Navigator.push(
@@ -163,6 +205,11 @@ class HomeScreenPhone extends StatelessWidget {
                               builder: (context) => const AddWord(),
                             ),
                           );
+                              builder: (context) => const Vocabularies(),
+                            ),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
@@ -170,7 +217,14 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Flashcard',
                         color: Colors.teal.shade500,
                         onTap: () {
-                          Navigator.pushNamed(context, '/flashcard');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FlashcardScreen(),
+                            ),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                       FeatureButton(
@@ -178,7 +232,14 @@ class HomeScreenPhone extends StatelessWidget {
                         label: 'Minigame',
                         color: Colors.amber.shade700,
                         onTap: () {
-                          Navigator.pushNamed(context, '/minigame');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MinigameScreen(),
+                            ),
+                          ).then((_) {
+                            _controller.clear();
+                          });
                         },
                       ),
                     ],
@@ -222,7 +283,7 @@ class FeatureButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 40, color: color),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
               label,
               textAlign: TextAlign.center,
