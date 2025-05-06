@@ -30,7 +30,7 @@ class _AddWordState extends State<AddWord> {
   final List<String> _dsTuLoai = ['Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
     'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'];
   List<Widget> meaningBoxes = [];
-
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -177,7 +177,9 @@ class _AddWordState extends State<AddWord> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
+            child: Stack(
+              children: [
+          SingleChildScrollView(
             child: Column(
               children: [
                 Align(
@@ -292,8 +294,22 @@ class _AddWordState extends State<AddWord> {
 
                       ElevatedButton(
                         onPressed: () {
-                          printData();
-                          // đẩy dữ liệu, dữ liệu lưu cục bộ
+                          if (wordController.text.isEmpty) {
+                            // Hiển thị thông báo lỗi
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Vui lòng điền từ vựng!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          } else {
+                            _saveVocabulary();
+                            printData();
+                            // đẩy dữ liệu, dữ liệu lưu cục bộ
+                          }
                         },
                         child: Text('Lưu từ vựng'),
                       ),
@@ -305,10 +321,62 @@ class _AddWordState extends State<AddWord> {
               ],
             ),
           ),
-
+                if (_isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.5), // Màu đen mờ
+                    child: Center(
+                      child: CircularProgressIndicator(), // Vòng xoay
+                    ),
+                  ),
+              ]
+          ),
         ),
       ),
     );
+  }
+
+
+  // Hàm để bắt đầu lưu từ vựng
+  Future<void> _saveVocabulary() async {
+    setState(() {
+      _isLoading = true; // Bật chế độ loading
+    });
+
+    try {
+      // Mô phỏng hành động lưu từ vựng (chờ dữ liệu hoặc gửi yêu cầu)
+      await Future.delayed(Duration(seconds: 2)); // Giả lập việc lưu dữ liệu (thực tế có thể là các hàm như gọi API)
+
+      setState(() {
+        _isLoading = false; // Tắt chế độ loading
+      });
+
+      // Điều hướng trở lại trang Home
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreenDesktop()),
+            (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
+      );
+
+      // Thông báo thành công (nền xanh)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Dữ liệu đã được lưu thành công!'),
+          backgroundColor: Colors.blue, // Màu nền xanh khi thành công
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false; // Tắt chế độ loading nếu có lỗi
+      });
+
+      // Thông báo thất bại (nền đỏ)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lưu dữ liệu thất bại!'),
+          backgroundColor: Colors.red, // Màu nền đỏ khi thất bại
+        ),
+      );
+    }
   }
 
   // Nút quay lại
