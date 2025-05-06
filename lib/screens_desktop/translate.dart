@@ -23,24 +23,12 @@ class _TranslateState extends State<Translate> {
   @override
   void initState() {
     super.initState();
-    _startNodeServer();
     // Lắng nghe sự thay đổi trong ô nhập
     textController.addListener(() {
       setState(() {
         displayedText = "${textController.text}";
       });
     });
-  }
-
-  Future<void> _startNodeServer() async {
-    var shell = Shell();
-
-    try {
-      //_serverProcess = await Process.start('node', ['D:/cnpm/SE_Project/node_server/server.js']);
-      print("Server Node.js đã chạy!");
-    } catch (e) {
-      print("Lỗi khi chạy server: $e");
-    }
   }
 
   @override
