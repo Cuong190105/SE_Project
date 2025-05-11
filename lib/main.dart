@@ -1,14 +1,11 @@
-import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
-import 'package:eng_dictionary/screens_phone/authentic_phone/splash_screen.dart';
+import 'package:eng_dictionary/features/common/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'database_SQLite/database_helper.dart';
-import 'screens_desktop/home_desktop.dart';
-import 'screens_phone/home_phone.dart';
+import 'package:eng_dictionary/data/models/database_helper.dart';
+import 'package:eng_dictionary/data/models/flashcard_manager.dart';
+import 'features/desktop/home/home_screen.dart';
 import 'package:window_size/window_size.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'back_end/test_api.dart';
-import 'screens_phone/flashcard/flashcard_models.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,20 +27,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS) {
+   
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
         home: SplashScreen(),
       );
-    } else {
-      return const MaterialApp(
-        title: 'EDU dictionary',
-        debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
-        //SplashScreen(),
-      );
-    }
+    
   }
 }
