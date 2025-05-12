@@ -3,6 +3,7 @@ import 'package:eng_dictionary/screens_phone/home_phone.dart';
 import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'package:eng_dictionary/screens_phone/flashcard/flashcard_models.dart';
+import 'package:eng_dictionary/screens_phone/authentic_phone/terms_service_screen.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
@@ -381,30 +382,61 @@ class _RegisterScreenState extends State<RegisterScreenPhone> {
                                 },
                               ),
                               Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: "Tôi đồng ý với ",
-                                    style: const TextStyle(
-                                      color: Colors.black87,
+                                child: Wrap(
+                                  children: [
+                                    const Text(
+                                      "Tôi đồng ý với ",
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                      ),
                                     ),
-                                    children: [
-                                      TextSpan(
-                                        text: 'Điều khoản dịch vụ',
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => TermsServiceScreen(
+                                              title: TermsServiceContent.termsOfServiceTitle,
+                                              content: TermsServiceContent.termsOfServiceContent,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Điều khoản dịch vụ',
                                         style: TextStyle(
                                           color: Colors.blue.shade700,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      const TextSpan(text: ' và '),
-                                      TextSpan(
-                                        text: 'Chính sách bảo mật',
+                                    ),
+                                    const Text(
+                                      ' và ',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => TermsServiceScreen(
+                                              title: TermsServiceContent.privacyPolicyTitle,
+                                              content: TermsServiceContent.privacyPolicyContent,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Chính sách bảo mật',
                                         style: TextStyle(
                                           color: Colors.blue.shade700,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
