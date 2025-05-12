@@ -110,6 +110,7 @@ class _AddWordState extends State<AddWord> {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
+            CustomBackButton_(content: 'Thêm từ', color: Colors.blue,),
             Center(
               child: LogoSmall(),
             ),
@@ -230,11 +231,7 @@ class _AddWordState extends State<AddWord> {
                     ],
                   ),
                 ),
-                Positioned(
-                  left: 10,
-                  top: 10,
-                  child: CustomBackButton(content: 'Thêm từ'),
-                ),
+
                 if (_isLoading)
                   Container(
                     color: Colors.black.withOpacity(0.5), // Màu đen mờ

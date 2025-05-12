@@ -51,7 +51,6 @@ class _VocabularyState extends State<Vocabulary> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    int streakCount = 5; // Placeholder for streak count
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,

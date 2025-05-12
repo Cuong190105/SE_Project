@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class CustomBackButton extends StatelessWidget {
 
 final String content;
@@ -26,22 +27,28 @@ const CustomBackButton({super.key, required this.content});
               highlightColor: Colors.blue.withOpacity(0.1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    buttonBack(context),
-                    const SizedBox(width: 8),
-                    Text(
-                        content,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                        letterSpacing: 1,
-                      ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 300), // Set your max width
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        buttonBack(context),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            content,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                              letterSpacing: 1,
+                            ),
+                            softWrap: true,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
               ),
             ),
           ),
@@ -96,20 +103,21 @@ class CustomBackButton_ extends StatelessWidget {
               highlightColor: color.withOpacity(0.1),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                child: Row(
+                child:Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     buttonBack(context),
                     const SizedBox(width: 8),
-                    Text(
-                      content,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
+                      Text(
+                        content,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
                   ],
                 ),
               ),

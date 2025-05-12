@@ -62,7 +62,6 @@ class _MyWord extends State<MyWord> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    int streakCount = 5; // Đợi dữ liệu từ database
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -70,6 +69,7 @@ class _MyWord extends State<MyWord> {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
+            CustomBackButton_(content: 'Kho từ vựng', color: Colors.blue,),
             Center(
               child: LogoSmall(),
             ),
@@ -97,8 +97,6 @@ class _MyWord extends State<MyWord> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 child: Row(
                   children: [
-                    // Phần bên trái: nút quay lại + tiêu đề
-                    CustomBackButton(content: 'Kho từ vựng'),
                     Spacer(),
                     AddWordButton(),
                   ],
