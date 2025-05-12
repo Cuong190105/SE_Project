@@ -31,8 +31,8 @@ class Settings extends StatefulWidget {
 
 class _SettingsState extends State<Settings> {
 
-  ValueNotifier<String> _name = ValueNotifier<String>('');
-  ValueNotifier<String> _email = ValueNotifier<String>('');
+  ValueNotifier<String> _name = ValueNotifier<String>('Unknown Name');
+  ValueNotifier<String> _email = ValueNotifier<String>('unknown_user@example.com');
   ValueNotifier<String> _profileImageUrl = ValueNotifier<String>(
       'https://i.pravatar.cc/150');
   ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
@@ -62,10 +62,12 @@ class _SettingsState extends State<Settings> {
       _errorMessage.value = null;
     });
     final result = await UserService.getUserInfo();
+
     if (result['success']) {
       setState(() {
-        _name = result['data']['name'] ?? 'Unknown';
-        _email = result['data']['email'] ?? 'Unknown';
+        print(result['data']['name'] ?? 'Unknown');
+        _name.value = result['data']['name'] ?? 'Unknown';
+        _email.value = result['data']['email'] ?? 'Unknown';
         _profileImageUrl = result['data']['avatar'] ?? _profileImageUrl;
         _nameController.text = _name.value;
         _emailController.text = _email.value;
@@ -115,7 +117,7 @@ class _SettingsState extends State<Settings> {
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
         ],
       ),
 
@@ -143,8 +145,8 @@ class _SettingsState extends State<Settings> {
               Row(
                   children: [
                     LeftSideMenu(selectedMenu: selectedMenu,
-                        nameController: _nameController,
-                        emailController: _emailController),
+                        name: _name,
+                        email: _email,),
                     RightSideContent(
                       selectedMenu: selectedMenu,
                       isLoading: _isLoading,

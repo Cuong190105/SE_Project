@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class StreakCount extends StatelessWidget {
 
-final int streakCount;
-const StreakCount({super.key, required this.streakCount});
+final int streakCount = 5;
+const StreakCount({super.key});
 
   @override
   Widget build(BuildContext context) {

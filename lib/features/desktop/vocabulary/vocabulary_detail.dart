@@ -63,7 +63,7 @@ class _VocabularyState extends State<Vocabulary> {
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
           SettingButton(),
         ],
       ),

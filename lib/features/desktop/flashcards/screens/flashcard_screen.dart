@@ -10,6 +10,9 @@ import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
+import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
+import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
+
 class FlashcardScreen extends StatefulWidget {
   const FlashcardScreen({super.key});
 
@@ -107,16 +110,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     _isLoading.value = false;
                   });
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tạo bộ thẻ thành công')),
-                  );
+                  SuccessDialog.show(context, 'Tạo bộ thẻ thành công');
                 } catch (e) {
                   setState(() {
                     _isLoading.value = false;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi tạo bộ thẻ: $e')),
-                  );
+                 ErrorDialog.show(context, 'Lỗi tạo bộ thẻ');
                 }
               }
             },
@@ -161,16 +160,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                     _isLoading.value = false;
                   });
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đổi tên thành công')),
-                  );
+                 SuccessDialog.show(context, 'Đổi tên bộ thẻ thành công');
                 } catch (e) {
                   setState(() {
                     _isLoading.value = false;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Lỗi đổi tên: $e')),
-                  );
+                  ErrorDialog.show(context, 'Lỗi đổi tên bộ thẻ');
                 }
               }
             },
@@ -183,7 +178,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int streakCount = 5; // Đợi dữ liệu từ database
+
     double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar:  AppBar(
@@ -192,11 +187,11 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
-            LogoSmall(),
+            CustomBackButton_(content: 'Flashcards', color:  Colors.blue,),
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
           SettingButton(),
         ],
       ),
@@ -257,27 +252,33 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: _sets.value.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return AddNewSetCard(onCreateSet: _showCreateSetDialog);
-                } else {
-                  return FlashcardSetCard(loadData: _loadData,
+
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate:  SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: screenWidth / 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.8, // Chiều cao sẽ tỉ lệ với chiều rộng
+                ),
+                itemCount: _sets.value.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return AddNewSetCard(onCreateSet: _showCreateSetDialog);
+                  } else if (index - 1 < _sets.value.length) {
+                    return FlashcardSetCard(
+                      loadData: _loadData,
                       showRenameSetDialog: _showRenameSetDialog,
-                      index: index-1, sets: _sets);
-                }
-              },
+                      index: index - 1,
+                      sets: _sets,
+                    );
+                  } else {
+                    return const SizedBox();
+                  }
+                },
+              ),
             ),
-          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

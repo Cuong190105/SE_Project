@@ -143,8 +143,12 @@ class _MeaningListState extends State<MeaningList> {
         final playerUS = AudioPlayer();
 
         try {
-          await playerUK.setUrl(audioUrlUK);
-          await playerUS.setUrl(audioUrlUS);
+          if(audioUrlUK.isNotEmpty) {
+            await playerUK.setUrl(audioUrlUK);
+          }
+         if(audioUrlUS.isNotEmpty) {
+            await playerUS.setUrl(audioUrlUS);
+          }
           wordDetail['audio'] = [playerUS, playerUK];  // preload xong
         } catch (e) {
           print('Không thể tải audio: $e');
@@ -269,6 +273,25 @@ class _MeaningListState extends State<MeaningList> {
       }
     }
 
+    for (var div in headingDivs) {
+      final h4 = div.querySelector('h4#Pronunciation');
+      if (h4 != null) {
+        // Tìm phần tử kế tiếp của div này (không phải toàn bộ cây DOM)
+        final parent = div.parent;
+        if (parent != null) {
+          final children = parent.children;
+          final index = children.indexOf(div);
+
+          if (index != -1 && index + 1 < children.length) {
+            final nextEl = children[index + 1];
+            if (nextEl.localName == 'ul') {
+              return nextEl.outerHtml;
+            }
+          }
+        }
+      }
+    }
+
     return '';
   }
 
@@ -276,7 +299,10 @@ class _MeaningListState extends State<MeaningList> {
     String type = chuyenTuLoaiSangTiengAnh(tuLoai);
     final document = html_parser.parse(html); // html là <ul>...</ul>
 
-    final ul = document.body?.children.first; // chính là <ul>
+    final bodyChildren = document.body?.children;
+    if (bodyChildren == null || bodyChildren.isEmpty) return oldp;
+    final ul = bodyChildren.first;
+
     if (ul == null) return oldp;
 
     for (var li in ul.children.where((e) => e.localName == 'li')) {
@@ -421,7 +447,16 @@ class _MeaningListState extends State<MeaningList> {
     int idex = 0;
 
     String type = chuyenTuLoaiSangTiengAnh(tuLoai);
-    final ul = document.body?.children.first;
+    final bodyChildren = document.body?.children;
+    if (bodyChildren == null)
+      print(1);
+    if( bodyChildren == null || bodyChildren.isEmpty)
+      print(2);
+
+    if (bodyChildren == null || bodyChildren.isEmpty) return listAudioUrl;
+
+    final ul = bodyChildren.first;
+
     if (ul == null) return listAudioUrl;
 
     Future<String> validateAudioUrl(String url) async {
@@ -522,6 +557,23 @@ class _MeaningListState extends State<MeaningList> {
     _player.dispose();
   }
 
+  void printWordDetails(List<Map<String, dynamic>> wordDetails) {
+    for (int i = 0; i < wordDetails.length; i++) {
+      final detail = wordDetails[i];
+      print('--- Word Detail $i ---');
+      detail.forEach((key, value) {
+        if (key == 'audio') {
+          if (value != null && value is List && value.isNotEmpty) {
+            print('$key: has audio');
+          } else {
+            print('$key: no audio');
+          }
+        } else {
+          print('$key: $value');
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

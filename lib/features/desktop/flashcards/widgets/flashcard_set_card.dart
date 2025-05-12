@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:eng_dictionary/data/models/flashcard_set.dart';
 import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:eng_dictionary/features/desktop/flashcards/screens/flashcard_detail.dart';
-
+import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
+import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
 class FlashcardSetCard extends StatefulWidget {
   final VoidCallback loadData;
   final Function(String setId, String currentName) showRenameSetDialog;
@@ -92,18 +93,29 @@ class _FlashcardSetCardState extends State<FlashcardSetCard> {
                                     onPressed: () async {
                                       setState(() => isLoading = true);
                                       try {
+                                        // Xóa bộ thẻ
                                         await FlashcardManager.deleteSet(set.id);
+
+                                        // Cập nhật lại danh sách bộ thẻ sau khi xóa
                                         widget.sets.value = await FlashcardManager.getSets();
-                                        setState(() => isLoading = false);
+
+                                        // Kiểm tra index hợp lệ trước khi gọi removeAt
+                                        if (widget.index >= 0 && widget.index < widget.sets.value.length) {
+                                          setState(() {
+                                            widget.sets.value.removeAt(widget.index); // Xóa bộ thẻ từ danh sách
+
+                                          });
+                                        } else {
+                                          // Xử lý nếu index không hợp lệ
+                                          print('Index không hợp lệ: $widget.index');
+                                        }
+
+                                        // Đóng hộp thoại và hiển thị thông báo thành công
                                         Navigator.pop(context);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Xóa bộ thẻ thành công')),
-                                        );
+                                        SuccessDialog.show(context, 'Xóa bộ thẻ thành công');
                                       } catch (e) {
                                         setState(() => isLoading = false);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Lỗi xóa bộ thẻ: $e')),
-                                        );
+                                        ErrorDialog.show(context, 'Xóa bộ thẻ thất bại');
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(

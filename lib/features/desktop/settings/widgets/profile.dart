@@ -36,18 +36,19 @@ class Profile extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        _buildInfoRow('Họ và tên', name.value),
-        _buildInfoRow('Email', email.value),
+        _buildInfoRow('Họ và tên: ', name.value),
+        const SizedBox(height: 10),
+        _buildInfoRow('Email: ', email.value),
       ],
     );
   }
 
   Widget _buildInfoRow(String title, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title),
-        Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold)), // In đậm title
+        Text(value,), // In đậm value
       ],
     );
   }

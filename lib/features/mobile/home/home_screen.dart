@@ -23,7 +23,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    int streakCount = 5; // Đợi database
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -32,7 +32,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
         actions: [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 1),
-            child: StreakCount(streakCount: streakCount),
+            child: StreakCount(),
           ),
           SettingButton(),
         ],

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/desktop/minigame/quiz_question.dart';
 import 'dart:async';
-
+import 'package:flutter/material.dart';
+import 'quizgame_screen.dart';
+import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
+import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
+import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 class QuizGameScreenPhone extends StatefulWidget {
   const QuizGameScreenPhone({super.key});
 
@@ -94,6 +99,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     if (isLoading) {
       return Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -104,8 +110,18 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade700,
-        title: const Text('Trắc nghiệm', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue.shade300,
+        elevation: 0,
+        leadingWidth: screenWidth,
+        leading: Stack(
+          children: [
+            CustomBackButton_(content: 'Mini game'),
+          ],
+        ),
+        actions: [
+          StreakCount(),
+          SettingButton(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),

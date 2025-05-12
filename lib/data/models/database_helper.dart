@@ -65,9 +65,18 @@ class DatabaseHelper {
         )
       ''');
 
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          email VARCHAR(255),
+          password TEXT,
+          avatar TEXT
+        )
+      ''');
+
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcard_sets_user_email ON flashcard_sets(user_email)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcards_set_id ON flashcards(set_id)');
-
       debugPrint('Hoàn tất khởi tạo cơ sở dữ liệu.');
       return db;
     } catch (e, stackTrace) {
@@ -363,6 +372,45 @@ class DatabaseHelper {
       debugPrint('Lỗi xóa bộ thẻ $setId: $e\n$stackTrace');
       rethrow;
     }
+  }
+
+  Future<int> registerUser(String name, String email, String password, String avatar) async {
+    final db = await database;
+    final result = db.select('SELECT id FROM users WHERE email = ?', [email]);
+    if (result.isNotEmpty) {
+      throw Exception('Email already exists');
+    }
+    db.execute(
+        'INSERT INTO users (name, email, password, avatar) VALUES (?, ?, ?, ?)',
+        [name, email, password, avatar]
+    );
+    final userId = db.lastInsertRowId;
+    return userId;
+  }
+
+  Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+    final db = await database;
+    final result = db.select(
+        'SELECT * FROM users WHERE email = ? AND password = ?',
+        [email, password]
+    );
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getUser() async {
+    final db = await database;
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('user_email');
+    final name = prefs.getString('user_name') ?? 'người dùng';
+    if (email == null) return null;
+    final result = db.select('SELECT * FROM users WHERE email = ?', [email]);
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+    return null;
   }
 
   Future<void> close() async {

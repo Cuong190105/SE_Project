@@ -3,7 +3,9 @@ import 'package:eng_dictionary/data/models/flashcard_set.dart';
 import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:eng_dictionary/data/models/flashcard.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:eng_dictionary/features/common/widgets/back_button.dart';
+import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
+import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
 class FlashcardDetailScreen extends StatefulWidget {
   const FlashcardDetailScreen({super.key});
 
@@ -281,8 +283,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     );
   }
 
+  Color lighten(Color color, [double amount = 0.2]) {
+    final hsl = HSLColor.fromColor(color);
+    final hslLight = hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    return hslLight.toColor();
+  }
+
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     if (_isLoading) {
       return Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -327,9 +336,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(flashcardSet!.name,
-            style: const TextStyle(color: Colors.white)),
-        backgroundColor: color,
+
+        backgroundColor: lighten(color, 0.2),
+        elevation: 0,
+        leadingWidth: screenWidth,
+        leading: Stack(
+        children: [
+          CustomBackButton_(content: flashcardSet!.name, color: color,),
+        ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
@@ -434,7 +449,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                       ),
                     ),
                   ),
-                  ElevatedButton.icon(
+                  Padding(
+                    padding: const EdgeInsets.only(right: 65),
+                    child:  ElevatedButton.icon(
                     onPressed: currentCardIndex < totalCards - 1
                         ? () {
                       setState(() {
@@ -453,6 +470,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                         vertical: 12,
                       ),
                     ),
+                  ),
                   ),
                 ],
               ),
@@ -688,16 +706,12 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           );
                           await _loadFlashcardSet();
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Xóa thẻ thành công')),
-                          );
+                          SuccessDialog.show(context, 'Xóa thẻ thành công');
                         } catch (e) {
                           setState(() {
                             _isLoading = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi xóa thẻ: $e')),
-                          );
+                          ErrorDialog.show(context, 'Lỗi xóa thẻ');
                         }
                       },
                     ),

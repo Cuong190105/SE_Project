@@ -9,7 +9,7 @@ class MinigameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int streakCount = 5; // Đợi dữ liệu từ database
+
     double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
@@ -18,11 +18,11 @@ class MinigameScreen extends StatelessWidget {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
-            LogoSmall(),
+            CustomBackButton_(content: 'Flashcards', color:  Colors.blue.shade700,),
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
           SettingButton(),
         ],
       ),
@@ -49,7 +49,7 @@ class MinigameScreen extends StatelessWidget {
               // Hướng dẫn
               Container(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5, // Giới hạn chiều cao
+                  maxHeight: MediaQuery.of(context).size.height * 0.55, // Giới hạn chiều cao
                 ),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -57,6 +57,7 @@ class MinigameScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.blue.shade200),
                 ),
+
                 child: Column(
                   children: [
                     Text(
@@ -82,6 +83,7 @@ class MinigameScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+
               ),
 
               const SizedBox(height: 20),

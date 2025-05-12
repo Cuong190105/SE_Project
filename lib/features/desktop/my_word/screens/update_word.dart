@@ -1,3 +1,16 @@
+import 'package:flutter/material.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:http/http.dart' as http;
+import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
+import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/common/widgets/back_button.dart';
+import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.dart';
+import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
+import 'package:eng_dictionary/features/desktop/my_word/widgets/vocabulary_card.dart';
+import 'package:eng_dictionary/features/desktop/my_word/screens/add_word.dart';
+import 'package:eng_dictionary/features/desktop/my_word/screens/my_word_detail.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
@@ -8,20 +21,18 @@ import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:eng_dictionary/features/desktop/my_word/widgets/related_word.dart';
 import 'package:eng_dictionary/features/desktop/my_word/widgets/meaning_box.dart';
-import 'package:eng_dictionary/core/services/cloud/google_drive_service.dart';
-import 'package:eng_dictionary/core/services/cloud/drive_uploader.dart';
-import 'package:googleapis/drive/v3.dart' as drive;
 
-class AddWord extends StatefulWidget {
-  const AddWord({super.key});
+class UpdateWord extends StatefulWidget {
+  final Map<String, dynamic> vocabularyList;
+  const UpdateWord({super.key, required this.vocabularyList});
 
   @override
-  _AddWordState createState() => _AddWordState();
+  _UpdateWordState createState() => _UpdateWordState();
 }
-class _AddWordState extends State<AddWord> {
+class _UpdateWordState extends State<UpdateWord> {
+  late Map<String, dynamic> vocabularyList;
 
-
-  final wordController = TextEditingController();
+  late TextEditingController wordController;
   final List<ValueNotifier<String>> selectedTypes = [];
   final List<List<TextEditingController>> phoneticControllers = [];
   final List<List<ValueNotifier<AudioPlayer>>> audioPlayers = [];
@@ -33,75 +44,73 @@ class _AddWordState extends State<AddWord> {
   final TextEditingController family = TextEditingController();
   final TextEditingController phrase = TextEditingController();
   final List<Map<String, dynamic>> means = [];
-
-  List<Widget> meaningBoxes = [];
   bool _isLoading = false;
+  String? _selectedTuLoai;
+  final List<String> _dsTuLoai = ['Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
+    'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'];
+  List<Widget> meaningBoxes = [];
+
   @override
   void initState() {
     super.initState();
-    _addNewMeaningBox();
+    vocabularyList = widget.vocabularyList;
+    wordController = TextEditingController(text: vocabularyList['word'] ?? '');
+    synonym.text = vocabularyList['synonym'] ?? '';
+    antonym.text = vocabularyList['antonym'] ?? '';
+    family.text = vocabularyList['family'] ?? '';
+    phrase.text = vocabularyList['phrase'] ?? '';
+    _loadExistingData();
   }
-
+  
   @override
   void dispose() {
-
+    // Dispose các controller chính
     wordController.dispose();
+    synonym.dispose();
+    antonym.dispose();
+    family.dispose();
+    phrase.dispose();
 
-    for (final phoneticPair in phoneticControllers) {
-      for (final controller in phoneticPair) {
+    // Dispose các controller trong các box
+    for (var controllers in phoneticControllers) {
+      for (var controller in controllers) {
         controller.dispose();
       }
     }
 
-    for (final controller in meaningControllers) {
+    for (var controller in meaningControllers) {
       controller.dispose();
     }
 
-    for (final exampleList in exampleControllers) {
-      for (final controller in exampleList) {
+    for (var controllers in exampleControllers) {
+      for (var controller in controllers) {
         controller.dispose();
       }
     }
 
-    for (final playerPair in audioPlayers) {
-      for (final player in playerPair) {
+    // Dispose audio players
+    for (var players in audioPlayers) {
+      for (var player in players) {
+        player.value.dispose();
         player.dispose();
       }
+    }
+
+    // Dispose notifiers
+    for (var type in selectedTypes) {
+      type.dispose();
+    }
+    for (var image in images) {
+      image.dispose();
     }
 
     super.dispose();
   }
 
-  Future<List<String>?> uploadMyImages(List<Uint8List> imageBytes) async {
-    try {
-      if (imageBytes.isEmpty) {
-        throw Exception('Không có ảnh nào được chọn');
-      }
-
-      // Kiểm tra kết nối
-      final driveApi = await GoogleDriveService.getDriveApi();
-      if (driveApi == null) {
-        throw Exception('Không thể kết nối với Google Drive');
-      }
-
-      final uploader = DriveUploader(driveApi);
-
-      // Upload ảnh và lấy links
-      final links = await uploader.uploadImages(imageBytes);
-      print("Các link công khai: $links");
-      return links;
-
-    } catch (e) {
-      print('Lỗi khi tải ảnh lên: $e');
-      // Hiển thị thông báo lỗi cho người dùng
-      throw Exception('Không thể tải ảnh lên. Vui lòng thử lại sau.');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    int streakCount = 5; // Đợi dữ liệu từ database
 
     return Scaffold(
       appBar: AppBar(
@@ -111,15 +120,16 @@ class _AddWordState extends State<AddWord> {
         leading: Stack(
           children: [
             Center(
-              child: LogoSmall(),
+              child:LogoSmall(),
             ),
           ],
         ),
         actions: [
-          StreakCount(),
+         StreakCount(),
           SettingButton(),
         ],
       ),
+
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -135,7 +145,14 @@ class _AddWordState extends State<AddWord> {
                 SingleChildScrollView(
                   child: Column(
                     children: [
-                      const SizedBox(height: 80),
+                      Align(
+                        alignment: Alignment.topLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          child: CustomBackButton(content: '${vocabularyList['word']}',),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 50),
                         child: Column(
@@ -202,7 +219,7 @@ class _AddWordState extends State<AddWord> {
 
                             ElevatedButton(
                               onPressed: () {
-                                if (wordController.text.isEmpty) {
+                                if (wordController.text.isEmpty || meaningControllers == null || meaningControllers.isEmpty) {
                                   // Hiển thị thông báo lỗi
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -210,14 +227,14 @@ class _AddWordState extends State<AddWord> {
                                         'Vui lòng điền từ vựng!',
                                         style: TextStyle(color: Colors.white),
                                       ),
-                                      backgroundColor: Colors.red,
+                                      backgroundColor: Colors.red, // Màu đỏ cho thông báo lỗi
                                     ),
                                   );
                                 } else {
+                                  // Nếu tất cả điều kiện hợp lệ, thực hiện lưu từ vựng
                                   _saveVocabulary();
-                                  uploadMyImages(images[0].value);
-                                  //printData();
-                                  // đẩy dữ liệu, dữ liệu lưu cục bộ
+                                  printData();
+                                  // đẩy dữ liệu, dữ liệu lưu cục bộ ok
                                 }
                               },
                               child: Text('Lưu từ vựng'),
@@ -229,11 +246,6 @@ class _AddWordState extends State<AddWord> {
                       const SizedBox(height: 24),
                     ],
                   ),
-                ),
-                Positioned(
-                  left: 10,
-                  top: 10,
-                  child: CustomBackButton(content: 'Thêm từ'),
                 ),
                 if (_isLoading)
                   Container(
@@ -247,6 +259,23 @@ class _AddWordState extends State<AddWord> {
         ),
       ),
     );
+  }
+
+  // chuyển sang bytes
+  Future<List<Uint8List>> fetchImage(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return [response.bodyBytes]; // trả về list chứa 1 ảnh
+      } else {
+        print("Failed to load image: ${response.statusCode}");
+        return []; // trả về list rỗng nếu lỗi
+      }
+    } catch (e) {
+      print("Error fetching image: $e");
+      return []; // trả về list rỗng nếu lỗi
+    }
   }
 
   // Hàm để bắt đầu lưu từ vựng
@@ -291,6 +320,50 @@ class _AddWordState extends State<AddWord> {
       );
     }
   }
+  // Nút quay lại
+  Widget buttonBack(BuildContext context) {
+    return Align(
+      alignment: Alignment.topLeft, // Canh về góc trái trên
+      child: IconButton(
+        icon: Icon(Icons.arrow_back, size: 30, color: Colors.blue.shade700),
+        onPressed: () {
+          Navigator.pop(context); // Quay lại màn hình trước đó
+        },
+
+        hoverColor: Colors.grey.shade300.withOpacity(0),              // Màu nền khi di chuột vào
+      ),
+    );
+  }
+  // từ loại
+  Widget typeWord() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Text(
+          'Từ loại: ',
+          style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+        ),
+        SizedBox(width: 8),
+        // Nút chọn từ loại với hiệu ứng hover
+        DropdownButton<String>(
+          hint: Text("Chọn từ loại", style: TextStyle(fontSize: 16, color: Colors.blue.shade900),),
+          value: _selectedTuLoai,
+          items: _dsTuLoai.map((loai) {
+            return DropdownMenuItem(
+              value: loai,
+              child: Text(loai),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedTuLoai = value;
+            });
+          },
+          //underline: SizedBox(), // Ẩn đường gạch dưới mặc định
+        ),
+      ],
+    );
+  }
 
   void _addNewMeaningBox() {
     final Map<String, dynamic> mean= {};
@@ -300,8 +373,12 @@ class _AddWordState extends State<AddWord> {
     final TextEditingController phoneticUsController = TextEditingController();
     final TextEditingController phoneticUkController = TextEditingController();
     final selectedType = ValueNotifier<String>("");
-    final List<ValueNotifier<AudioPlayer>> audioPlayer
-    = [ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer())];
+
+    final List<ValueNotifier<AudioPlayer>> audioPlayer = [
+      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer đầu tiên
+      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer thứ hai
+      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer thứ ba
+    ];
     final ValueNotifier<List<Uint8List>> image =  ValueNotifier([]);
     setState(() {
 
@@ -334,39 +411,145 @@ class _AddWordState extends State<AddWord> {
 
     });
   }
+  void _loadExistingData() {
+    final types = vocabularyList['type'] as List<dynamic>?;
+    final phonetics = vocabularyList['phonetic'] as List<dynamic>?;
+    final meanings = vocabularyList['meaning'] as List<dynamic>?;
+    final examples = vocabularyList['example'] as List<dynamic>?;
+    final audios = vocabularyList['audio'] as List<dynamic>?;
+    final images = vocabularyList['image'] as List<dynamic>?;
+
+    if (types != null &&
+        phonetics != null &&
+        meanings != null &&
+        examples != null &&
+        audios != null &&
+        images != null &&
+        types.length == meanings.length) {
+
+      for (int i = 0; i < types.length; i++) {
+        final type = ValueNotifier<String>(types[i]);
+        final meaning = TextEditingController(text: meanings[i]);
+
+        // Phonetics
+        final phoneticUs = TextEditingController(text: phonetics[i][0]);
+        final phoneticUk = TextEditingController(text: phonetics[i][1]);
+
+        // Examples
+        final List<String> examplesList = List<String>.from(examples[i]);
+        final example1 = TextEditingController(text: examplesList[0]);
+        final example2 = TextEditingController(text: examplesList[1]);
+
+        // Audio players
+        final List<ValueNotifier<AudioPlayer>> audioPlayers = [
+          ValueNotifier<AudioPlayer>(AudioPlayer()),
+          ValueNotifier<AudioPlayer>(AudioPlayer()),
+          ValueNotifier<AudioPlayer>(AudioPlayer())
+        ];
+
+        // Load audio URLs
+        Future.delayed(Duration.zero, () async {
+          try {
+            for (int j = 0; j < audios[i].length && j < 3; j++) {
+              await audioPlayers[j].value.setUrl(audios[i][j]);
+            }
+          } catch (e) {
+            print('Error loading audio: $e');
+          }
+        });
+
+        // Image bytes
+        final imageBytes = ValueNotifier<List<Uint8List>>([]);
+        if (i < images.length) {
+          fetchImage(images[i]).then((bytes) {
+            imageBytes.value = bytes;
+          });
+        }
+
+        setState(() {
+          meaningBoxes.add(MeaningBox(
+            selectedType: type,
+            meaningController: meaning,
+            example1Controller: example1,
+            example2Controller: example2,
+            phoneticUkController: phoneticUk,
+            phoneticUsController: phoneticUs,
+            audioPlayers: audioPlayers,
+            imageByte: imageBytes,
+          ));
+
+          selectedTypes.add(type);
+          meaningControllers.add(meaning);
+          phoneticControllers.add([phoneticUk, phoneticUs]);
+          exampleControllers.add([example1, example2]);
+          this.audioPlayers.add(audioPlayers);
+          this.images.add(imageBytes);
+        });
+      }
+    } else {
+      _addNewMeaningBox();
+    }
+  }
   void _removeNewMeaningBox() {
-    if (means.isEmpty || meaningBoxes.length == 1) return;
+    if (meaningBoxes.length <= 1) return;
 
     setState(() {
-      // Lấy dữ liệu cuối cùng
-      final mean = means.removeLast();
+      // Xóa và dispose các controller
+      final lastIndex = meaningBoxes.length - 1;
 
-      // Giải phóng các controller văn bản
-      (mean['meaning'] as TextEditingController).dispose();
-      for (var controller in mean['example'] as List<TextEditingController>) {
+      // Dispose AudioPlayers
+      for (var playerNotifier in audioPlayers[lastIndex]) {
+        playerNotifier.value.dispose();
+        playerNotifier.dispose();
+      }
+
+      // Dispose các controller khác
+      for (var controller in phoneticControllers[lastIndex]) {
         controller.dispose();
       }
-      for (var controller in mean['phonetic'] as List<TextEditingController>) {
+      meaningControllers[lastIndex].dispose();
+      for (var controller in exampleControllers[lastIndex]) {
         controller.dispose();
       }
 
-      // Giải phóng AudioPlayer (dạng ValueNotifier)
-      for (var playerNotifier in mean['audio'] as List<ValueNotifier<AudioPlayer>>) {
-        playerNotifier.value.dispose(); // Dispose actual player
-        playerNotifier.dispose(); // Dispose ValueNotifier nếu không tái sử dụng
-      }
-
-      // Giải phóng selectedType & imageByte nếu bạn tạo bằng ValueNotifier
-      selectedTypes.removeLast().dispose();
-      images.removeLast().dispose();
-
-      // Xóa khỏi các danh sách liên quan
-      meaningControllers.removeLast();
-      exampleControllers.removeLast();
+      // Xóa khỏi các list
+      meaningBoxes.removeLast();
+      selectedTypes.removeLast();
       phoneticControllers.removeLast();
       audioPlayers.removeLast();
-      meaningBoxes.removeLast();
+      meaningControllers.removeLast();
+      exampleControllers.removeLast();
+      images.removeLast();
     });
+  }
+
+  Future<void> _loadAudios(List<List<String>> audiosUrl, List<List<AudioPlayer>> audioPlayers) async {
+
+    for (int i = 0; i < audiosUrl.length; i++) {
+      await _audios(audiosUrl[i], audioPlayers[i]);
+    }
+  }
+  Future<void> _audios(List<String> audiosUrl, List<AudioPlayer> players) async {
+    try {
+      for (int i = 0; i < audiosUrl.length; i++) {
+        await players[i].setUrl(audiosUrl[i]);
+      }
+    } catch (e) {
+      print('Lỗi thêm âm thanh: $e');
+    }
+
+  }
+  Future<void> _playAudio(AudioPlayer player) async {
+    try {
+      if (player.playing) {
+        await player.seek(Duration.zero);
+      } else {
+        await player.seek(Duration.zero);
+        await player.play();
+      }
+    } catch (e) {
+      print('Lỗi phát âm thanh: $e');
+    }
   }
 
   Future<void> printData() async {
@@ -384,6 +567,7 @@ class _AddWordState extends State<AddWord> {
       for (int j = 0; j < audioPlayers[i].length; j++) {
         final player = audioPlayers[i][j];
 
+        // Kiểm tra duration để xác nhận đã có âm thanh
         final duration = await player.value.duration;
         if (duration == null) {
           print('audioPlayers[$i][$j] has no audio loaded');

@@ -6,8 +6,8 @@ import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.d
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/desktop/my_word/widgets/vocabulary_card.dart';
 import 'package:eng_dictionary/features/desktop/my_word/screens/add_word.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/my_word_detail.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/update_word.dart';
+import 'package:eng_dictionary/features/desktop/my_word/screens/my_word_detail.dart';
+import 'package:eng_dictionary/features/desktop/my_word/screens/update_word.dart';
 
 class MyWord extends StatefulWidget {
   const MyWord({super.key});
@@ -76,7 +76,7 @@ class _MyWord extends State<MyWord> {
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
           SettingButton(),
         ],
       ),

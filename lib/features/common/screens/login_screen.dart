@@ -295,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => RegisterScreenDesktop(),
+                                          (context) => RegisterScreen(),
                                     ),
                                   );
                                 },

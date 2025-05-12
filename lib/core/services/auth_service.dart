@@ -22,6 +22,8 @@ class AuthService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', response['access_token']);
         await prefs.setString('user_email', email);
+        await prefs.setString('user_name', response['name'] ?? '');
+        print('djfnhduhfud$response');
         return {
           'success': true,
           'message': 'Đăng nhập thành công',
@@ -61,6 +63,8 @@ class AuthService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', response['access_token']);
         await prefs.setString('user_email', email);
+        await prefs.setString('user_name', name);
+
         return {
           'success': true,
           'message': response['message'] ?? 'Đăng ký thành công, email xác thực đã được gửi',
@@ -404,5 +408,10 @@ class AuthService {
   static Future<String?> getUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_email');
+  }
+
+  static Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_name') ?? 'người dùng';;
   }
 }

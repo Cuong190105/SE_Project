@@ -6,14 +6,14 @@ import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
-class RegisterScreenDesktop extends StatefulWidget {
-  const RegisterScreenDesktop({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreenDesktop> createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreenDesktop> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -43,6 +43,9 @@ class _RegisterScreenState extends State<RegisterScreenDesktop> {
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       return iosInfo.utsname.machine ?? 'iOS Device';
+    } else if (Platform.isWindows) {
+      WindowsDeviceInfo windowsInfo = await deviceInfo.windowsInfo;
+      return windowsInfo.computerName ?? 'Windows Device';
     } else {
       return 'Unknown Device';
     }

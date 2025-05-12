@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/features/common/screens/register_screen.dart';
+import 'package:eng_dictionary/features/common/screens/login_screen.dart';
+import 'package:eng_dictionary/data/models/database_helper.dart';
+import 'package:eng_dictionary/core/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eng_dictionary/core/services/api_service.dart';
+
 class LeftSideMenu extends StatefulWidget {
   final ValueNotifier<String> selectedMenu;
-  final TextEditingController nameController;
-  final TextEditingController emailController;
+  final ValueNotifier<String> name;
+  final ValueNotifier<String> email;
 
   const LeftSideMenu({
     super.key,
     required this.selectedMenu,
-    required this.nameController,
-    required this.emailController,
+    required this.name,
+    required this.email,
   });
 
   @override
@@ -17,6 +22,9 @@ class LeftSideMenu extends StatefulWidget {
 }
 
 class _LeftSideMenuState extends State<LeftSideMenu> {
+  late Future<Map<String, dynamic>?> _userFuture;
+  late Future<String?> _userName;
+  late Future<String?> _userEmail;
   Map<String, bool> isHoveredMap = {};
 
   Widget buildMenuButtonWithIcon(IconData icon, String title, {bool isLogout = false}) {
@@ -39,11 +47,36 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
           borderRadius: BorderRadius.circular(10),
           onTap: () {
             if (isLogout) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const RegisterScreenDesktop()),
+              showDialog(
+                context: context,
+                barrierDismissible: false, // không cho phép đóng bằng cách bấm ngoài hộp thoại
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text("Xác nhận"),
+                    content: Text("Bạn có muốn đăng xuất?"),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Đóng hộp thoại
+                        },
+                        child: Text("Hủy"),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Đóng hộp thoại
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          );
+                        },
+                        child: Text("Đăng xuất"),
+                      ),
+                    ],
+                  );
+                },
               );
-            } else {
+            }
+            else {
               setState(() {
                 widget.selectedMenu.value = title;
               });
@@ -77,6 +110,49 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
     );
   }
 
+  void debugSharedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    if (keys.isEmpty) {
+      debugPrint('SharedPreferences đang rỗng.');
+    } else {
+      for (var key in keys) {
+        final value = prefs.get(key);
+        debugPrint('[$key] = $value');
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getUsers() async {
+    try {
+      final response = await ApiService.get('users');
+
+      if (response is List) {
+        return List<Map<String, dynamic>>.from(response);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Lỗi khi lấy danh sách người dùng: $e');
+      return [];
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _userName = AuthService.getUserName();
+    _userEmail = AuthService.getUserEmail();
+    _userFuture = Future.wait([_userName, _userEmail]).then((values) {
+      return {
+        'name': values[0] ,
+        'email': values[1] ,
+      };
+    });
+    //debugSharedPreferences();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -97,20 +173,25 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (widget.nameController.text.isEmpty || widget.emailController.text.isEmpty)
+                    if (widget.name.value.isEmpty || widget.email.value.isEmpty)
                       const CircularProgressIndicator()
                     else ...[
                       Text(
-                        widget.nameController.text,
+                        widget.name.value,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
+
                       Text(
-                        widget.emailController.text,
+                        widget.email.value,
                         style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ],

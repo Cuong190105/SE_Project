@@ -54,7 +54,7 @@ class _TranslateState extends State<Translate> {
           ],
         ),
         actions: [
-          StreakCount(streakCount: streakCount),
+          StreakCount(),
           SettingButton(),
         ],
       ),
