@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
 import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
 import 'build_info_row.dart';
-
+import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
 class ChangeName extends StatelessWidget {
   final ValueNotifier<String> oldName;
   final ValueNotifier<bool> isLoading;
@@ -45,7 +45,8 @@ class ChangeName extends StatelessWidget {
           ),
           ValueListenableBuilder<String?>(
             valueListenable: errorMessage,
-            builder: (context, value, _) => value != null
+            builder: (context, value, _) =>
+            value != null
                 ? Padding(
               padding: const EdgeInsets.only(top: 10),
               child: Text(value, style: const TextStyle(color: Colors.red)),
@@ -55,16 +56,17 @@ class ChangeName extends StatelessWidget {
           const SizedBox(height: 20),
           ValueListenableBuilder<bool>(
             valueListenable: isLoading,
-            builder: (context, loading, _) => ElevatedButton(
-              onPressed: loading ? null : () => _updateName(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                foregroundColor: Colors.white,
-              ),
-              child: loading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Lưu thay đổi'),
-            ),
+            builder: (context, loading, _) =>
+                ElevatedButton(
+                  onPressed: loading ? null : () => _updateName(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Lưu thay đổi'),
+                ),
           ),
         ],
       ),
@@ -81,17 +83,22 @@ class ChangeName extends StatelessWidget {
     isLoading.value = true;
     errorMessage.value = null;
 
-    final result = await UserService.changeName(newName);
-    if (result['success']) {
-      oldName.value = newName;
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_name', newName);
+    try {
+      final result = await UserService.changeName(newName);
+      if (result['success']) {
+        oldName.value = newName;
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', newName);
 
-      SuccessDialog.show(context, result['message']);
-    } else {
-      errorMessage.value = result['message'];
+        SuccessDialog.show(context, result['message']);
+      } else {
+        errorMessage.value = result['message'];
+      }
+    } catch (e) {
+      errorMessage.value = 'Lỗi xảy ra: $e';
+    } finally {
+      isLoading.value = false;
     }
-
-    isLoading.value = false;
   }
 }
+
