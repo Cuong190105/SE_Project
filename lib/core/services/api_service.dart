@@ -50,6 +50,7 @@ class ApiService {
 
   // POST với file
   static Future<dynamic> postWithFiles(String endpoint, Map<String, String> fields, Map<String, File> files) async {
+
     try {
       var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/$endpoint'));
 
@@ -84,7 +85,7 @@ class ApiService {
       try {
         return jsonDecode(response.body);
       } catch (e) {
-        return response.body;
+        return response.bodyBytes;
       }
     } else if (response.statusCode == 409) {
       // Xử lý lỗi validation

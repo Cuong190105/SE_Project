@@ -4,17 +4,20 @@ import 'package:eng_dictionary/data/models/database_helper.dart';
 import 'package:eng_dictionary/core/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eng_dictionary/core/services/api_service.dart';
+import 'dart:typed_data';
 
 class LeftSideMenu extends StatefulWidget {
   final ValueNotifier<String> selectedMenu;
-  final ValueNotifier<String> name;
-  final ValueNotifier<String> email;
+  final String name;
+  final String email;
+  final ValueNotifier<String> profileImageUrl;
 
   const LeftSideMenu({
     super.key,
     required this.selectedMenu,
     required this.name,
     required this.email,
+    required this.profileImageUrl,
   });
 
   @override
@@ -22,11 +25,10 @@ class LeftSideMenu extends StatefulWidget {
 }
 
 class _LeftSideMenuState extends State<LeftSideMenu> {
-  late Future<Map<String, dynamic>?> _userFuture;
-  late Future<String?> _userName;
-  late Future<String?> _userEmail;
+
   Map<String, bool> isHoveredMap = {};
 
+  Uint8List imageBytes = Uint8List(0);
   Widget buildMenuButtonWithIcon(IconData icon, String title, {bool isLogout = false}) {
     bool isSelected = widget.selectedMenu.value == title;
 
@@ -138,19 +140,18 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
     }
   }
 
+  void _avatar() async {
+   final img = await ApiService.get('user/avatar?avatar=$widget.profileImageUrl');
+   setState(() {
+      imageBytes = img;
+   });
+  }
+
   @override
   void initState() {
+    _avatar();
     super.initState();
-    _userName = AuthService.getUserName();
-    _userEmail = AuthService.getUserEmail();
-    _userFuture = Future.wait([_userName, _userEmail]).then((values) {
-      return {
-        'name': values[0] ,
-        'email': values[1] ,
-      };
-    });
     //debugSharedPreferences();
-
   }
 
   @override
@@ -165,19 +166,20 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
           children: [
             Row(
               children: [
-                const CircleAvatar(
+                 CircleAvatar(
                   radius: 30,
-                  backgroundImage: NetworkImage('https://i.pravatar.cc/150'),
+
+                  backgroundImage:  MemoryImage(imageBytes),
                 ),
                 const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (widget.name.value.isEmpty || widget.email.value.isEmpty)
+                    if (widget.name.isEmpty || widget.email.isEmpty)
                       const CircularProgressIndicator()
                     else ...[
                       Text(
-                        widget.name.value,
+                        widget.name,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -188,7 +190,7 @@ class _LeftSideMenuState extends State<LeftSideMenu> {
                       ),
 
                       Text(
-                        widget.email.value,
+                        widget.email,
                         style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,

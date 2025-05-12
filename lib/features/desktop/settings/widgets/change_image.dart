@@ -7,8 +7,9 @@ import 'package:eng_dictionary/core/services/user_service.dart';
 import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
 import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
 import 'build_info_row.dart';
-
-class ChangeImage extends StatelessWidget {
+import 'dart:typed_data';
+import 'package:eng_dictionary/core/services/api_service.dart';
+class ChangeImage extends StatefulWidget {
   final ValueNotifier<bool> isLoading;
   final ValueNotifier<String?> errorMessage;
   final ValueNotifier<String> profileImageUrl;
@@ -21,6 +22,26 @@ class ChangeImage extends StatelessWidget {
     required this.profileImageUrl,
     required this.newImagePath,
   });
+
+  @override
+  _ChangeImageState createState() => _ChangeImageState();
+}
+class _ChangeImageState extends State<ChangeImage> {
+
+  Uint8List imageBytes = Uint8List(0);
+  void _avatar() async {
+    final img = await ApiService.get('user/avatar?avatar=$widget.profileImageUrl');
+    setState(() {
+      imageBytes = img;
+    });
+  }
+
+  @override
+  void initState() {
+    _avatar();
+    super.initState();
+    //debugSharedPreferences();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +59,11 @@ class ChangeImage extends StatelessWidget {
               Column(
                 children: [
                   Container(
-                    width: 100,
-                    height: 130,
+                    width: 150,
+                    height: 200,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(profileImageUrl.value),
+                        image: MemoryImage(imageBytes),
                         fit: BoxFit.cover,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -60,19 +81,19 @@ class ChangeImage extends StatelessWidget {
                   Stack(
                     children: [
                       Container(
-                        width: 100,
-                        height: 130,
+                        width: 150,
+                        height: 200,
                         decoration: BoxDecoration(
-                          image: newImagePath.value.isNotEmpty
+                          image: widget.newImagePath.value.isNotEmpty
                               ? DecorationImage(
-                            image: FileImage(File(newImagePath.value)),
+                            image: FileImage(File(widget.newImagePath.value)),
                             fit: BoxFit.cover,
                           )
                               : null,
                           borderRadius: BorderRadius.circular(8),
                           color: Colors.grey[200],
                         ),
-                        child: newImagePath.value.isEmpty
+                        child: widget.newImagePath.value.isEmpty
                             ? const Center(
                           child: Text(
                             'Chưa chọn ảnh',
@@ -82,7 +103,7 @@ class ChangeImage extends StatelessWidget {
                         )
                             : null,
                       ),
-                      if (newImagePath.value.isNotEmpty)
+                      if (widget.newImagePath.value.isNotEmpty)
                         Positioned(
                           top: 5,
                           right: 5,
@@ -108,23 +129,40 @@ class ChangeImage extends StatelessWidget {
               ),
             ],
           ),
-          if (errorMessage.value != null) ...[
+          if (widget.errorMessage.value != null) ...[
             const SizedBox(height: 10),
             Text(
-              errorMessage.value!,
+              widget.errorMessage.value!,
               style: const TextStyle(color: Colors.red, fontSize: 14),
             ),
           ],
           const SizedBox(height: 20),
           Row(
             children: [
+              const SizedBox(width: 10),
               ElevatedButton(
-                onPressed: isLoading.value ? null : () => _pickImage(context),
+                onPressed:  () => _pickImage(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade700,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Chọn ảnh mới'),
+                child: const Text('chọn ảnh mới'),
+              ),
+              const SizedBox(width: 45),
+
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.isLoading,
+                builder: (context, loading, _) =>
+                    ElevatedButton(
+                      onPressed: loading ? null : () => _updateAvatar(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Lưu thay đổi'),
+                    ),
               ),
             ],
           ),
@@ -134,34 +172,46 @@ class ChangeImage extends StatelessWidget {
   }
 
   // Hàm chọn ảnh mới từ bộ chọn tệp
-  Future<void> _pickImage(BuildContext context) async {
+  Future<void> _updateAvatar(BuildContext context) async {
+
+    if (widget.newImagePath.value.isNotEmpty) {
+      // Update the new image path
+      widget.isLoading.value = true;
+      widget.errorMessage.value = null;
+
+      final result = await UserService.updateAvatar(File(widget.newImagePath.value));
+      if (result['success']) {
+        widget.profileImageUrl.value = result['avatar'];
+        widget.newImagePath.value = '';
+        SuccessDialog.show(context, 'Cập nhật ảnh đại diện thành công!');
+      } else {
+        widget.errorMessage.value = result['message'];
+      }
+      widget.isLoading.value = false;
+    }
+  }
+
+  Future<void> _pickImage() async {
     final XTypeGroup typeGroup = XTypeGroup(
       label: 'images',
-      extensions: <String>['jpg', 'jpeg', 'png'],
+      extensions: <String>['jpg', 'jpeg'],
     );
 
     final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
 
     if (file != null) {
       // Update the new image path
-      newImagePath.value = file.path;
-      isLoading.value = true;
-      errorMessage.value = null;
+      setState(() {
+        widget.newImagePath.value = file.path;
+      });
 
-      final result = await UserService.updateAvatar(File(file.path));
-      if (result['success']) {
-        profileImageUrl.value = result['avatar'];
-        newImagePath.value = '';
-        SuccessDialog.show(context, 'Cập nhật ảnh đại diện thành công!');
-      } else {
-        errorMessage.value = result['message'];
-      }
-      isLoading.value = false;
+
     }
   }
-
   // Hàm xóa ảnh
   void _removeImage() {
-    newImagePath.value = '';
+    setState(() {
+      widget.newImagePath.value = '';
+    });
   }
 }

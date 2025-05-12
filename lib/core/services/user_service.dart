@@ -27,6 +27,7 @@ class UserService {
         {},
         {'file': imageFile},
       );
+
       if (response != null && response['avatar'] != null) {
         return {
           'success': true,
@@ -39,6 +40,7 @@ class UserService {
         };
       }
     } catch (e) {
+      print('Error: $e');
       return {
         'success': false,
         'message': 'Lỗi cập nhật ảnh đại diện: $e',

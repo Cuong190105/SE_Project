@@ -58,7 +58,7 @@ class _SettingsState extends State<Settings> {
 
   Future<void> _fetchUserInfo() async {
     setState(() {
-      _isLoading.value = true;
+      _isLoading.value = false;
       _errorMessage.value = null;
     });
     final result = await UserService.getUserInfo();
@@ -68,18 +68,17 @@ class _SettingsState extends State<Settings> {
         print(result['data']['name'] ?? 'Unknown');
         _name.value = result['data']['name'] ?? 'Unknown';
         _email.value = result['data']['email'] ?? 'Unknown';
-        _profileImageUrl = result['data']['avatar'] ?? _profileImageUrl;
+        _profileImageUrl.value = result['data']['avatar'] ?? ''; //https://i.pravatar.cc/150
+        print(_profileImageUrl.value);
         _nameController.text = _name.value;
         _emailController.text = _email.value;
+        _isLoading.value = false;
       });
     } else {
       setState(() {
         _errorMessage.value = result['message'];
       });
     }
-    setState(() {
-      _isLoading.value = false;
-    });
   }
 
   @override
@@ -94,15 +93,8 @@ class _SettingsState extends State<Settings> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-    double screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
-    int streakCount = 5; // Đợi dữ liệu từ database
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -144,22 +136,46 @@ class _SettingsState extends State<Settings> {
 
               Row(
                   children: [
-                    LeftSideMenu(selectedMenu: selectedMenu,
-                        name: _name,
-                        email: _email,),
-                    RightSideContent(
-                      selectedMenu: selectedMenu,
-                      isLoading: _isLoading,
-                      errorMessage: _errorMessage,
-                      name: _name,
-                      email: _email,
-                      profileImageUrl: _profileImageUrl,
-                      newImagePath: _newImagePath,
-                      nameController: _nameController,
-                      emailController: _emailController,
-                      oldPasswordController: _oldPasswordController,
-                      confirmPasswordController: _confirmPasswordController,
-                      passwordController: _passwordController,
+                    ValueListenableBuilder<String>(
+                      valueListenable: _name,
+                      builder: (context, nameValue, _) {
+                        return ValueListenableBuilder<String>(
+                          valueListenable: _email,
+                          builder: (context, emailValue, _) {
+                            return LeftSideMenu(
+                              name: nameValue,
+                              email: emailValue,
+                              selectedMenu: selectedMenu,
+                              profileImageUrl: _profileImageUrl,
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    ValueListenableBuilder<String>(
+                      valueListenable: _name,
+                      builder: (context, nameValue, _) {
+                        return ValueListenableBuilder<String>(
+                          valueListenable: _email,
+                          builder: (context, emailValue, _) {
+                            return  RightSideContent(
+                              selectedMenu: selectedMenu,
+                              isLoading: _isLoading,
+                              errorMessage: _errorMessage,
+                              name: _name,
+                              email: _email,
+                              profileImageUrl: _profileImageUrl,
+                              newImagePath: _newImagePath,
+                              nameController: _nameController,
+                              emailController: _emailController,
+                              oldPasswordController: _oldPasswordController,
+                              confirmPasswordController: _confirmPasswordController,
+                              passwordController: _passwordController,
+                            );
+                          },
+                        );
+                      },
                     ),
                   ]
               ),
