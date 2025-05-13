@@ -245,7 +245,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
+                childAspectRatio: 1.0,
               ),
               itemCount: _sets.length + 1,
               itemBuilder: (context, index) {
@@ -258,11 +258,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue.shade700,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: _showCreateSetDialog,
       ),
     );
   }
@@ -286,7 +281,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 color: Colors.blue.shade50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.add, size: 40, color: Colors.blue.shade700),
+              child: Icon(Icons.add, size: 20, color: Colors.blue.shade700),
             ),
             const SizedBox(height: 16),
             Text(
@@ -329,7 +324,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
             Stack(
               children: [
                 Container(
-                  height: 100,
+                  height: 75,
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: const BorderRadius.only(
@@ -340,7 +335,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   child: Center(
                     child: Icon(
                       Icons.card_membership,
-                      size: 48,
+                      size: 40,
                       color: Colors.white,
                     ),
                   ),
@@ -437,7 +432,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                         child: Text(
                           set.name,
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                           maxLines: 1,
