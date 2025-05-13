@@ -503,11 +503,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          _isFlipped ? Icons.translate : Icons.text_fields,
-                          size: 48,
-                          color: color,
-                        ),
                         const SizedBox(height: 24),
                         Text(
                           _isFlipped ? card.backContent : card.frontContent,
