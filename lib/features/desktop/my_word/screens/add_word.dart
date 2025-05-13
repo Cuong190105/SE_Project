@@ -298,7 +298,7 @@ class _AddWordState extends State<AddWord> {
     final TextEditingController phoneticUkController = TextEditingController();
     final selectedType = ValueNotifier<String>("");
     final List<ValueNotifier<AudioPlayer>> audioPlayer
-    = [ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer())];
+    = [ValueNotifier(AudioPlayer()), ValueNotifier(AudioPlayer())];
     final ValueNotifier<List<Uint8List>> image =  ValueNotifier([]);
     setState(() {
 

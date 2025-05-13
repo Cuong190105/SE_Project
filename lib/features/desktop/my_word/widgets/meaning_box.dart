@@ -79,7 +79,7 @@ class MeaningBox extends StatelessWidget {
             children: [
               Expanded(child: Example(label: 'Nghĩa', controller: meaningController)),
               const SizedBox(width: 8),
-              AddSoundButton(size: 900, audioPlayer: audioPlayers[2]),
+              //AddSoundButton(size: 900, audioPlayer: audioPlayers[2]),
             ],
           ),
           const SizedBox(height: 10),

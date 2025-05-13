@@ -64,7 +64,6 @@ class _WordDetailsState extends State<WordDetails> {
 
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    int streakCount = 5; // Đợi dữ liệu từ database
 
     final Map<String, dynamic> data = widget.wordDetails;
 
@@ -172,11 +171,11 @@ class _WordDetailsState extends State<WordDetails> {
                                         types[index],
                                         style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                                       ),
-                                      const SizedBox(width: 15),
+                                      /*const SizedBox(width: 15),
                                       GestureDetector(
                                         onTap: () => _playAudio(audiosPlayer[index][0]),
                                         child: const Icon(Icons.volume_up, size: 20),
-                                      ),
+                                      ),*/
                                     ],
                                   ),
                                   const SizedBox(height: 5),

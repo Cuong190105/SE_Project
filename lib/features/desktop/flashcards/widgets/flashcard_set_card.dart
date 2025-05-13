@@ -54,7 +54,7 @@ class _FlashcardSetCardState extends State<FlashcardSetCard> {
                 Stack(
                   children: [
                     Container(
-                      height: 100,
+                      height: 50,
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: const BorderRadius.only(
@@ -65,7 +65,7 @@ class _FlashcardSetCardState extends State<FlashcardSetCard> {
                       child: Center(
                         child: Icon(
                           Icons.card_membership,
-                          size: 48,
+                          size: 40,
                           color: Colors.white,
                         ),
                       ),
