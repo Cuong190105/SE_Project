@@ -521,10 +521,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   top: 8,
                   right: 8,
                   child: IconButton(
-                    icon: Icon(
-                      Icons.edit,
-                      color: color,
-                    ),
+                    icon: Icon(Icons.edit, color: color),
                     onPressed: () => _showEditCardDialog(card),
                   ),
                 ),
@@ -556,17 +553,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     },
                   ),
                 ),
-                Positioned(
-                  bottom: 8,
-                  left: 8,
-                  child: Text(
-                    'Đã học',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
+                if (card.isLearned)
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Text(
+                      'Đã học',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
