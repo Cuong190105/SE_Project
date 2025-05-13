@@ -18,7 +18,10 @@ class MinigameScreen extends StatelessWidget {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
-            CustomBackButton_(content: 'Flashcards', color:  Colors.blue.shade700,),
+            CustomBackButton_(content: 'Mini game', color:  Colors.blue.shade700,),
+            Center(
+              child: LogoSmall(),
+            ),
           ],
         ),
         actions: [
@@ -26,9 +29,19 @@ class MinigameScreen extends StatelessWidget {
           SettingButton(),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+
+          child:  Padding(
+            padding: const EdgeInsets.all(20.0),
+              child: Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -91,11 +104,11 @@ class MinigameScreen extends StatelessWidget {
               // Start button
               ElevatedButton(
                 onPressed: () {
-                  print('Nhấn nút Bắt đầu, chuyển đến QuizGameScreenPhone');
+                  print('Nhấn nút Bắt đầu, chuyển đến QuizGameScreen');
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const QuizGameScreenPhone(),
+                      builder: (context) => const QuizGameScreen(),
                     ),
                   );
                 },
@@ -118,6 +131,8 @@ class MinigameScreen extends StatelessWidget {
               const SizedBox(height: 30),
             ],
           ),
+        ),
+
         ),
       ),
     );

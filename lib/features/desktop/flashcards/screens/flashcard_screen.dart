@@ -188,6 +188,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
         leading: Stack(
           children: [
             CustomBackButton_(content: 'Flashcards', color:  Colors.blue,),
+            Center(
+              child: LogoSmall(),
+            ),
           ],
         ),
         actions: [
@@ -195,7 +198,16 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           SettingButton(),
         ],
       ),
-      body: _isLoading.value
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+        child: _isLoading.value
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
@@ -255,12 +267,12 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
                 gridDelegate:  SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: screenWidth / 3,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.8, // Chiều cao sẽ tỉ lệ với chiều rộng
+                  childAspectRatio: 1.6, // Chiều cao sẽ tỉ lệ với chiều rộng
                 ),
                 itemCount: _sets.value.length + 1,
                 itemBuilder: (context, index) {
@@ -280,12 +292,15 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               ),
             ),
         ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
+
+      /*floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue.shade700,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: Colors.blue),
         onPressed: _showCreateSetDialog,
-      ),
+      ),*/
+
     );
   }
 }

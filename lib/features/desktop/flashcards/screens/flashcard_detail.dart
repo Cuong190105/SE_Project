@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/success_dialog.dart';
 import 'package:eng_dictionary/features/common/widgets/error_dialog.dart';
+import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 class FlashcardDetailScreen extends StatefulWidget {
   const FlashcardDetailScreen({super.key});
 
@@ -343,6 +344,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         leading: Stack(
         children: [
           CustomBackButton_(content: flashcardSet!.name, color: color,),
+          Center(
+            child: LogoSmall(),
+          ),
         ],
         ),
         actions: [
@@ -372,7 +376,16 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+    child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -403,80 +416,101 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             ),
           ),
           Expanded(
-            child: totalCards > 0
-                ? _buildFlashcard(color)
+            child: totalCards > 0 ?
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child:  Row (
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: currentCardIndex > 0
+                              ? () {
+                            setState(() {
+                              currentCardIndex--;
+                              _isFlipped = false;
+                            });
+                          }
+                              : null,
+                          icon: const Icon(Icons.arrow_back_ios, size: 16),
+                          label: const Text('Trước'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                        _buildFlashcard(color),
+                        ElevatedButton.icon(
+                          onPressed: currentCardIndex < totalCards - 1
+                              ? () {
+                            setState(() {
+                              currentCardIndex++;
+                              _isFlipped = false;
+                            });
+                          }
+                              : null,
+                          icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                          label: const Text('Tiếp'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                    )
                 : _buildEmptyState(color),
           ),
           if (totalCards > 0)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: currentCardIndex > 0
-                        ? () {
-                      setState(() {
-                        currentCardIndex--;
-                        _isFlipped = false;
-                      });
-                    }
-                        : null,
-                    icon: const Icon(Icons.arrow_back_ios, size: 16),
-                    label: const Text('Trước'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: color,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 30),
+                child: Column(
+                  children: [
+                    Text(
+                      totalCards > 0
+                          ? 'Thẻ ${currentCardIndex + 1} / $totalCards'
+                          : 'Chưa có thẻ nào',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
                       ),
                     ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      min(5, totalCards),
-                          (index) => Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: index == currentCardIndex % min(5, totalCards)
-                              ? color
-                              : Colors.grey.shade300,
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        min(5, totalCards),
+                            (index) => Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: index == currentCardIndex % min(5, totalCards)
+                                ? color
+                                : Colors.grey.shade300,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 65),
-                    child:  ElevatedButton.icon(
-                    onPressed: currentCardIndex < totalCards - 1
-                        ? () {
-                      setState(() {
-                        currentCardIndex++;
-                        _isFlipped = false;
-                      });
-                    }
-                        : null,
-                    icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                    label: const Text('Tiếp'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: color,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
         ],
       ),
+    ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: color,
         child: const Icon(Icons.add, color: Colors.white),
@@ -486,6 +520,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   }
 
   Widget _buildFlashcard(Color color) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     if (flashcardSet!.cards.isEmpty) {
       return _buildEmptyState(color);
     }
@@ -507,6 +543,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             side: BorderSide(color: color.withOpacity(0.5), width: 2),
           ),
           child: Container(
+            width: screenWidth/1.5,
+            height: screenHeight/1.5,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(

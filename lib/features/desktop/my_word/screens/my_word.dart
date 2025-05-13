@@ -127,6 +127,15 @@ class _MyWord extends State<MyWord> {
 
                               return SizedBox(
                                 width: 250,
+                                  child: GestureDetector(
+                                  onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => WordDetails(wordDetails: item),
+                                  ),
+                                );
+                              },
                                 child: VocabularyCard(
                                   word: item['word'] ?? '',
                                   meaning: item['meaning'] ?? '',
@@ -155,6 +164,7 @@ class _MyWord extends State<MyWord> {
                                     });
                                   },
                                 ),
+                                  ),
                               );
                             }).toList(),
                           ),

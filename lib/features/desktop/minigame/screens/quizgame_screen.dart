@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/features/desktop/minigame/quiz_question.dart';
+import 'package:eng_dictionary/features/desktop/minigame/widgets/quiz_question.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'quizgame_screen.dart';
@@ -7,14 +7,14 @@ import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
-class QuizGameScreenPhone extends StatefulWidget {
-  const QuizGameScreenPhone({super.key});
+class QuizGameScreen extends StatefulWidget {
+  const QuizGameScreen({super.key});
 
   @override
-  State<QuizGameScreenPhone> createState() => _QuizGameScreenState();
+  State<QuizGameScreen> createState() => _QuizGameScreenState();
 }
 
-class _QuizGameScreenState extends State<QuizGameScreenPhone> {
+class _QuizGameScreenState extends State<QuizGameScreen> {
   late List<QuizQuestion> questions;
   int currentQuestionIndex = 0;
   int? selectedAnswerIndex;
@@ -116,6 +116,9 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
         leading: Stack(
           children: [
             CustomBackButton_(content: 'Mini game'),
+            Center(
+              child: LogoSmall(),
+            ),
           ],
         ),
         actions: [
@@ -123,7 +126,16 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
           SettingButton(),
         ],
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+        child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -305,6 +317,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -321,12 +334,35 @@ class QuizResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kết quả', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blue.shade700,
+        backgroundColor: Colors.blue.shade300,
+        elevation: 0,
+        leadingWidth: screenWidth,
+        leading: Stack(
+          children: [
+            CustomBackButton_(content: 'Mini game', color:  Colors.blue.shade700,),
+            Center(
+              child: LogoSmall(),
+            ),
+          ],
+        ),
+        actions: [
+          StreakCount(),
+          SettingButton(),
+        ],
       ),
-      body: Center(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+            stops: const [0.3, 1.0],
+          ),
+        ),
+     child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -341,7 +377,7 @@ class QuizResultScreen extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const QuizGameScreenPhone(),
+                    builder: (context) => const QuizGameScreen(),
                   ),
                 );
               },
@@ -376,6 +412,7 @@ class QuizResultScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
