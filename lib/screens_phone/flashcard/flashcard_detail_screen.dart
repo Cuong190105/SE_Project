@@ -22,7 +22,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     _loadFlashcardSet();
   }
 
-  Future<void> _loadFlashcardSet() async {
+  Future<void> _loadFlashcardSet({bool keepIndex = false}) async {
     debugPrint('Đang tải bộ thẻ...');
     setState(() {
       _isLoading = true;
@@ -55,7 +55,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
       debugPrint('Đã tải bộ thẻ: ${flashcardSet!.id}');
       setState(() {
         _isLoading = false;
-        currentCardIndex = 0;
+        if (!keepIndex) currentCardIndex = 0;
         _isFlipped = false;
       });
     } catch (e, stackTrace) {
@@ -518,27 +518,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
-                        if (_isFlipped)
-                          Text(
-                            'Nhấn để xem từ tiếng Anh',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          )
-                        else
-                          Text(
-                            'Nhấn để xem nghĩa',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
                       ],
                     ),
                   ),
@@ -570,7 +549,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           card.id,
                           value ?? false,
                         );
-                        await _loadFlashcardSet();
+                        await _loadFlashcardSet(keepIndex: true);
                       } catch (e) {
                         setState(() {
                           _isLoading = false;
