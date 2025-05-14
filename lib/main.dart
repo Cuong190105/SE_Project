@@ -36,13 +36,13 @@ class MainApp extends StatelessWidget {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: LoginScreenPhone(),
       );
     } else {
       return const MaterialApp(
         title: 'EDU dictionary',
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: LoginScreenPhone(),
         //SplashScreen(),
       );
     }

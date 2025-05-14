@@ -29,11 +29,18 @@ class Flashcard {
   }
 
   factory Flashcard.fromJson(Map<String, dynamic> json) {
+    debugPrint('Parsing Flashcard JSON: $json');
     return Flashcard(
-      id: json['id'],
-      frontContent: json['front'],
-      backContent: json['back'],
-      isLearned: json['is_learned'] ?? false,
+      id: json['id']?.toString() ?? 'card_${DateTime.now().millisecondsSinceEpoch}',
+      frontContent: json['front']?.toString() ?? '',
+      backContent: json['back']?.toString() ?? '',
+      isLearned: json['is_learned'] is bool
+          ? json['is_learned']
+          : (json['is_learned'] is int
+          ? json['is_learned'] == 1
+          : (json['is_learned'] is String
+          ? json['is_learned'].toLowerCase() == 'true' || json['is_learned'] == '1'
+          : false)),
     );
   }
 }
@@ -83,19 +90,39 @@ class FlashcardSet {
   }
 
   factory FlashcardSet.fromJson(Map<String, dynamic> json) {
-    final cards = (json['cards'] as List).map((cardJson) => Flashcard.fromJson(cardJson)).toList();
+    debugPrint('Parsing FlashcardSet JSON: $json');
+    final cards = (json['cards'] as List<dynamic>?)?.map((cardJson) {
+      if (cardJson is Map<String, dynamic>) {
+        return Flashcard.fromJson(cardJson);
+      } else {
+        debugPrint('Invalid card JSON: $cardJson');
+        throw Exception('Định dạng thẻ không hợp lệ trong JSON');
+      }
+    }).toList() ?? [];
+
+    bool isSample;
+    if (json['is_sample'] is int) {
+      isSample = json['is_sample'] == 1;
+    } else if (json['is_sample'] is String) {
+      isSample = json['is_sample'] == '1' || json['is_sample'].toLowerCase() == 'true';
+    } else if (json['is_sample'] is bool) {
+      isSample = json['is_sample'] as bool;
+    } else {
+      isSample = false;
+    }
+
     return FlashcardSet(
-      id: json['set_id'],
-      userEmail: json['user_email'] ?? 'unknown_user@example.com',
-      name: json['name'],
-      description: json['description'] ?? '',
+      id: json['set_id']?.toString() ?? 'set_${DateTime.now().millisecondsSinceEpoch}',
+      userEmail: json['user_email']?.toString() ?? 'unknown_user@example.com',
+      name: json['name']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
       cards: cards,
       color: FlashcardManager.getColorForIndex(cards.length),
       progress: cards.where((card) => card.isLearned).length,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      createdAt: DateTime.parse(json['created_at']?.toString() ?? DateTime.now().toIso8601String()),
+      updatedAt: DateTime.parse(json['updated_at']?.toString() ?? DateTime.now().toIso8601String()),
       isSynced: true,
-      isSample: json['is_sample'] == 1,
+      isSample: isSample,
     );
   }
 }
@@ -332,8 +359,33 @@ class FlashcardManager {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');
       });
 
-      final sets = (response['payload'] as List)
-          .map((json) => FlashcardSet.fromJson(json))
+      debugPrint('Phản hồi từ server: $response');
+
+      // Xử lý response là List hoặc Map
+      List<dynamic> payload;
+      if (response is List<dynamic>) {
+        payload = response;
+      } else if (response is Map<String, dynamic> && response.containsKey('payload')) {
+        if (response['payload'] is List<dynamic>) {
+          payload = response['payload'] as List<dynamic>;
+        } else {
+          debugPrint('Lỗi: payload không phải List: ${response['payload']}');
+          throw Exception('payload phải là một danh sách');
+        }
+      } else {
+        debugPrint('Lỗi: Phản hồi không đúng định dạng: $response');
+        throw Exception('Phản hồi từ server không đúng định dạng');
+      }
+
+      final sets = payload
+          .map((json) {
+        if (json is Map<String, dynamic>) {
+          return FlashcardSet.fromJson(json);
+        } else {
+          debugPrint('Invalid set JSON: $json');
+          throw Exception('Định dạng bộ thẻ không hợp lệ trong JSON');
+        }
+      })
           .where((set) => set.userEmail == userEmail && !set.isSample)
           .toList();
 
@@ -391,4 +443,4 @@ class FlashcardManager {
       return {'success': false, 'message': 'Lỗi đồng bộ: $e'};
     }
   }
-}
+} 
