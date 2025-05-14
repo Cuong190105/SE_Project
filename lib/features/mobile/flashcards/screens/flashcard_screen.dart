@@ -70,15 +70,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               ),
               autofocus: true,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Mô tả',
-                hintText: 'Nhập mô tả cho bộ thẻ',
-              ),
-              maxLines: 2,
-            ),
           ],
         ),
         actions: [
@@ -124,7 +115,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
 
   void _showRenameSetDialog(String setId, String currentName) {
     final TextEditingController nameController =
-    TextEditingController(text: currentName);
+        TextEditingController(text: currentName);
 
     showDialog(
       context: context,
@@ -150,7 +141,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   _isLoading = true;
                 });
                 try {
-                  await FlashcardManager.renameSet(setId, nameController.text.trim());
+                  await FlashcardManager.renameSet(
+                      setId, nameController.text.trim());
                   _sets = await FlashcardManager.getSets();
                   setState(() {
                     _isLoading = false;
@@ -186,81 +178,82 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _errorMessage!,
-              style: TextStyle(color: Colors.red, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: Text('Thử lại'),
-            ),
-          ],
-        ),
-      )
-          : Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.blue.shade50,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Bộ thẻ ghi nhớ của bạn',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadData,
+                        child: Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      color: Colors.blue.shade50,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Bộ thẻ ghi nhớ của bạn',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade800,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade700,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '${_sets.length} bộ',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_sets.length} bộ',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.0,
+                        ),
+                        itemCount: _sets.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return _buildAddNewSetCard(context);
+                          } else {
+                            return _buildFlashcardSetCard(context, index - 1);
+                          }
+                        },
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.0,
-              ),
-              itemCount: _sets.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildAddNewSetCard(context);
-                } else {
-                  return _buildFlashcardSetCard(context, index - 1);
-                }
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -356,7 +349,7 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                           builder: (context) => AlertDialog(
                             title: const Text('Xóa bộ thẻ'),
                             content:
-                            Text('Bạn có chắc muốn xóa bộ "${set.name}"?'),
+                                Text('Bạn có chắc muốn xóa bộ "${set.name}"?'),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -375,14 +368,17 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                                     });
                                     Navigator.pop(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Xóa bộ thẻ thành công')),
+                                      const SnackBar(
+                                          content:
+                                              Text('Xóa bộ thẻ thành công')),
                                     );
                                   } catch (e) {
                                     setState(() {
                                       _isLoading = false;
                                     });
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Lỗi xóa bộ thẻ: $e')),
+                                      SnackBar(
+                                          content: Text('Lỗi xóa bộ thẻ: $e')),
                                     );
                                   }
                                 },
@@ -458,12 +454,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   const SizedBox(height: 4),
                   Text('${set.totalCards} thẻ',
                       style: TextStyle(color: Colors.grey.shade600)),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: set.progressPercentage,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
                 ],
               ),
             ),

@@ -1,7 +1,8 @@
-
+import 'package:flutter/foundation.dart';
 import 'forgotpassword_screen.dart';
 import 'register_screen.dart';
 import 'package:eng_dictionary/features/desktop/home/home_screen.dart';
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart'; // Thêm package này
 import 'package:eng_dictionary/core/services/auth_service.dart'; // Import AuthService
@@ -59,11 +60,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (result['success']) {
           // Đăng nhập thành công
+          Widget nextScreen;
+
+          if (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS) {
+            nextScreen = HomeScreenPhone();
+          } else {
+            nextScreen = HomeScreenDesktop();
+          }
+
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => HomeScreenDesktop(),
-            ),
+            MaterialPageRoute(builder: (context) => nextScreen),
           );
         } else {
           // Đăng nhập thất bại

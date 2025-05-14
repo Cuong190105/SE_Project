@@ -114,5 +114,4 @@ class Translate extends StatelessWidget {
       ),
     );
   }
-
 }

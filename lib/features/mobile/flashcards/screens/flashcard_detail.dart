@@ -32,7 +32,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     });
 
     try {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final setId = args?['setId'] as String?;
 
       final sets = await FlashcardManager.getSets();
@@ -47,7 +48,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
       if (setId != null) {
         flashcardSet = sets.firstWhere(
-              (set) => set.id == setId,
+          (set) => set.id == setId,
           orElse: () => sets.first,
         );
       } else {
@@ -64,7 +65,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
       debugPrint('Lỗi tải bộ thẻ: $e\n$stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Không thể tải bộ thẻ. Vui lòng kiểm tra kết nối và thử lại.';
+        _errorMessage =
+            'Không thể tải bộ thẻ. Vui lòng kiểm tra kết nối và thử lại.';
       });
     }
   }
@@ -154,9 +156,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   void _showEditCardDialog(Flashcard card) {
     final TextEditingController frontController =
-    TextEditingController(text: card.frontContent);
+        TextEditingController(text: card.frontContent);
     final TextEditingController backController =
-    TextEditingController(text: card.backContent);
+        TextEditingController(text: card.backContent);
 
     showDialog(
       context: context,
@@ -225,7 +227,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
   void _showRenameSetDialog() {
     final TextEditingController nameController =
-    TextEditingController(text: flashcardSet?.name ?? '');
+        TextEditingController(text: flashcardSet?.name ?? '');
 
     showDialog(
       context: context,
@@ -330,32 +332,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         title: Text(flashcardSet!.name,
             style: const TextStyle(color: Colors.white)),
         backgroundColor: color,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: _showRenameSetDialog,
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'manage') {
-                _showManageCardsDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'manage',
-                child: Row(
-                  children: [
-                    Icon(Icons.list, size: 20),
-                    SizedBox(width: 8),
-                    Text('Quản lý thẻ'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -376,14 +352,14 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     ),
                   ),
                 ),
-                if (totalCards > 0)
-                  Text(
-                    'Nhấn để lật thẻ',
-                    style: TextStyle(
-                      color: Colors.blue.shade700,
-                      fontStyle: FontStyle.italic,
-                    ),
+                IconButton(
+                  onPressed: flashcardSet == null ? null : _showAddCardDialog,
+                  icon: Icon(
+                    Icons.add,
+                    size: 25,
+                    color: color,
                   ),
+                )
               ],
             ),
           ),
@@ -401,11 +377,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   ElevatedButton.icon(
                     onPressed: currentCardIndex > 0
                         ? () {
-                      setState(() {
-                        currentCardIndex--;
-                        _isFlipped = false;
-                      });
-                    }
+                            setState(() {
+                              currentCardIndex--;
+                              _isFlipped = false;
+                            });
+                          }
                         : null,
                     icon: const Icon(Icons.arrow_back_ios, size: 16),
                     label: const Text('Trước'),
@@ -421,7 +397,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   Row(
                     children: List.generate(
                       min(5, totalCards),
-                          (index) => Container(
+                      (index) => Container(
                         width: 8,
                         height: 8,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -437,11 +413,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                   ElevatedButton.icon(
                     onPressed: currentCardIndex < totalCards - 1
                         ? () {
-                      setState(() {
-                        currentCardIndex++;
-                        _isFlipped = false;
-                      });
-                    }
+                            setState(() {
+                              currentCardIndex++;
+                              _isFlipped = false;
+                            });
+                          }
                         : null,
                     icon: const Icon(Icons.arrow_forward_ios, size: 16),
                     label: const Text('Tiếp'),
@@ -458,11 +434,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
               ),
             ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: color,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: flashcardSet == null ? null : _showAddCardDialog,
       ),
     );
   }
@@ -616,68 +587,69 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           width: double.maxFinite,
           child: flashcardSet!.cards.isEmpty
               ? const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text('Chưa có thẻ nào'),
-            ),
-          )
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text('Chưa có thẻ nào'),
+                  ),
+                )
               : ListView.builder(
-            shrinkWrap: true,
-            itemCount: flashcardSet!.cards.length,
-            itemBuilder: (context, index) {
-              final card = flashcardSet!.cards[index];
-              return ListTile(
-                title: Text(
-                  card.frontContent,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  shrinkWrap: true,
+                  itemCount: flashcardSet!.cards.length,
+                  itemBuilder: (context, index) {
+                    final card = flashcardSet!.cards[index];
+                    return ListTile(
+                      title: Text(
+                        card.frontContent,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        card.backContent,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _showEditCardDialog(card);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 20),
+                            onPressed: () async {
+                              setState(() {
+                                _isLoading = true;
+                              });
+                              try {
+                                await FlashcardManager.deleteCard(
+                                  flashcardSet!.id,
+                                  card.id,
+                                );
+                                await _loadFlashcardSet();
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Xóa thẻ thành công')),
+                                );
+                              } catch (e) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Lỗi xóa thẻ: $e')),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                subtitle: Text(
-                  card.backContent,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _showEditCardDialog(card);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 20),
-                      onPressed: () async {
-                        setState(() {
-                          _isLoading = true;
-                        });
-                        try {
-                          await FlashcardManager.deleteCard(
-                            flashcardSet!.id,
-                            card.id,
-                          );
-                          await _loadFlashcardSet();
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Xóa thẻ thành công')),
-                          );
-                        } catch (e) {
-                          setState(() {
-                            _isLoading = false;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Lỗi xóa thẻ: $e')),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
         ),
         actions: [
           TextButton(

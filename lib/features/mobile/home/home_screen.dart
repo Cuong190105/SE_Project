@@ -1,8 +1,8 @@
-import 'package:eng_dictionary/features/desktop/my_word/screens/my_word.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/my_word.dart';
 import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
-import 'package:eng_dictionary/features/common/widgets/search.dart';
+import 'package:eng_dictionary/features/mobile/home/search.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_big.dart';
 import 'package:eng_dictionary/features/desktop/home/widgets/buildIcon_grid.dart';
 import 'package:eng_dictionary/core/services/auth_service.dart';
@@ -57,10 +57,46 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
             ),
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: StreakCount(),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(
+                    Icons.local_fire_department,
+                    color: Colors.orange.shade600,
+                    size: 28,
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    "$streakCount",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          SettingButton(),
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SettingsPhone(userEmail: userEmail ?? ''),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: Container(
@@ -108,7 +144,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                Search(controller: _controller),
+                SearchPhone(controller: _controller),
                 const SizedBox(height: 40),
                 Expanded(
                   child: GridView.count(

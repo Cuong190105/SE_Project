@@ -26,13 +26,6 @@ class Introduction extends StatelessWidget {
             ,
             style: TextStyle(fontSize: 16),
           ),
-          const SizedBox(height: 20),
-          /*ElevatedButton(
-            onPressed: () {
-              // Xử lý khi nhấn nút giới thiệu
-            },
-            child: Text('Tìm hiểu thêm'),
-          ),*/
         ],
       ),
     );
