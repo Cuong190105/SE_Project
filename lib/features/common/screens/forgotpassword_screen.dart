@@ -1,5 +1,6 @@
 import 'package:eng_dictionary/features/common/screens/login_screen.dart';
 import 'package:eng_dictionary/data/models/flashcard_manager.dart';
+import 'package:eng_dictionary/data/models/word_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:eng_dictionary/core/services/auth_service.dart';
@@ -125,6 +126,7 @@ class _ForgotpasswordScreenDesktopState extends State<ForgotpasswordScreenDeskto
         if (result['success']) {
           // Đồng bộ flashcard sau khi đặt lại mật khẩu
           await FlashcardManager.syncOnStartup();
+          await WordManager.syncOnStartup();
           setState(() {
             _currentStep = Step.success;
           });

@@ -5,7 +5,7 @@ import 'package:eng_dictionary/core/services/auth_service.dart';
 import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
-
+import 'package:eng_dictionary/data/models/word_manager.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -72,6 +72,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Đồng bộ flashcard nếu server tự động đăng nhập
           if (await AuthService.isLoggedIn()) {
             await FlashcardManager.syncOnStartup();
+            await WordManager.syncOnStartup();
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => HomeScreenDesktop()),

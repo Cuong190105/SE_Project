@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:eng_dictionary/features/common/widgets/vocabulary/meaning_list.dart';
 import 'package:eng_dictionary/features/common/widgets/vocabulary/related_words_list.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/translate/labeled_text_field_box.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/common/widgets/search.dart';

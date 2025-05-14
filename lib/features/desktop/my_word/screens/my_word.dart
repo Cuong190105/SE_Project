@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
@@ -17,10 +17,10 @@ class MyWord extends StatefulWidget {
 }
 class _MyWord extends State<MyWord> {
 
-  late Future<List<Map<String, dynamic>>> _wordDetailsFuture;
+  late Future<List<ValueNotifier<Map<String, dynamic>>>> _wordDetailsFuture;
 
-  Future<List<Map<String, dynamic>>> parseWordDetails() async {
-    List<Map<String, dynamic>> vocabularyList = [];
+  Future<List<ValueNotifier<Map<String, dynamic>>>> parseWordDetails() async {
+    List<ValueNotifier<Map<String, dynamic>>> vocabularyList = [];
     await Future.delayed(Duration(seconds: 2)); // Mô phỏng chờ tải dữ liệu
 
 
@@ -31,7 +31,13 @@ class _MyWord extends State<MyWord> {
         'type': ['Danh từ', 'Động từ'],
         'phonetic': [['/us1/','/uk1/'],['/us2/','/uk2/']],
         'audio' : [[audioUrl, audioUrl, audioUrl], [audioUrl, audioUrl, audioUrl]],
-        'meaning': ['quả táo','đu đubbbbbbbbbbbbbbbbbbhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhf'],
+        'meaning': ['quả táo','đu đubbbbbbbbbbbbbbbbboooooooooooooo'
+            'oooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooohhhhhhhhhhhh'
+            'hhhhhhhhhhhhhhhhhhhhhhhhhf'],
         'example': [['v1','vd2'], ['v1','vd2']],
         'image': ['https://i.pravatar.cc/150','https://i.pravatar.cc/151'],
         'synonym': 'táo',
@@ -44,10 +50,45 @@ class _MyWord extends State<MyWord> {
         'audio' : [ [audioUrl, audioUrl, audioUrl]],
         'meaning': ['đu đu'], 'example': [['v1','vd2']],
         'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
 
       // Thêm nhiều từ khác...
     ];
-    vocabularyList = data;
+    vocabularyList = data.map((item) => ValueNotifier<Map<String, dynamic>>(item)).toList();
     return vocabularyList;
   }
 
@@ -104,7 +145,7 @@ class _MyWord extends State<MyWord> {
               ),
               const SizedBox(height: 10),
 
-              FutureBuilder<List<Map<String, dynamic>>>(
+              FutureBuilder<List<ValueNotifier<Map<String, dynamic>>>>(
                   future: _wordDetailsFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -113,7 +154,7 @@ class _MyWord extends State<MyWord> {
                       return Center(child: Text('Lỗi: ${snapshot.error}'));
                     }
                     else {
-                      final vocabularyList = List<Map<String, dynamic>>.from(snapshot.data!);
+                      final vocabularyList = List<ValueNotifier<Map<String, dynamic>>>.from(snapshot.data!);
                       return Expanded(
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -126,24 +167,24 @@ class _MyWord extends State<MyWord> {
                               final item = entry.value;
 
                               return SizedBox(
-                                width: 250,
+                                width: (screenWidth-120)/4,
                                   child: GestureDetector(
                                   onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => WordDetails(wordDetails: item),
+                                    builder: (context) => WordDetails(wordDetails: item.value),
                                   ),
                                 );
                               },
                                 child: VocabularyCard(
-                                  word: item['word'] ?? '',
-                                  meaning: item['meaning'] ?? '',
+                                  word: item.value['word'] ?? '',
+                                  meaning: item.value['meaning'] ?? '',
                                   onView: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => WordDetails(wordDetails: item),
+                                        builder: (context) => WordDetails(wordDetails: item.value),
                                       ),
                                     );
                                   },
@@ -152,7 +193,7 @@ class _MyWord extends State<MyWord> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => UpdateWord(vocabularyList: item,),
+                                        builder: (context) => UpdateWord(vocabularyList: item.value,),
                                       ),
                                     );
                                   },

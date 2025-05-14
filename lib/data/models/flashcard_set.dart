@@ -19,7 +19,7 @@ class FlashcardSet {
     required this.id,
     required this.userEmail,
     required this.name,
-    this.description = '',
+    this.description = '' ,
     required this.cards,
     required this.color,
     this.progress = 0,

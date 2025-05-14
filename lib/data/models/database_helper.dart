@@ -6,7 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:eng_dictionary/data/models/flashcard.dart';
 import 'package:eng_dictionary/data/models/flashcard_set.dart';
-
+import 'package:eng_dictionary/data/models/word_set.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'meaning.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._instance();
   sqlite3.Database? _db;
@@ -66,17 +69,44 @@ class DatabaseHelper {
       ''');
 
       db.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT,
-          email VARCHAR(255),
-          password TEXT,
-          avatar TEXT
-        )
-      ''');
+  CREATE TABLE IF NOT EXISTS word_sets (
+    word_id TEXT PRIMARY KEY,
+    deleted INTEGER NOT NULL DEFAULT 0,
+    user_email TEXT NOT NULL,
+    word TEXT NOT NULL,
+    synonyms TEXT,
+    antonyms TEXT,
+    family TEXT,
+    phrases TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    is_sample INTEGER NOT NULL DEFAULT 0
+  )
+''');
+
+
+       db.execute('''
+  CREATE TABLE IF NOT EXISTS meanings (
+    meaning_id TEXT,
+    definition TEXT,
+    part_of_speech TEXT,
+    image BLOB,
+    us_phonetic TEXT,
+    uk_phonetic TEXT,
+    us_ipa BLOB,
+    uk_ipa BLOB,
+    example1 TEXT,
+    example2 TEXT,
+    word_id TEXT,
+    FOREIGN KEY (word_id) REFERENCES word_sets (word_id)
+  )
+''');
+
 
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcard_sets_user_email ON flashcard_sets(user_email)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcards_set_id ON flashcards(set_id)');
+      db.execute('CREATE INDEX IF NOT EXISTS idx_words_user_email ON word_sets(user_email)');
+
       debugPrint('Hoàn tất khởi tạo cơ sở dữ liệu.');
       return db;
     } catch (e, stackTrace) {
@@ -194,6 +224,22 @@ class DatabaseHelper {
     final db = await database;
     try {
       final sampleCount = db.select('SELECT COUNT(*) as count FROM flashcard_sets WHERE is_sample = 1');
+      if (sampleCount.first['count'] == 0) {
+        debugPrint('Chèn dữ liệu mẫu vì không tìm thấy...');
+        await _insertSampleFlashcardSets(db);
+      } else {
+        debugPrint('Dữ liệu mẫu đã tồn tại.');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi kiểm tra dữ liệu mẫu: $e\n$stackTrace');
+      throw Exception('Không thể kiểm tra dữ liệu mẫu.');
+    }
+  }
+
+  Future<void> ensureSampleWords() async {
+    final db = await database;
+    try {
+      final sampleCount = db.select('SELECT COUNT(*) as count FROM word_sets WHERE is_sample = 1');
       if (sampleCount.first['count'] == 0) {
         debugPrint('Chèn dữ liệu mẫu vì không tìm thấy...');
         await _insertSampleFlashcardSets(db);
@@ -370,6 +416,176 @@ class DatabaseHelper {
       debugPrint('Bộ thẻ $setId đã được xóa thành công.');
     } catch (e, stackTrace) {
       debugPrint('Lỗi xóa bộ thẻ $setId: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> insertWordSets(WordSet word) async {
+    final db = await database;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userEmail = prefs.getString('user_email') ?? word.userEmail;
+
+       db.execute('''
+      INSERT OR REPLACE INTO word_sets (
+        word_id, user_email, word,
+        synonyms, antonyms, family, phrases,
+        created_at, updated_at, deleted, is_sample
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', [
+        word.id,
+        userEmail,
+        word.word,
+        word.synonyms,
+        word.antonyms,
+        word.family,
+        word.phrases,
+        word.createdAt.toIso8601String(),
+        word.updatedAt.toIso8601String(),
+        word.deleted ? 1 : 0,
+        word.isSample ? 1 : 0,
+      ]);
+
+      for (var meaning in word.meanings) {
+        db.execute('''
+      INSERT INTO meanings (
+        meaning_id, definition, part_of_speech, image, us_phonetic,
+         uk_phonetic, us_ipa, uk_ipa, example1, example2, word_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ''', [
+          meaning.meaningId,
+          meaning.definition,
+          meaning.partOfSpeech,
+          meaning.image,
+          meaning.meaningId,
+          meaning.meaningId,
+          meaning.us_phonetic,
+          meaning.uk_phonetic,
+          meaning.usIpaAudio != null ? base64Encode(meaning.usIpaAudio!) : null,
+          meaning.ukIpaAudio != null ? base64Encode(meaning.ukIpaAudio!) : null,
+          meaning.example1,
+          meaning.example2,
+          word.id,
+        ]);
+      }
+
+      debugPrint('Từ "${word.word}" đã được lưu vào word_sets thành công.');
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi khi lưu từ "${word.word}": $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<List<WordSet>> getWordSets() async {
+    final db = await database;
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('user_email') ?? 'unknown@example.com';
+
+    try {
+      final rows = await db.select('''
+      SELECT * FROM word_sets w
+        LEFT JOIN meanings m ON w.word_id = m.word_id
+        WHERE (w.user_email = ? OR w.is_sample = 1)
+          AND w.deleted = 0;
+    ''', [userEmail]);
+
+      return rows.map((row) => WordSet(
+        id: row['word_id'] as String,
+        userEmail: row['user_email'] as String,
+        word: row['word'] as String,
+        meanings: row['meanings'] != null
+            ? (jsonDecode(row['meanings'] as String) as List<dynamic>)
+                .map((meaningRow) => Meaning(
+                  meaningId: meaningRow['meaning_id'] as String,
+                  definition: meaningRow['definition'] as String,
+                  partOfSpeech: meaningRow['part_of_speech'] as String,
+                  example1: meaningRow['example1'] as String,
+                  example2: meaningRow['example2'] as String,
+                ))
+                .toList()
+            : [],
+        synonyms: row['synonyms'] as String? ?? '',
+        antonyms: row['antonyms'] as String? ?? '',
+        family: row['family'] as String? ?? '',
+        phrases: row['phrases'] as String? ?? '',
+        createdAt: DateTime.parse(row['created_at'] as String),
+        updatedAt: DateTime.parse(row['updated_at'] as String),
+        deleted: (row['deleted'] as int) == 1,
+        isSample: (row['is_sample'] as int) == 1,
+      )).toList();
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi khi lấy danh sách từ vựng: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<List<WordSet>> getUnsyncedWordSets() async {
+    final db = await database;
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('user_email');
+    if (userEmail == null) return [];
+
+    try {
+      final rows = await db.select('''
+      SELECT * FROM word_sets w
+        LEFT JOIN meanings m ON w.word_id = m.word_id
+        WHERE (w.user_email = ? OR w.is_sample = 1)
+          AND w.deleted = 0
+          AND w.is_synced = 0; 
+    ''', [userEmail]);
+
+      return rows.map((row) => WordSet(
+        id: row['word_id'] as String,
+        userEmail: row['user_email'] as String,
+        word: row['word'] as String,
+        meanings: row['meanings'] != null
+            ? (jsonDecode(row['meanings'] as String) as List<dynamic>)
+                .map((meaningRow) => Meaning(
+                  meaningId: meaningRow['meaning_id'] as String,
+                  definition: meaningRow['definition'] as String,
+                  partOfSpeech: meaningRow['part_of_speech'] as String,
+                  example1: meaningRow['example1'] as String,
+                  example2: meaningRow['example2'] as String,
+                ))
+                .toList()
+            : [],
+        synonyms: row['synonyms'] as String? ?? '',
+        antonyms: row['antonyms'] as String? ?? '',
+        family: row['family'] as String? ?? '',
+        phrases: row['phrases'] as String? ?? '',
+        createdAt: DateTime.parse(row['created_at'] as String),
+        updatedAt: DateTime.parse(row['updated_at'] as String),
+        deleted: (row['deleted'] as int) == 1,
+        isSample: (row['is_sample'] as int) == 1,
+      )).toList();
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi khi lấy từ vựng chưa đồng bộ: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> markWordSetAsSynced(String wordId) async {
+    final db = await database;
+    try {
+       db.execute(
+        'UPDATE word_set SET is_synced = 1 WHERE word_id = ?',
+        [wordId],
+      );
+      debugPrint('Từ $wordId đã được đánh dấu là đồng bộ.');
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi khi đánh dấu từ $wordId là đồng bộ: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteWordSets(String wordId) async {
+    final db = await database;
+    try {
+      // Xóa từ vựng trong bảng flashcards
+      db.execute('DELETE FROM Word_sets WHERE id = ?', [wordId]);
+      debugPrint('Từ vựng $wordId đã được xóa thành công.');
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi xóa từ vựng $wordId: $e\n$stackTrace');
       rethrow;
     }
   }

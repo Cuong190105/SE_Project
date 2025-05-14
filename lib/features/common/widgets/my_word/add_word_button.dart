@@ -10,7 +10,7 @@ class AddWordButton extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AddWord()),
+          MaterialPageRoute(builder: (context) =>  AddWord(vocabularyList: [],)),
         );
       },
       style: ElevatedButton.styleFrom(

@@ -237,7 +237,7 @@ class FlashcardManager {
       final formatter = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
       final formattedLastSync = formatter.format(DateTime.parse(lastSync));
 
-      final response = await ApiService.get('sync/downloadFlashcards?timestamp=$formattedLastSync')
+      final response = await ApiService.get('sync/downloadWords?timestamp=$formattedLastSync')
           .timeout(Duration(seconds: 10), onTimeout: () {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');
       });
@@ -273,7 +273,7 @@ class FlashcardManager {
         return {'success': true, 'message': 'Không có dữ liệu cần đồng bộ'};
       }
 
-      final response = await ApiService.post('sync/uploadFlashcards', {
+      final response = await ApiService.post('sync/uploadWords', {
         'payload': unsyncedSets.map((set) => set.toJson()).toList(),
       }).timeout(Duration(seconds: 10), onTimeout: () {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');

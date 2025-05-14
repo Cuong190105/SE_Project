@@ -596,7 +596,7 @@ class _MeaningListState extends State<MeaningList> {
                     // Điều hướng đến trang thêm từ
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AddWord()),
+                      MaterialPageRoute(builder: (context) => AddWord(vocabularyList: [])),
                     );
                   },
                   child: Tooltip(

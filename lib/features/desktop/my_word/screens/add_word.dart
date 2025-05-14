@@ -1,6 +1,6 @@
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/desktop/home/home_screen.dart';
 import 'package:flutter/material.dart';
@@ -11,9 +11,12 @@ import 'package:eng_dictionary/features/desktop/my_word/widgets/meaning_box.dart
 import 'package:eng_dictionary/core/services/cloud/google_drive_service.dart';
 import 'package:eng_dictionary/core/services/cloud/drive_uploader.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-
+import 'package:eng_dictionary/core/services/word_service.dart';
 class AddWord extends StatefulWidget {
-  const AddWord({super.key});
+
+  final List<ValueNotifier<Map<String, dynamic>>> vocabularyList;
+
+  AddWord({super.key, required this.vocabularyList});
 
   @override
   _AddWordState createState() => _AddWordState();
@@ -215,8 +218,9 @@ class _AddWordState extends State<AddWord> {
                                     ),
                                   );
                                 } else {
-                                  _saveVocabulary();
-                                  uploadMyImages(images[0].value);
+                                  //_saveVocabulary();
+                                  collectAndAddData();
+                                  //uploadMyImages(images[0].value);
                                   //printData();
                                   // đẩy dữ liệu, dữ liệu lưu cục bộ
                                 }
@@ -405,6 +409,72 @@ class _AddWordState extends State<AddWord> {
     print('familyController: ${family.text}');
     print('phraseController: ${phrase.text}');
 
+  }
+  Future<void> collectAndAddData() async {
+    String word = wordController.text;
+    List<String> types = selectedTypes.map((typeNotifier) => typeNotifier.value).toList();
+
+    List<List<String>> phonetics = [];
+    List<List<String>> audioUrls = [];
+    List<String> meanings = [];
+    List<List<String>> examples = [];
+    List<List<Uint8List>> imagesList = [];
+
+    for (int i = 0; i < selectedTypes.length; i++) {
+      // Phonetic
+      phonetics.add(phoneticControllers[i].map((controller) => controller.text).toList());
+
+      // Audio
+      List<String> audioGroup = [];
+      for (int j = 0; j < audioPlayers[i].length; j++) {
+        final audioPlayer = audioPlayers[i][j];
+        final audio = audioPlayer.value.audioSource?.sequence.first.tag ?? "no_audio_url";
+        audioGroup.add(audio.toString());
+      }
+      audioUrls.add(audioGroup);
+
+      // Meaning
+      meanings.add(meaningControllers[i].text);
+
+      // Example
+      examples.add(exampleControllers[i].map((controller) => controller.text).toList());
+
+      // Image
+      imagesList.add(images[i].value);
+    }
+
+    // Build final map
+    Map<String, dynamic> newWord = {
+      'word': word,
+      'type': types,
+      'phonetic': phonetics,
+      'meaning': meanings,
+      'example': examples,
+      'synonym': synonym.text,
+      'antonym': antonym.text,
+      'family': family.text,
+      'phrase': phrase.text,
+    };
+
+    Map<String, dynamic> newWord1 = {
+      'word_id': 1,
+      'deleted': false,
+      'word': 'cxdf',
+      'definition': 'cxdf',
+      'example': ['kbjif', 'kbjif'],
+      'us_ipa': 'cxdf',
+      'uk_ipa': 'cxdf',
+      'synonym': [1,2],
+      'antonym': [1,2],
+      'family': [1,2],
+      'phrase': [1,2],
+    };
+    final List<Map<String, dynamic>> vocabularyList1 = [newWord1];
+    // Thêm vào vocabularyList
+    widget.vocabularyList.add(ValueNotifier<Map<String, dynamic>>(newWord));
+   await WordService.uploadWords(vocabularyList1,
+        images: {}, usAudios: {}, ukAudios: {});
+    print("✅ Dữ liệu đã được thêm vào vocabularyList.");
   }
 
 }
