@@ -921,16 +921,6 @@ class _SettingsPhoneState extends State<SettingsPhone> {
           style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: () {
-            // Mở trang web hoặc gửi email hỗ trợ
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade700,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Tìm hiểu thêm'),
-        ),
       ],
     );
   }
