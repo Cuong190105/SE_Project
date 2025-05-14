@@ -68,15 +68,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               ),
               autofocus: true,
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Mô tả',
-                hintText: 'Nhập mô tả cho bộ thẻ',
-              ),
-              maxLines: 2,
-            ),
           ],
         ),
         actions: [
@@ -456,12 +447,6 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   const SizedBox(height: 4),
                   Text('${set.totalCards} thẻ',
                       style: TextStyle(color: Colors.grey.shade600)),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: set.progressPercentage,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
                 ],
               ),
             ),

@@ -328,32 +328,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         title: Text(flashcardSet!.name,
             style: const TextStyle(color: Colors.white)),
         backgroundColor: color,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: _showRenameSetDialog,
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (value) {
-              if (value == 'manage') {
-                _showManageCardsDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'manage',
-                child: Row(
-                  children: [
-                    Icon(Icons.list, size: 20),
-                    SizedBox(width: 8),
-                    Text('Quản lý thẻ'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -374,14 +348,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     ),
                   ),
                 ),
-                if (totalCards > 0)
-                  Text(
-                    'Nhấn để lật thẻ',
-                    style: TextStyle(
-                      color: Colors.blue.shade700,
-                      fontStyle: FontStyle.italic,
+                
+                  IconButton(
+                    onPressed: flashcardSet == null ? null : _showAddCardDialog,
+                    icon: Icon(
+                      Icons.add,
+                      size: 25,
+                      color: color,
                     ),
-                  ),
+                  )
               ],
             ),
           ),
@@ -456,11 +431,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
               ),
             ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: color,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: flashcardSet == null ? null : _showAddCardDialog,
       ),
     );
   }
