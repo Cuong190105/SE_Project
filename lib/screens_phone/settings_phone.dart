@@ -78,10 +78,25 @@ class _SettingsPhoneState extends State<SettingsPhone> {
   }
 
   Future<void> _pickImage() async {
-    final XTypeGroup typeGroup = XTypeGroup(
-      label: 'images',
-      extensions: <String>['jpg', 'jpeg', 'png'],
-    );
+    late final XTypeGroup typeGroup;
+    if (Platform.isAndroid) {
+      typeGroup = const XTypeGroup(
+        label: 'images_android',
+        extensions: ['jpg', 'jpeg', 'png'],
+      );
+    } else if (Platform.isIOS) {
+      typeGroup = const XTypeGroup(
+        label: 'images_ios',
+        mimeTypes: ['image/jpeg', 'image/png'],
+      );
+    } else {
+      // fallback: dùng cả extensions lẫn mimeTypes
+      typeGroup = const XTypeGroup(
+        label: 'images',
+        extensions: ['jpg', 'jpeg', 'png'],
+        mimeTypes: ['image/jpeg', 'image/png'],
+      );
+    }
 
     final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
 

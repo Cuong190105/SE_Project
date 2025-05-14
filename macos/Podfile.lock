@@ -1,6 +1,10 @@
 PODS:
   - audio_session (0.0.1):
     - FlutterMacOS
+  - connectivity_plus (0.0.1):
+    - FlutterMacOS
+  - device_info_plus (0.0.1):
+    - FlutterMacOS
   - file_selector_macos (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
@@ -10,20 +14,57 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqlite3 (3.49.1):
+    - sqlite3/common (= 3.49.1)
+  - sqlite3/common (3.49.1)
+  - sqlite3/dbstatvtab (3.49.1):
+    - sqlite3/common
+  - sqlite3/fts5 (3.49.1):
+    - sqlite3/common
+  - sqlite3/math (3.49.1):
+    - sqlite3/common
+  - sqlite3/perf-threadsafe (3.49.1):
+    - sqlite3/common
+  - sqlite3/rtree (3.49.1):
+    - sqlite3/common
+  - sqlite3_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - sqlite3 (~> 3.49.1)
+    - sqlite3/dbstatvtab
+    - sqlite3/fts5
+    - sqlite3/math
+    - sqlite3/perf-threadsafe
+    - sqlite3/rtree
   - window_size (0.0.2):
     - FlutterMacOS
 
 DEPENDENCIES:
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
+  - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
+  - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/darwin`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin`)
   - window_size (from `Flutter/ephemeral/.symlinks/plugins/window_size/macos`)
+
+SPEC REPOS:
+  trunk:
+    - sqlite3
 
 EXTERNAL SOURCES:
   audio_session:
     :path: Flutter/ephemeral/.symlinks/plugins/audio_session/macos
+  connectivity_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
+  device_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
   file_selector_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   FlutterMacOS:
@@ -32,15 +73,24 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/just_audio/darwin
   path_provider_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  shared_preferences_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
+  sqlite3_flutter_libs:
+    :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin
   window_size:
     :path: Flutter/ephemeral/.symlinks/plugins/window_size/macos
 
 SPEC CHECKSUMS:
   audio_session: eaca2512cf2b39212d724f35d11f46180ad3a33e
+  connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
+  device_info_plus: b0fafc687fb901e2af612763340f1b0d4352f8e5
   file_selector_macos: 6280b52b459ae6c590af5d78fc35c7267a3c4b31
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  sqlite3: fc1400008a9b3525f5914ed715a5d1af0b8f4983
+  sqlite3_flutter_libs: f6acaa2172e6bb3e2e70c771661905080e8ebcf2
   window_size: 4bd15034e6e3d0720fd77928a7c42e5492cfece9
 
 PODFILE CHECKSUM: 7eb978b976557c8c1cd717d8185ec483fd090a82

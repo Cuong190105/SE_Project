@@ -38,7 +38,7 @@ class MinigameScreen extends StatelessWidget {
               // Hướng dẫn
               Container(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5, // Giới hạn chiều cao
+                  maxHeight: MediaQuery.of(context).size.height * 0.55, // Giới hạn chiều cao
                 ),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
