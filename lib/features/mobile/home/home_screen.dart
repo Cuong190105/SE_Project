@@ -4,7 +4,6 @@ import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/mobile/home/search.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_big.dart';
-import 'package:eng_dictionary/features/desktop/home/widgets/buildIcon_grid.dart';
 import 'package:eng_dictionary/core/services/auth_service.dart';
 import 'package:eng_dictionary/features/mobile/settings/screens/setting_screen.dart';
 import 'package:eng_dictionary/features/mobile/translate/translate_screen.dart';

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:file_selector/file_selector.dart';
-import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart';
-import 'add_word.dart';
-import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
+import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/common/widgets/back_button.dart';
+import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.dart';
+import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
+import 'package:eng_dictionary/features/mobile/my_word/widgets/vocabulary_card.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/add_word.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/my_word_detail.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/update_word.dart';
 
 class MyWord extends StatefulWidget {
   const MyWord({super.key});
@@ -13,20 +17,179 @@ class MyWord extends StatefulWidget {
 }
 
 class _MyWord extends State<MyWord> {
+  late Future<List<ValueNotifier<Map<String, dynamic>>>> _wordDetailsFuture;
+
+  Future<List<ValueNotifier<Map<String, dynamic>>>> parseWordDetails() async {
+    List<ValueNotifier<Map<String, dynamic>>> vocabularyList = [];
+    await Future.delayed(Duration(seconds: 2)); // Mô phỏng chờ tải dữ liệu
+
+    final audioUrl =
+        'https://upload.wikimedia.org/wikipedia/commons/5/52/En-us-hello.ogg';
+
+    final data = [
+      {
+        'word': 'applefffffffffffffffffffffffffffffff',
+        'type': ['Danh từ', 'Động từ'],
+        'phonetic': [
+          ['/us1/', '/uk1/'],
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl],
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': [
+          'quả táo',
+          'đu đubbbbbbbbbbbbbbbbboooooooooooooo'
+        ],
+        'example': [
+          ['v1', 'vd2'],
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/150', 'https://i.pravatar.cc/151'],
+        'synonym': 'táo',
+        'antonym': 'cam',
+        'family': 'taos',
+        'phrase': 'tao không dai, tao ddd',
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+      {
+        'word': 'tomato',
+        'type': ['Động từ'],
+        'phonetic': [
+          ['/us2/', '/uk2/']
+        ],
+        'audio': [
+          [audioUrl, audioUrl, audioUrl]
+        ],
+        'meaning': ['đu đu'],
+        'example': [
+          ['v1', 'vd2']
+        ],
+        'image': ['https://i.pravatar.cc/153']
+      },
+
+      // Thêm nhiều từ khác...
+    ];
+    vocabularyList =
+        data.map((item) => ValueNotifier<Map<String, dynamic>>(item)).toList();
+    return vocabularyList;
+  }
 
   @override
   void initState() {
     super.initState();
+    _wordDetailsFuture = parseWordDetails();
   }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
-    int streakCount = 5; // Đợi dữ liệu từ database
-    bool _isHovering = false; // hiệu ứng khi di chuột trở về
-    bool _isHoveringT = false; // hiệu ứng khi di chuột trở về
-    bool isHoveringIcon = false;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -34,112 +197,20 @@ class _MyWord extends State<MyWord> {
         leadingWidth: screenWidth,
         leading: Stack(
           children: [
-            Center(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'DICTIONARY',
-                      softWrap: false,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                  StatefulBuilder(
-                    builder: (context, setState) {
-
-                      return MouseRegion(
-                        onEnter: (_) => setState(() => isHoveringIcon = true),
-                        onExit: (_) => setState(() => isHoveringIcon = false),
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => const HomeScreenPhone()),
-                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
-                            );
-                          },
-                          customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.shade100,
-                                  blurRadius: 2,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.book,
-                              size: 20,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+            CustomBackButton_(
+              content: 'Kho từ vựng',
+              color: Colors.blue,
             ),
-            /*Align(
-              alignment: Alignment.center,
-              child: Container(
-                width: screenWidth / 2,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(color: Colors.blue.shade100, blurRadius: 5, spreadRadius: 1),
-                  ],
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: IconButton(
-                      icon: Icon(Icons.search, color: Colors.blue.shade700),
-                      onPressed: () {},
-                    ),
-                    hintText: 'Nhập từ cần tìm kiếm',
-                    hintStyle: TextStyle(color: Colors.blue.shade300),
-                    border: InputBorder.none,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),*/
+            Center(
+              child: LogoSmall(),
+            ),
           ],
         ),
         actions: [
-          Row(
-            children: [
-              Text(
-                "$streakCount",
-                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
-            ],
-          ),
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-              child: Icon(Icons.person, color: Colors.blue.shade700, size: 20),
-            ),
-            onPressed: () {},
-          ),
+          StreakCount(),
+          SettingButton(),
         ],
       ),
-
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -150,114 +221,98 @@ class _MyWord extends State<MyWord> {
           ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  child: Row(
-                    children: [
-                      // Phần bên trái: nút quay lại + tiêu đề
-                      StatefulBuilder(
-                        builder: (context, setState) {
-                          return MouseRegion(
-                            onEnter: (_) => setState(() => _isHovering = true),
-                            onExit: (_) => setState(() => _isHovering = false),
-                            child: Material(
-                              color: _isHovering ? Colors.grey.shade300 : Colors.transparent,
-                              borderRadius: BorderRadius.circular(30),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                borderRadius: BorderRadius.circular(30),
-                                splashColor: Colors.blue.withOpacity(0.2),
-                                highlightColor: Colors.blue.withOpacity(0.1),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      buttonBack(context),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Kho từ vựng',
-                                        style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue.shade700,
-                                          letterSpacing: 1,
-                                        ),
+          child: Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                child: Row(
+                  children: [
+                    Spacer(),
+                    AddWordButton(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              FutureBuilder<List<ValueNotifier<Map<String, dynamic>>>>(
+                  future: _wordDetailsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Lỗi: ${snapshot.error}'));
+                    } else {
+                      final vocabularyList =
+                          List<ValueNotifier<Map<String, dynamic>>>.from(
+                              snapshot.data!);
+                      return Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: Wrap(
+                            alignment: WrapAlignment.start,
+                            spacing: 16,
+                            runSpacing: 16,
+                            children:
+                                vocabularyList.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final item = entry.value;
+
+                              return SizedBox(
+                                width: (screenWidth - 120) / 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => WordDetails(
+                                            wordDetails: item.value),
                                       ),
-                                    ],
+                                    );
+                                  },
+                                  child: VocabularyCard(
+                                    word: item.value['word'] ?? '',
+                                    meaning: item.value['meaning'] ?? '',
+                                    onView: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => WordDetails(
+                                              wordDetails: item.value),
+                                        ),
+                                      );
+                                    },
+                                    onEdit: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => UpdateWord(
+                                            vocabularyList: item.value,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    onDelete: () {
+                                      setState(() {
+                                        vocabularyList.removeAt(index);
+                                        _wordDetailsFuture =
+                                            Future.value(vocabularyList);
+                                        // xóa trên database
+                                      });
+                                    },
                                   ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Spacer đẩy nút + sang phải
-                      Spacer(),
-                      // Nút dấu cộng
-                      add_button(context),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50),
-                  child: Column(
-                    children: [
-
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-              ],
-            ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      );
+                    }
+                  }),
+              const SizedBox(height: 24),
+            ],
           ),
-
         ),
-      ),
-    );
-  }
-
-  // Nút quay lại
-  Widget buttonBack(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft, // Canh về góc trái trên
-      child: IconButton(
-        icon: Icon(Icons.arrow_back, size: 30, color: Colors.blue.shade700),
-        onPressed: () {
-          Navigator.pop(context); // Quay lại màn hình trước đó
-        },
-
-        hoverColor: Colors.grey.shade300.withOpacity(0),              // Màu nền khi di chuột vào
-      ),
-    );
-  }
-  // nút thêm từ
-  Widget add_button(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) =>  AddWord()),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade500, // Nền xanh dương
-        shape: CircleBorder(),        // Hình tròn
-        padding: EdgeInsets.all(15),  // Kích thước nút
-        elevation: 1,                 // Đổ bóng nhẹ
-      ),
-      child:  Icon(
-        Icons.add,                    // Icon dấu +
-        color: Colors.white,         // Màu trắng
-        size: 32,                     // Kích thước icon
       ),
     );
   }

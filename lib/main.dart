@@ -5,7 +5,6 @@ import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:eng_dictionary/data/models/word_manager.dart';
 import 'package:window_size/window_size.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
