@@ -1,21 +1,10 @@
-import 'package:eng_dictionary/features/common/widgets/back_button.dart';
-import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
-import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
-import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/desktop/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/related_word.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/meaning_box.dart';
-import 'package:eng_dictionary/core/services/cloud/google_drive_service.dart';
-import 'package:eng_dictionary/core/services/cloud/drive_uploader.dart';
-// import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:eng_dictionary/core/services/word_service.dart';
+
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:just_audio/just_audio.dart';
+
 
 class AddWord extends StatefulWidget {
   const AddWord({super.key});
@@ -367,15 +356,13 @@ class _AddWordState extends State<AddWord> {
         onPressed: () {
           Navigator.pop(context); // Quay lại màn hình trước đó
         },
-
         hoverColor: Colors.grey.shade300.withOpacity(
           0,
-        ), // Màu nền khi di chuột vào
+        ), 
       ),
     );
   }
 
-  // ô nghĩa và ví dụ
   Widget meaningBox() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -397,7 +384,6 @@ class _AddWordState extends State<AddWord> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          // Cố định chiều rộng phần label
           width: 90, // Bạn có thể điều chỉnh phù hợp
           child: Text(
             '$label:',

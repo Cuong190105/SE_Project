@@ -189,7 +189,6 @@ class _MyWord extends State<MyWord> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -200,9 +199,6 @@ class _MyWord extends State<MyWord> {
             CustomBackButton_(
               content: 'Kho từ vựng',
               color: Colors.blue,
-            ),
-            Center(
-              child: LogoSmall(),
             ),
           ],
         ),
@@ -246,70 +242,65 @@ class _MyWord extends State<MyWord> {
                           List<ValueNotifier<Map<String, dynamic>>>.from(
                               snapshot.data!);
                       return Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          child: Wrap(
-                            alignment: WrapAlignment.start,
-                            spacing: 16,
-                            runSpacing: 16,
-                            children:
-                                vocabularyList.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final item = entry.value;
-
-                              return SizedBox(
-                                width: (screenWidth - 120) / 4,
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => WordDetails(
-                                            wordDetails: item.value),
-                                      ),
-                                    );
-                                  },
-                                  child: VocabularyCard(
-                                    word: item.value['word'] ?? '',
-                                    meaning: item.value['meaning'] ?? '',
-                                    onView: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => WordDetails(
-                                              wordDetails: item.value),
-                                        ),
-                                      );
-                                    },
-                                    onEdit: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => UpdateWord(
-                                            vocabularyList: item.value,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    onDelete: () {
-                                      setState(() {
-                                        vocabularyList.removeAt(index);
-                                        _wordDetailsFuture =
-                                            Future.value(vocabularyList);
-                                        // xóa trên database
-                                      });
-                                    },
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                        child: GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // 2 cards per row for mobile
+                            childAspectRatio: 1.2, // Width to height ratio
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
                           ),
+                          itemCount: vocabularyList.length,
+                          itemBuilder: (context, index) {
+                            final item = vocabularyList[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => WordDetails(
+                                        wordDetails: item.value),
+                                  ),
+                                );
+                              },
+                              child: VocabularyCard(
+                                word: item.value['word'] ?? '',
+                                meaning: item.value['meaning'] ?? '',
+                                onView: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WordDetails(
+                                          wordDetails: item.value),
+                                    ),
+                                  );
+                                },
+                                onEdit: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UpdateWord(
+                                        vocabularyList: item.value,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onDelete: () {
+                                  setState(() {
+                                    vocabularyList.removeAt(index);
+                                    _wordDetailsFuture =
+                                        Future.value(vocabularyList);
+                                    // xóa trên database
+                                  });
+                                },
+                              ),
+                            );
+                          },
                         ),
                       );
                     }
                   }),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
           ),
         ),

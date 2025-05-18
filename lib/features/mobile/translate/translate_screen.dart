@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'labeled_display_box.dart';
 import 'labeled_text_field_box.dart';
+import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
+import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/common/widgets/search.dart';
 
 class Translate extends StatefulWidget {
   const Translate({super.key});
@@ -47,10 +50,11 @@ class _TranslateState extends State<Translate> {
             letterSpacing: 2,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.blue.shade700),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        actions: [
+          StreakCount(),
+          SettingButton()
+        ],
+        leading: BackButton()
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -68,6 +72,10 @@ class _TranslateState extends State<Translate> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const SizedBox(height: 12),
+                  Search(controller: _controller),
+                  
+                  const SizedBox(height: 12),
                   // Tiêu đề ô nhập văn bản
                   Text(
                     "Văn bản gốc",
