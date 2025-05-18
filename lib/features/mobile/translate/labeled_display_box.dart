@@ -5,13 +5,11 @@ import 'dart:async';
 
 // Ô hiển thị văn bản dịch
 class LabeledDisplayBox extends StatefulWidget {
-  final String title;
   final String inputText; // Văn bản cần dịch
   final bool isEditing;
 
   const LabeledDisplayBox({
     Key? key,
-    required this.title,
     required this.inputText,
     required this.isEditing,
   }) : super(key: key);
@@ -100,54 +98,34 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Tiêu đề
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Ô hiển thị văn bản dịch
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return GestureDetector(
-                onTap: () {
-                  FocusScope.of(context)
-                      .requestFocus(FocusNode()); // Ẩn bàn phím
-                },
-                child: Container(
-                  width: (screenWidth - 55) / 2,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade300, width: 2),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  alignment: Alignment.topLeft,
-                  child: SingleChildScrollView(
-                    child: Text(
-                      translatedText,
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              );
+    return Flexible(
+      fit: FlexFit.tight,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return GestureDetector(
+            onTap: () {
+              FocusScope.of(context).requestFocus(FocusNode()); // Ẩn bàn phím
             },
-          ),
-        ),
-      ],
+            child: Container(
+              width: screenWidth - 32, // Full width minus padding
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade300, width: 2),
+              ),
+              padding: const EdgeInsets.all(8),
+              alignment: Alignment.topLeft,
+              child: SingleChildScrollView(
+                child: Text(
+                  translatedText,
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

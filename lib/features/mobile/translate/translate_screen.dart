@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
-import 'package:eng_dictionary/features/common/widgets/translate/labeled_text_field_box.dart';
-import 'package:eng_dictionary/features/common/widgets/translate/labeled_display_box.dart';
-import 'package:eng_dictionary/features/common/widgets/search.dart';
-import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
-import 'package:eng_dictionary/features/common/widgets/back_button.dart';
-import 'package:googleapis/admob/v1.dart';
+import 'labeled_display_box.dart';
+import 'labeled_text_field_box.dart';
 
 class Translate extends StatefulWidget {
   const Translate({super.key});
@@ -40,10 +34,6 @@ class _TranslateState extends State<Translate> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final boxHeight = (screenHeight - 300) / 2;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -53,7 +43,7 @@ class _TranslateState extends State<Translate> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.blue.shade700,
+            color: Colors.white,
             letterSpacing: 2,
           ),
         ),
@@ -78,24 +68,20 @@ class _TranslateState extends State<Translate> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
-                  Container(
-                    width: screenWidth,
-                    height: boxHeight,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  // Tiêu đề ô nhập văn bản
+                  Text(
+                    "Văn bản gốc",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade800,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.35, 
+                    constraints: BoxConstraints(minHeight: 180),
                     child: LabeledTextField(
-                      title: "Văn bản gốc",
                       controller: textController,
                       isEditing: isEditing,
                       onEditingChanged: (value) {
@@ -105,24 +91,21 @@ class _TranslateState extends State<Translate> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: screenWidth,
-                    height: boxHeight,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  const SizedBox(height: 16),
+                  // Tiêu đề ô hiển thị văn bản dịch
+                  Text(
+                    "Bản dịch",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade800,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.35, 
+                    constraints: BoxConstraints(minHeight: 180), 
                     child: LabeledDisplayBox(
-                      title: "Bản dịch",
                       inputText: textController.text,
                       isEditing: isEditing,
                     ),
