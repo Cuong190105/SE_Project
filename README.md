@@ -29,3 +29,7 @@ Tính năng này đem tới cho người dùng những câu hỏi về từ vự
 ## 3. Cài đặt
 
 Ứng dụng hiện tại có thể chạy trên Windows và Android thông qua các gói cài đặt EXE cho Windows và APK cho Android. Người dùng tải xuống tại [đây](https://github.com/Cuong190105/SE_Project/releases/tag/release)
+
+## 4. Link đến Repo Server
+
+https://github.com/Cuong190105/edu_dictionary_server
