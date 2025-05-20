@@ -27,7 +27,6 @@ class _AddSoundButtonState extends State<AddSoundButton> {
   bool _isPickingFile = false; // Flag to prevent multiple simultaneous file picking requests
 
   Future<void> _pickAudioFile() async {
-    // Prevent multiple simultaneous file picking requests
     if (_isPickingFile) {
       print('File picking operation already in progress');
       return;

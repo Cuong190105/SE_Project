@@ -318,41 +318,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                           const SizedBox(height: 16),
-
-                          Row(
-                            children: [
-                              Expanded(child: Divider(thickness: 1)),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  'Hoặc đăng nhập với',
-                                  style: TextStyle(color: Colors.grey.shade700),
-                                ),
-                              ),
-                              Expanded(child: Divider(thickness: 1)),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _socialLoginButton(
-                                icon: Icons.facebook,
-                                color: Colors.blue,
-                                onTap: () {
-                                  //login facebook
-                                },
-                              ),
-                              _socialLoginButton(
-                                icon: Icons.g_mobiledata,
-                                color: Colors.red,
-                                onTap: () {
-                                  //login google
-                                },
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
