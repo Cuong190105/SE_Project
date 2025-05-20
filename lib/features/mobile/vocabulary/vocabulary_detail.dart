@@ -5,10 +5,9 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:eng_dictionary/features/common/widgets/vocabulary/meaning_list.dart';
-import 'package:eng_dictionary/features/common/widgets/vocabulary/related_words_list.dart';
+import 'package:eng_dictionary/features/mobile/vocabulary/related_words.list.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
-import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/mobile/home/search.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
@@ -50,7 +49,7 @@ class _VocabularyState extends State<VocabularyPhone> {
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
-        leadingWidth: screenWidth,
+        leadingWidth: 300,
         leading: CustomBackButton(color: Colors.white, content: widget.word),
         actions: [
           StreakCount(),
@@ -122,13 +121,13 @@ class _VocabularyState extends State<VocabularyPhone> {
                       ),
                     ],
                   ),
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 15),
-                        child: SearchPhone(controller: _controller),
-                      ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 15),
+                      child: SearchPhone(controller: _controller),
                     ),
+                  ),
                 ],
               ),
             ]),

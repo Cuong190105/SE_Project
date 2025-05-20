@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:file_selector/file_selector.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:eng_dictionary/features/common/screens/login_screen.dart';
@@ -87,49 +88,53 @@ class _SettingsPhoneState extends State<SettingsPhone> {
   }
 
   Future<void> _pickImage() async {
-    late final XTypeGroup typeGroup;
-    if (Platform.isAndroid) {
-      typeGroup = const XTypeGroup(
-        label: 'images_android',
-        extensions: ['jpg', 'jpeg', 'png'],
-      );
-    } else if (Platform.isIOS) {
-      typeGroup = const XTypeGroup(
-        label: 'images_ios',
-        mimeTypes: ['image/jpeg', 'image/png'],
-      );
-    } else {
-      // fallback: dùng cả extensions lẫn mimeTypes
-      typeGroup = const XTypeGroup(
-        label: 'images',
-        extensions: ['jpg', 'jpeg', 'png'],
-        mimeTypes: ['image/jpeg', 'image/png'],
-      );
-    }
+    try {
+      XFile? file;
+      if (Platform.isAndroid || Platform.isIOS) {
+        final ImagePicker picker = ImagePicker();
+        file = await picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 80,
+        );
+      } 
+      else {
+        final XTypeGroup typeGroup = XTypeGroup(
+          label: 'images',
+          extensions: ['jpg', 'jpeg', 'png'],
+          mimeTypes: ['image/jpeg', 'image/png'],
+        );
 
-    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+        file = await openFile(acceptedTypeGroups: [typeGroup]);
+      }
 
-    if (file != null) {
-      setState(() {
-        _newImagePath = file.path;
-        _isLoading = true;
-        _errorMessage = null;
-      });
-
-      final result = await UserService.updateAvatar(File(file.path));
-      if (result['success']) {
+      if (file != null) {
+        final String filePath = file.path;
         setState(() {
-          _profileImageUrl = result['avatar'];
-          _newImagePath = '';
+          _newImagePath = filePath;
+          _isLoading = true;
+          _errorMessage = null;
         });
-        _showSuccessMessage('Cập nhật ảnh đại diện thành công!');
-      } else {
+
+        final result = await UserService.updateAvatar(File(filePath));
+        if (result['success']) {
+          setState(() {
+            _profileImageUrl = result['avatar'];
+            _newImagePath = '';
+          });
+          _showSuccessMessage('Cập nhật ảnh đại diện thành công!');
+        } else {
+          setState(() {
+            _errorMessage = result['message'];
+          });
+        }
         setState(() {
-          _errorMessage = result['message'];
+          _isLoading = false;
         });
       }
+    } catch (e) {
       setState(() {
         _isLoading = false;
+        _errorMessage = 'Không thể chọn ảnh: ${e.toString()}';
       });
     }
   }
@@ -953,4 +958,3 @@ class _SettingsPhoneState extends State<SettingsPhone> {
     );
   }
 }
-

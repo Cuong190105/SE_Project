@@ -630,7 +630,7 @@ class _MeaningListState extends State<MeaningList> {
                     ),
                     SizedBox(height: 5, width: MediaQuery.of(context).size.width-100),
                     // Phát âm
-                    Row(
+                    Column(
                       children: [
                         GestureDetector(
                           onTap: () async {

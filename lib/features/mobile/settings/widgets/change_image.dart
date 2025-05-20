@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
@@ -192,35 +193,42 @@ class _ChangeImageState extends State<ChangeImage> {
   }
 
   Future<void> _pickImage() async {
-    late final XTypeGroup typeGroup;
-    if (Platform.isAndroid) {
-      typeGroup = const XTypeGroup(
-        label: 'images_android',
-        extensions: ['jpg', 'jpeg', 'png'],
-      );
-    } else if (Platform.isIOS) {
-      typeGroup = const XTypeGroup(
-        label: 'images_ios',
-        mimeTypes: ['image/jpeg', 'image/png'],
-      );
-    } else {
-      // fallback: dùng cả extensions lẫn mimeTypes
-      typeGroup = const XTypeGroup(
-        label: 'images',
-        extensions: ['jpg', 'jpeg', 'png'],
-        mimeTypes: ['image/jpeg', 'image/png'],
-      );
-    }
+    try {
+      // Use image_picker for mobile platforms (Android and iOS)
+      if (Platform.isAndroid || Platform.isIOS) {
+        final ImagePicker picker = ImagePicker();
+        final XFile? image = await picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 80, // Reduce image quality to save space
+        );
+        
+        if (image != null) {
+          setState(() {
+            widget.newImagePath.value = image.path;
+          });
+        }
+      } 
+      // Use file_selector for desktop platforms
+      else {
+        final XTypeGroup typeGroup = XTypeGroup(
+          label: 'images',
+          extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+          mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        );
 
-    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+        final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
 
-    if (file != null) {
-      // Update the new image path
+        if (file != null) {
+          setState(() {
+            widget.newImagePath.value = file.path;
+          });
+        }
+      }
+    } catch (e) {
+      // Handle any errors that might occur during image picking
       setState(() {
-        widget.newImagePath.value = file.path;
+        widget.errorMessage.value = 'Không thể chọn ảnh: ${e.toString()}';
       });
-
-
     }
   }
   // Hàm xóa ảnh
