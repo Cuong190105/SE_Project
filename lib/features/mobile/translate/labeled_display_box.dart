@@ -98,34 +98,32 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return Flexible(
-      fit: FlexFit.tight,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return GestureDetector(
-            onTap: () {
-              FocusScope.of(context).requestFocus(FocusNode()); // Ẩn bàn phím
-            },
-            child: Container(
-              width: screenWidth - 32, // Full width minus padding
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade300, width: 2),
-              ),
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.topLeft,
-              child: SingleChildScrollView(
-                child: Text(
-                  translatedText,
-                  textAlign: TextAlign.start,
-                  style: const TextStyle(fontSize: 16),
-                ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode()); // Ẩn bàn phím
+          },
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.shade300, width: 2),
+            ),
+            padding: const EdgeInsets.all(8),
+            alignment: Alignment.topLeft,
+            child: SingleChildScrollView(
+              child: Text(
+                translatedText,
+                textAlign: TextAlign.start,
+                style: const TextStyle(fontSize: 16),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

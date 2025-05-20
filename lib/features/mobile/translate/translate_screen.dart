@@ -54,7 +54,12 @@ class _TranslateState extends State<Translate> {
           StreakCount(),
           SettingButton()
         ],
-        leading: BackButton()
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
       ),
       body: Container(
         decoration: BoxDecoration(
