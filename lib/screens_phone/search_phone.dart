@@ -6,6 +6,7 @@ import 'package:eng_dictionary/screens_desktop/authentic_desktop/register_screen
 import 'settings_phone.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../database_SQLite/database_helper.dart';
 
 class SearchPhone extends StatefulWidget {
   final TextEditingController controller;
@@ -23,7 +24,6 @@ class _Search extends State<SearchPhone> {
 
   @override
   void dispose() {
-    // Don't dispose the controller here as it's managed by the parent
     _mounted = false;
     super.dispose();
   }
@@ -49,7 +49,6 @@ class _Search extends State<SearchPhone> {
             .take(10)
             .toList();
       } else {
-        // Nếu API trả về không phải danh sách
         throw Exception('Định dạng phản hồi API không hợp lệ');
       }
     } else {
@@ -57,13 +56,30 @@ class _Search extends State<SearchPhone> {
     }
   }
 
+  // Tìm từ trong cơ sở dữ liệu hoặc tạo mới nếu không tìm thấy
+  Future<Word> _getOrCreateWord(String wordText) async {
+    final dbHelper = DatabaseHelper.instance;
+    final words = await dbHelper.getWords();
+    final existingWord = words.firstWhere(
+          (w) => w.word.toLowerCase() == wordText.toLowerCase(),
+      orElse: () => Word(
+        wordId: wordText, // Tạm thời dùng wordText làm ID
+        userEmail: 'unknown_user@example.com',
+        word: wordText,
+        partOfSpeech: 'Unknown',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+    return existingWord;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get screen width to make search bar responsive
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     return Container(
-      width: screenWidth * 0.9, // Make width 90% of screen width
+      width: screenWidth * 0.9,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -76,11 +92,10 @@ class _Search extends State<SearchPhone> {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      margin: const EdgeInsets.symmetric(horizontal: 8), // Add margin for better spacing
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Prevent column from expanding infinitely
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // TextField cho việc tìm kiếm
           TextField(
             controller: widget.controller,
             onChanged: (value) {
@@ -93,24 +108,21 @@ class _Search extends State<SearchPhone> {
                 icon: Icon(Icons.clear, color: Colors.blue.shade700),
                 onPressed: () {
                   widget.controller.clear();
-                  _searchWords(''); // Reset kết quả tìm kiếm
-                  setState(() {}); // Cập nhật lại giao diện
+                  _searchWords('');
+                  setState(() {});
                 },
               ),
               hintText: 'Nhập từ cần tìm kiếm',
               hintStyle: TextStyle(color: Colors.blue.shade300),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 15), // Add padding for better height
+              contentPadding: EdgeInsets.symmetric(vertical: 15),
             ),
-            textAlign: TextAlign.start, // Left align text for better readability
+            textAlign: TextAlign.start,
           ),
-
           Container(
             height: 1,
             color: Colors.grey.shade300,
           ),
-
-          // Hiển thị kết quả tìm kiếm hoặc đề xuất từ
           if (widget.controller.text.isNotEmpty)
             FutureBuilder<List<String>>(
               future: _suggestions,
@@ -133,73 +145,73 @@ class _Search extends State<SearchPhone> {
                 } else if (snapshot.hasData) {
                   final data = snapshot.data!;
                   return Container(
-                    width: double.infinity, // Use parent width instead of screen width
+                    width: double.infinity,
                     constraints: BoxConstraints(
-                      maxHeight: 300, // Limit height to prevent excessive scrolling
+                      maxHeight: 300,
                     ),
                     color: Colors.white,
                     child: data.isEmpty
                         ? Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Center(
-                              child: Text('Không tìm thấy định nghĩa.',
-                                  style: TextStyle(color: Colors.red)),
-                            ),
-                          )
+                      padding: const EdgeInsets.all(20),
+                      child: Center(
+                        child: Text('Không tìm thấy định nghĩa.',
+                            style: TextStyle(color: Colors.red)),
+                      ),
+                    )
                         : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: data.length,
-                            itemBuilder: (context, index) {
-                              final word = data[index];
-                              final isHovered = _hoveredIndexes.contains(index);
+                      shrinkWrap: true,
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        final wordText = data[index];
+                        final isHovered = _hoveredIndexes.contains(index);
 
-                              return MouseRegion(
-                                onEnter: (_) {
-                                  if (_mounted) {
-                                    setState(() {
-                                      _hoveredIndexes.add(index);
-                                    });
-                                  }
-                                },
-                                onExit: (_) {
-                                  if (_mounted) {
-                                    setState(() {
-                                      _hoveredIndexes.remove(index);
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  color: isHovered
-                                      ? Colors.grey.shade300
-                                      : Colors.transparent,
-                                  child: ListTile(
-                                    title: Text(
-                                      word,
-                                      overflow: TextOverflow.ellipsis, // Prevent text overflow
-                                      style: TextStyle(fontSize: 14), // Slightly smaller text
+                        return MouseRegion(
+                          onEnter: (_) {
+                            if (_mounted) {
+                              setState(() {
+                                _hoveredIndexes.add(index);
+                              });
+                            }
+                          },
+                          onExit: (_) {
+                            if (_mounted) {
+                              setState(() {
+                                _hoveredIndexes.remove(index);
+                              });
+                            }
+                          },
+                          child: Container(
+                            color: isHovered
+                                ? Colors.grey.shade300
+                                : Colors.transparent,
+                            child: ListTile(
+                              title: Text(
+                                wordText,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14),
+                              ),
+                              dense: true,
+                              onTap: () async {
+                                if (_mounted) {
+                                  widget.controller.clear();
+                                  _searchWords('');
+                                }
+                                // Tìm hoặc tạo đối tượng Word
+                                final word = await _getOrCreateWord(wordText);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VocabularyPhone(
+                                      word: word,
                                     ),
-                                    dense: true, // Make list tiles more compact
-                                    onTap: () {
-                                      // Clear the text before navigation
-                                      if (_mounted) {
-                                        widget.controller.clear();
-                                        _searchWords(''); // Clear suggestions
-                                      }
-                                      
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => VocabularyPhone(
-                                            word: word,
-                                          ),
-                                        ),
-                                      );
-                                    },
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
+                        );
+                      },
+                    ),
                   );
                 } else {
                   return SizedBox();

@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
-import 'package:process_run/shell.dart';
-import 'dart:async';
 import 'search_phone.dart';
 import 'home_phone.dart';
 import 'translate_phone.dart';
-//import 'package:html/parser.dart' as htmlParser;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
+import '../database_SQLite/database_helper.dart';
 
 class VocabularyPhone extends StatefulWidget {
-  final String word;
+  final Word word;
 
   const VocabularyPhone({Key? key, required this.word}) : super(key: key);
 
@@ -29,6 +26,40 @@ class _VocabularyState extends State<VocabularyPhone> {
   @override
   void initState() {
     super.initState();
+    _loadVocabularyData();
+  }
+
+  Future<void> _loadVocabularyData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+    try {
+      // Sử dụng dữ liệu từ đối tượng Word
+      _vocabularyData = {
+        'word': widget.word.word,
+        'partOfSpeech': widget.word.partOfSpeech,
+        'usIpa': widget.word.usIpa,
+        'ukIpa': widget.word.ukIpa,
+        'meanings': widget.word.meanings.map((m) => {
+          'definition': m.definition,
+          'examples': m.examples.map((e) => e.example).toList(),
+        }).toList(),
+      };
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Lỗi khi tải dữ liệu: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _playAudio(String audioUrl) {
+    // Placeholder for audio playing logic (e.g., using just_audio package)
+    // You can implement audio playback here
   }
 
   @override
@@ -66,7 +97,6 @@ class _VocabularyState extends State<VocabularyPhone> {
           ),
         ],
       ),
-
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -86,11 +116,10 @@ class _VocabularyState extends State<VocabularyPhone> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SearchPhone(controller: _controller),
-                    // Word title
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
-                        widget.word,
+                        widget.word.word,
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -102,13 +131,15 @@ class _VocabularyState extends State<VocabularyPhone> {
                   ],
                 ),
               ),
-              
               // Divider
               Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
-              
               // Word content
               Expanded(
-                child: VocabularyList(word: widget.word),
+                child: _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : _errorMessage.isNotEmpty
+                    ? Center(child: Text(_errorMessage, style: TextStyle(color: Colors.red)))
+                    : VocabularyList(word: widget.word),
               ),
             ],
           ),
@@ -116,28 +147,24 @@ class _VocabularyState extends State<VocabularyPhone> {
       ),
     );
   }
-
-  void _playAudio(String audioUrl) {
-    // You can use any audio playing package such as just_audio to play the audio
-  }
-
 }
 
-// lấy dữ liệu
+// Lấy dữ liệu bổ sung từ Wiktionary (tùy chọn)
 class Wiktionary extends StatefulWidget {
-  final String word;
+  final Word word;
   const Wiktionary({super.key, required this.word});
 
   @override
   State<Wiktionary> createState() => _WiktionaryState();
 }
+
 class _WiktionaryState extends State<Wiktionary> {
   late Future<List<String>> _results;
 
   @override
   void initState() {
     super.initState();
-    _results = _fetchWord(widget.word);
+    _results = _fetchWord(widget.word.word); // Sử dụng word.word để fetch
   }
 
   Future<List<String>> _fetchWord(String word) async {
@@ -178,8 +205,8 @@ class _WiktionaryState extends State<Wiktionary> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('Không có dữ liệu'));
         } else {
-          final results = snapshot.data!; // Lấy dữ liệu từ snapshot
-          return Expanded( // Dùng Expanded để bao bọc ListView
+          final results = snapshot.data!;
+          return Expanded(
             child: ListView.builder(
               itemCount: results.length,
               itemBuilder: (context, index) {
@@ -202,108 +229,38 @@ class _WiktionaryState extends State<Wiktionary> {
   }
 }
 
-// danh sách nghĩa
+// Danh sách nghĩa từ cơ sở dữ liệu
 class VocabularyList extends StatefulWidget {
-  final String word;
+  final Word word;
   VocabularyList({required this.word});
 
   @override
   _VocabularyListState createState() => _VocabularyListState();
 }
+
 class _VocabularyListState extends State<VocabularyList> {
   late Future<List<Map<String, dynamic>>> _wordDetails;
-  final List<String> _dsTuLoai = [
-    'Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
-    'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'
-  ];
-
-  Future<String> fetchWordDetails(String word) async {
-    final url = 'https://vi.wiktionary.org/wiki/$word';
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
-      throw Exception('Failed to load word details');
-    }
-  }
-
-  List<Map<String, dynamic>> parseWordDetails(String htmlContent) {
-    final document = html_parser.parse(htmlContent);
-    final wordDetails = <Map<String, dynamic>>[];
-
-    // Lấy tất cả các phần tử <section> trong document
-    final sectionElements0 = document.querySelectorAll('section');
-    final filteredSections = sectionElements0.where((section) {
-      final h2Element = section.querySelector('h2');
-      return h2Element != null && h2Element.text.trim() == 'Tiếng Anh';
-    }).toList();
-
-    for (var section in filteredSections) {
-      // Lấy tất cả các phần tử <section> con trong section đã lọc
-      final sectionElements = section.querySelectorAll('section');
-      // Duyệt qua từng section để lấy thông tin
-      for (int i = 0; i < sectionElements.length; i++) {
-        Map<String, dynamic> wordDetail = {};
-
-        // Lấy tên từ loại (Ví dụ: Danh từ, Động từ, ...)
-        final partOfSpeechElement = sectionElements[i].querySelector('.mw-heading h3');
-        String partOfSpeech = partOfSpeechElement?.text.trim() ?? 'không rõ từ loại';
-
-        // Kiểm tra nếu từ loại có trong danh sách _dsTuLoai
-        if (!_dsTuLoai.contains(partOfSpeech)) {
-          continue;  // Nếu không có, bỏ qua phần tử này và tiếp tục vòng lặp
-        }
-
-        wordDetail['type'] = partOfSpeech;
-
-        // Lấy phiên âm (nếu có)
-        final phoneticElement = sectionElements[i].querySelector('.IPA');
-        wordDetail['phonetic'] = phoneticElement?.text.trim() ?? 'không rõ phiên âm';
-
-        // Lấy nghĩa của từ (<li>)
-        final meaningElements = sectionElements[i].querySelectorAll('li');
-        List<String> meanings = [];
-        List<List<String>> examples = [];
-
-        for (var meaningElement in meaningElements) {
-          String meaningText = '';
-          List<String> examplesText = [];
-          final aElements = meaningElement.querySelectorAll('a');
-          final ddElements = meaningElement.querySelectorAll('dd');
-
-          for (var aElement in aElements) {
-            meaningText += aElement.text.trim();
-            meaningText += ", ";
-          }
-
-          if (meaningText.isNotEmpty) {
-            meaningText = meaningText.substring(0, meaningText.length - 2);
-          }
-
-          for (var ddElement in ddElements) {
-            examplesText.add(ddElement.text.trim());
-          }
-
-          meanings.add(meaningText);
-          examples.add(examplesText);
-        }
-
-        wordDetail['meaning'] = meanings;
-        wordDetail['examples'] = examples;
-
-        // Thêm chi tiết từ vào danh sách
-        wordDetails.add(wordDetail);
-      }
-    }
-    return wordDetails;
-  }
-
 
   @override
   void initState() {
     super.initState();
-    _wordDetails = fetchWordDetails(widget.word).then((htmlContent) => parseWordDetails(htmlContent));
+    _wordDetails = _prepareWordDetails(widget.word);
+  }
+
+  Future<List<Map<String, dynamic>>> _prepareWordDetails(Word word) async {
+    List<Map<String, dynamic>> wordDetails = [];
+
+    for (var meaning in word.meanings) {
+      Map<String, dynamic> wordDetail = {
+        'type': word.partOfSpeech,
+        'phonetic': word.usIpa ?? word.ukIpa ?? 'Không có phiên âm',
+        'meaning': [meaning.definition],
+        'examples': meaning.examples.map((e) => e.example).toList(),
+      };
+      wordDetails.add(wordDetail);
+    }
+
+    return wordDetails;
   }
 
   @override
@@ -320,21 +277,19 @@ class _VocabularyListState extends State<VocabularyList> {
         } else {
           final data = snapshot.data!;
           return ListView.builder(
-            itemCount: data.length, // Sửa lại để đếm đúng số lượng phần tử trong data
+            itemCount: data.length,
             itemBuilder: (context, index) {
-              final wordType = data[index]; // Lấy từng phần tử trong data
+              final wordType = data[index];
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Từ loại
                     Text(
                       '${wordType['type']}',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 5),
-                    // Phát âm
                     Row(
                       children: [
                         Icon(Icons.volume_up, size: 20),
@@ -346,7 +301,6 @@ class _VocabularyListState extends State<VocabularyList> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    // Nghĩa
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -354,20 +308,17 @@ class _VocabularyListState extends State<VocabularyList> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Hiển thị nghĩa với chữ in đậm
                               Text(
                                 'Nghĩa: ${wordType['meaning'][i]}',
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                              // Kiểm tra ví dụ tương ứng với nghĩa này
-                              if (wordType['examples'][i].isNotEmpty)
-                                for (var example in wordType['examples'][i])
+                              if (wordType['examples'].isNotEmpty)
+                                for (var example in wordType['examples'])
                                   Text(
-                                    '• $example',  // Dấu chấm tròn đậm
+                                    '• $example',
                                     style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
                                   ),
-                              // Nếu không có ví dụ, hiển thị dấu chấm tròn đậm với "Không có ví dụ"
-                              if (wordType['examples'][i].isEmpty)
+                              if (wordType['examples'].isEmpty)
                                 Text(
                                   '• Không có ví dụ',
                                   style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
