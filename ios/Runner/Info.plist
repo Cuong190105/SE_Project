@@ -50,5 +50,11 @@
     <key>NSAllowsArbitraryLoads</key>
     <true/>
 </dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your photo library to select profile images</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to take profile images</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone when taking videos</string>
 </dict>
 </plist>
