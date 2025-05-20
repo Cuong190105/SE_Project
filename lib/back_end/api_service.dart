@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   // URL cơ sở của API
   static const String baseUrl = 'https://edudictionaryserver-production.up.railway.app/api';
+  //'https://edudictionaryserver-production.up.railway.app/api';
 
   // Header cơ bản cho mọi yêu cầu
   static Future<Map<String, String>> getHeaders() async {

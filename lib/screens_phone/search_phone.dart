@@ -65,6 +65,7 @@ class _Search extends State<SearchPhone> {
       orElse: () => Word(
         wordId: wordText, // Tạm thời dùng wordText làm ID
         userEmail: 'unknown_user@example.com',
+        definition: wordText,
         word: wordText,
         partOfSpeech: 'Unknown',
         createdAt: DateTime.now(),

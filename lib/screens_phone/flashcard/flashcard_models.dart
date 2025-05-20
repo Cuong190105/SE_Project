@@ -67,6 +67,7 @@ class FlashcardSet {
   DateTime updatedAt;
   bool isSynced;
   bool isSample;
+  bool isDeleted;
 
   FlashcardSet({
     required this.id,
@@ -80,6 +81,7 @@ class FlashcardSet {
     required this.updatedAt,
     this.isSynced = false,
     this.isSample = false,
+    this.isDeleted = false,
   });
 
   int get totalCards => cards.length;
@@ -96,11 +98,14 @@ class FlashcardSet {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'is_sample': isSample ? 1 : 0,
+      'is_deleted': isDeleted ? 1 : 0,
     };
   }
 
-  factory FlashcardSet.fromJson(Map<String, dynamic> json) {
+  static Future<FlashcardSet> fromJson(Map<String, dynamic> json) async {
     debugPrint('Parsing FlashcardSet JSON: $json');
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('user_email') ?? 'unknown_user@example.com';
     final cards = (json['cards'] as List<dynamic>?)?.map((cardJson) {
       if (cardJson is Map<String, dynamic>) {
         return Flashcard.fromJson(cardJson);
@@ -123,7 +128,7 @@ class FlashcardSet {
 
     return FlashcardSet(
       id: json['set_id']?.toString() ?? 'set_${DateTime.now().millisecondsSinceEpoch}',
-      userEmail: json['user_email']?.toString() ?? 'unknown_user@example.com',
+      userEmail: userEmail,
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       cards: cards,
@@ -389,17 +394,18 @@ class FlashcardManager {
         throw Exception('Phản hồi từ server không đúng định dạng');
       }
 
-      final sets = payload
-          .map((json) {
+      final sets = <FlashcardSet>[];
+      for (var json in payload) {
         if (json is Map<String, dynamic>) {
-          return FlashcardSet.fromJson(json);
+          final set = await FlashcardSet.fromJson(json);
+          if (set.userEmail == userEmail && !set.isSample) {
+            sets.add(set);
+          }
         } else {
           debugPrint('Invalid set JSON: $json');
           throw Exception('Định dạng bộ thẻ không hợp lệ trong JSON');
         }
-      })
-          .where((set) => set.userEmail == userEmail && !set.isSample)
-          .toList();
+      }
 
       for (var set in sets) {
         set.color = getColorForIndex((await getSets()).length);

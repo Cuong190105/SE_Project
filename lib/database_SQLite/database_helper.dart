@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import '../screens_phone/flashcard/flashcard_models.dart';
+import 'package:uuid/uuid.dart';
 
 // Định nghĩa các lớp mô hình cho từ vựng
 class Word {
@@ -14,7 +15,8 @@ class Word {
   final String partOfSpeech;
   final String? usIpa;
   final String? ukIpa;
-  final List<Meaning> meanings;
+  final String definition;
+  final List<String> examples; // Thêm trường examples
   final List<Synonym> synonyms;
   final List<Antonym> antonyms;
   final List<FamilyWord> family;
@@ -32,7 +34,8 @@ class Word {
     required this.partOfSpeech,
     this.usIpa,
     this.ukIpa,
-    this.meanings = const [],
+    required this.definition,
+    this.examples = const [], // Khởi tạo mặc định
     this.synonyms = const [],
     this.antonyms = const [],
     this.family = const [],
@@ -42,28 +45,6 @@ class Word {
     required this.updatedAt,
     this.isSynced = false,
     this.isDeleted = false,
-  });
-}
-
-class Meaning {
-  final String meaningId;
-  final String definition;
-  final List<Example> examples;
-
-  Meaning({
-    required this.meaningId,
-    required this.definition,
-    this.examples = const [],
-  });
-}
-
-class Example {
-  final String exampleId;
-  final String example;
-
-  Example({
-    required this.exampleId,
-    required this.example,
   });
 }
 
@@ -186,28 +167,11 @@ class DatabaseHelper {
           part_of_speech TEXT NOT NULL,
           us_ipa TEXT,
           uk_ipa TEXT,
+          definition TEXT NOT NULL,
           created_at TEXT NOT NULL,
           updated_at TEXT NOT NULL,
           is_synced INTEGER NOT NULL DEFAULT 0,
           is_deleted INTEGER NOT NULL DEFAULT 0
-        )
-      ''');
-
-      db.execute('''
-        CREATE TABLE IF NOT EXISTS meanings (
-          meaning_id TEXT PRIMARY KEY,
-          word_id TEXT NOT NULL,
-          definition TEXT NOT NULL,
-          FOREIGN KEY (word_id) REFERENCES words (word_id)
-        )
-      ''');
-
-      db.execute('''
-        CREATE TABLE IF NOT EXISTS examples (
-          example_id TEXT PRIMARY KEY,
-          meaning_id TEXT NOT NULL,
-          example TEXT NOT NULL,
-          FOREIGN KEY (meaning_id) REFERENCES meanings (meaning_id)
         )
       ''');
 
@@ -257,16 +221,24 @@ class DatabaseHelper {
         )
       ''');
 
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS examples (
+          example_id TEXT PRIMARY KEY,
+          word_id TEXT NOT NULL,
+          example TEXT NOT NULL,
+          FOREIGN KEY (word_id) REFERENCES words (word_id)
+        )
+      ''');
+
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcard_sets_user_email ON flashcard_sets(user_email)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_flashcards_set_id ON flashcards(set_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_words_user_email ON words(user_email)');
-      db.execute('CREATE INDEX IF NOT EXISTS idx_meanings_word_id ON meanings(word_id)');
-      db.execute('CREATE INDEX IF NOT EXISTS idx_examples_meaning_id ON examples(meaning_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_synonyms_word_id ON synonyms(word_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_antonyms_word_id ON antonyms(word_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_family_word_id ON family(word_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_phrases_word_id ON phrases(word_id)');
       db.execute('CREATE INDEX IF NOT EXISTS idx_media_word_id ON media(word_id)');
+      db.execute('CREATE INDEX IF NOT EXISTS idx_examples_word_id ON examples(word_id)');
 
       debugPrint('Hoàn tất khởi tạo cơ sở dữ liệu.');
       return db;
@@ -580,8 +552,8 @@ class DatabaseHelper {
 
       db.execute('''
         INSERT OR REPLACE INTO words (
-          word_id, user_email, word, part_of_speech, us_ipa, uk_ipa, created_at, updated_at, is_synced, is_deleted
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          word_id, user_email, word, part_of_speech, us_ipa, uk_ipa, definition, created_at, updated_at, is_synced, is_deleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ''', [
         word.wordId,
         word.userEmail,
@@ -589,41 +561,19 @@ class DatabaseHelper {
         word.partOfSpeech,
         word.usIpa,
         word.ukIpa,
+        word.definition,
         createdAtStr,
         updatedAtStr,
         word.isSynced ? 1 : 0,
         word.isDeleted ? 1 : 0,
       ]);
 
-      db.execute('DELETE FROM meanings WHERE word_id = ?', [word.wordId]);
-      db.execute('DELETE FROM examples WHERE meaning_id IN (SELECT meaning_id FROM meanings WHERE word_id = ?)', [word.wordId]);
       db.execute('DELETE FROM synonyms WHERE word_id = ?', [word.wordId]);
       db.execute('DELETE FROM antonyms WHERE word_id = ?', [word.wordId]);
       db.execute('DELETE FROM family WHERE word_id = ?', [word.wordId]);
       db.execute('DELETE FROM phrases WHERE word_id = ?', [word.wordId]);
       db.execute('DELETE FROM media WHERE word_id = ?', [word.wordId]);
-
-      for (var meaning in word.meanings) {
-        db.execute('''
-          INSERT INTO meanings (meaning_id, word_id, definition)
-          VALUES (?, ?, ?)
-        ''', [
-          meaning.meaningId,
-          word.wordId,
-          meaning.definition,
-        ]);
-
-        for (var example in meaning.examples) {
-          db.execute('''
-            INSERT INTO examples (example_id, meaning_id, example)
-            VALUES (?, ?, ?)
-          ''', [
-            example.exampleId,
-            meaning.meaningId,
-            example.example,
-          ]);
-        }
-      }
+      db.execute('DELETE FROM examples WHERE word_id = ?', [word.wordId]);
 
       for (var synonym in word.synonyms) {
         db.execute('''
@@ -681,6 +631,17 @@ class DatabaseHelper {
         ]);
       }
 
+      for (var example in word.examples) {
+        db.execute('''
+          INSERT INTO examples (example_id, word_id, example)
+          VALUES (?, ?, ?)
+        ''', [
+          Uuid().v4(),
+          word.wordId,
+          example,
+        ]);
+      }
+
       db.execute('COMMIT');
       debugPrint('Từ vựng ${word.wordId} đã được lưu thành công.');
     } catch (e, stackTrace) {
@@ -700,21 +661,19 @@ class DatabaseHelper {
       final wordRows = db.select(
         '''
         SELECT w.*, 
-               m.meaning_id, m.definition,
-               e.example_id, e.example,
                s.synonym_id, s.synonym_word_id,
                a.antonym_id, a.antonym_word_id,
                f.family_id, f.family_word,
                p.phrase_id, p.phrase,
-               med.media_id, med.type, med.file_path
+               med.media_id, med.type, med.file_path,
+               e.example_id, e.example
         FROM words w
-        LEFT JOIN meanings m ON w.word_id = m.word_id
-        LEFT JOIN examples e ON m.meaning_id = e.meaning_id
         LEFT JOIN synonyms s ON w.word_id = s.word_id
         LEFT JOIN antonyms a ON w.word_id = a.word_id
         LEFT JOIN family f ON w.word_id = f.word_id
         LEFT JOIN phrases p ON w.word_id = p.word_id
         LEFT JOIN media med ON w.word_id = med.word_id
+        LEFT JOIN examples e ON w.word_id = e.word_id
         WHERE w.user_email = ? AND w.is_deleted = 0
         ''',
         [userEmail],
@@ -733,7 +692,8 @@ class DatabaseHelper {
             partOfSpeech: row['part_of_speech'] as String,
             usIpa: row['us_ipa'] as String?,
             ukIpa: row['uk_ipa'] as String?,
-            meanings: [],
+            definition: row['definition'] as String,
+            examples: [],
             synonyms: [],
             antonyms: [],
             family: [],
@@ -747,28 +707,6 @@ class DatabaseHelper {
         }
 
         final word = wordMap[wordId]!;
-
-        if (row['meaning_id'] != null) {
-          var meaning = word.meanings.firstWhere(
-                (m) => m.meaningId == row['meaning_id'],
-            orElse: () => Meaning(
-              meaningId: row['meaning_id'] as String,
-              definition: row['definition'] as String,
-              examples: [],
-            ),
-          );
-
-          if (!word.meanings.contains(meaning)) {
-            word.meanings.add(meaning);
-          }
-
-          if (row['example_id'] != null) {
-            meaning.examples.add(Example(
-              exampleId: row['example_id'] as String,
-              example: row['example'] as String,
-            ));
-          }
-        }
 
         if (row['synonym_id'] != null) {
           word.synonyms.add(Synonym(
@@ -804,6 +742,10 @@ class DatabaseHelper {
             type: row['type'] as String,
             filePath: row['file_path'] as String,
           ));
+        }
+
+        if (row['example_id'] != null) {
+          word.examples.add(row['example'] as String);
         }
       }
 
@@ -830,21 +772,19 @@ class DatabaseHelper {
       final wordRows = db.select(
         '''
         SELECT w.*, 
-               m.meaning_id, m.definition,
-               e.example_id, e.example,
                s.synonym_id, s.synonym_word_id,
                a.antonym_id, a.antonym_word_id,
                f.family_id, f.family_word,
                p.phrase_id, p.phrase,
-               med.media_id, med.type, med.file_path
+               med.media_id, med.type, med.file_path,
+               e.example_id, e.example
         FROM words w
-        LEFT JOIN meanings m ON w.word_id = m.word_id
-        LEFT JOIN examples e ON m.meaning_id = e.meaning_id
         LEFT JOIN synonyms s ON w.word_id = s.word_id
         LEFT JOIN antonyms a ON w.word_id = a.word_id
         LEFT JOIN family f ON w.word_id = f.word_id
         LEFT JOIN phrases p ON w.word_id = p.word_id
         LEFT JOIN media med ON w.word_id = med.word_id
+        LEFT JOIN examples e ON w.word_id = e.word_id
         WHERE w.user_email = ? AND w.is_synced = 0 AND w.is_deleted = 0
         ''',
         [userEmail],
@@ -863,7 +803,8 @@ class DatabaseHelper {
             partOfSpeech: row['part_of_speech'] as String,
             usIpa: row['us_ipa'] as String?,
             ukIpa: row['uk_ipa'] as String?,
-            meanings: [],
+            definition: row['definition'] as String,
+            examples: [],
             synonyms: [],
             antonyms: [],
             family: [],
@@ -877,28 +818,6 @@ class DatabaseHelper {
         }
 
         final word = wordMap[wordId]!;
-
-        if (row['meaning_id'] != null) {
-          var meaning = word.meanings.firstWhere(
-                (m) => m.meaningId == row['meaning_id'],
-            orElse: () => Meaning(
-              meaningId: row['meaning_id'] as String,
-              definition: row['definition'] as String,
-              examples: [],
-            ),
-          );
-
-          if (!word.meanings.contains(meaning)) {
-            word.meanings.add(meaning);
-          }
-
-          if (row['example_id'] != null) {
-            meaning.examples.add(Example(
-              exampleId: row['example_id'] as String,
-              example: row['example'] as String,
-            ));
-          }
-        }
 
         if (row['synonym_id'] != null) {
           word.synonyms.add(Synonym(
@@ -934,6 +853,10 @@ class DatabaseHelper {
             type: row['type'] as String,
             filePath: row['file_path'] as String,
           ));
+        }
+
+        if (row['example_id'] != null) {
+          word.examples.add(row['example'] as String);
         }
       }
 

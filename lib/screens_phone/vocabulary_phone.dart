@@ -35,16 +35,13 @@ class _VocabularyState extends State<VocabularyPhone> {
       _errorMessage = '';
     });
     try {
-      // Sử dụng dữ liệu từ đối tượng Word
       _vocabularyData = {
         'word': widget.word.word,
         'partOfSpeech': widget.word.partOfSpeech,
         'usIpa': widget.word.usIpa,
         'ukIpa': widget.word.ukIpa,
-        'meanings': widget.word.meanings.map((m) => {
-          'definition': m.definition,
-          'examples': m.examples.map((e) => e.example).toList(),
-        }).toList(),
+        'definition': widget.word.definition,
+        'examples': widget.word.examples,
       };
       setState(() {
         _isLoading = false;
@@ -58,13 +55,12 @@ class _VocabularyState extends State<VocabularyPhone> {
   }
 
   void _playAudio(String audioUrl) {
-    // Placeholder for audio playing logic (e.g., using just_audio package)
-    // You can implement audio playback here
+    // Placeholder for audio playing logic
   }
 
   @override
   Widget build(BuildContext context) {
-    int streakCount = 5; // Placeholder for streak count
+    int streakCount = 5;
 
     return Scaffold(
       appBar: AppBar(
@@ -109,7 +105,6 @@ class _VocabularyState extends State<VocabularyPhone> {
         child: SafeArea(
           child: Column(
             children: [
-              // Word title and search bar
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
@@ -131,9 +126,7 @@ class _VocabularyState extends State<VocabularyPhone> {
                   ],
                 ),
               ),
-              // Divider
               Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
-              // Word content
               Expanded(
                 child: _isLoading
                     ? Center(child: CircularProgressIndicator())
@@ -149,7 +142,6 @@ class _VocabularyState extends State<VocabularyPhone> {
   }
 }
 
-// Lấy dữ liệu bổ sung từ Wiktionary (tùy chọn)
 class Wiktionary extends StatefulWidget {
   final Word word;
   const Wiktionary({super.key, required this.word});
@@ -164,7 +156,7 @@ class _WiktionaryState extends State<Wiktionary> {
   @override
   void initState() {
     super.initState();
-    _results = _fetchWord(widget.word.word); // Sử dụng word.word để fetch
+    _results = _fetchWord(widget.word.word);
   }
 
   Future<List<String>> _fetchWord(String word) async {
@@ -229,7 +221,6 @@ class _WiktionaryState extends State<Wiktionary> {
   }
 }
 
-// Danh sách nghĩa từ cơ sở dữ liệu
 class VocabularyList extends StatefulWidget {
   final Word word;
   VocabularyList({required this.word});
@@ -239,7 +230,7 @@ class VocabularyList extends StatefulWidget {
 }
 
 class _VocabularyListState extends State<VocabularyList> {
-  late Future<List<Map<String, dynamic>>> _wordDetails;
+  late Future<Map<String, dynamic>> _wordDetails;
 
   @override
   void initState() {
@@ -247,40 +238,31 @@ class _VocabularyListState extends State<VocabularyList> {
     _wordDetails = _prepareWordDetails(widget.word);
   }
 
-  Future<List<Map<String, dynamic>>> _prepareWordDetails(Word word) async {
-    List<Map<String, dynamic>> wordDetails = [];
-
-    for (var meaning in word.meanings) {
-      Map<String, dynamic> wordDetail = {
-        'type': word.partOfSpeech,
-        'phonetic': word.usIpa ?? word.ukIpa ?? 'Không có phiên âm',
-        'meaning': [meaning.definition],
-        'examples': meaning.examples.map((e) => e.example).toList(),
-      };
-      wordDetails.add(wordDetail);
-    }
-
-    return wordDetails;
+  Future<Map<String, dynamic>> _prepareWordDetails(Word word) async {
+    return {
+      'type': word.partOfSpeech,
+      'phonetic': word.usIpa ?? word.ukIpa ?? 'Không có phiên âm',
+      'definition': word.definition,
+      'examples': word.examples,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
+    return FutureBuilder<Map<String, dynamic>>(
       future: _wordDetails,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        } else if (!snapshot.hasData) {
           return Center(child: Text('Không tìm thấy dữ liệu'));
         } else {
-          final data = snapshot.data!;
-          return ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              final wordType = data[index];
-              return Padding(
+          final wordType = snapshot.data!;
+          return ListView(
+            children: [
+              Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,34 +286,28 @@ class _VocabularyListState extends State<VocabularyList> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (int i = 0; i < wordType['meaning'].length; i++)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Nghĩa: ${wordType['meaning'][i]}',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              if (wordType['examples'].isNotEmpty)
-                                for (var example in wordType['examples'])
-                                  Text(
-                                    '• $example',
-                                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                                  ),
-                              if (wordType['examples'].isEmpty)
-                                Text(
-                                  '• Không có ví dụ',
-                                  style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                                ),
-                            ],
+                        Text(
+                          'Nghĩa: ${wordType['definition']}',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        if (wordType['examples'].isNotEmpty)
+                          for (var example in wordType['examples'])
+                            Text(
+                              '• $example',
+                              style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+                            ),
+                        if (wordType['examples'].isEmpty)
+                          Text(
+                            '• Không có ví dụ',
+                            style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
                           ),
                       ],
                     ),
                     Divider(),
                   ],
                 ),
-              );
-            },
+              ),
+            ],
           );
         }
       },

@@ -28,8 +28,10 @@ class _AddWordState extends State<AddWord> {
     'Đại từ',
     'Từ hạn định',
   ];
-  List<MeaningBoxData> meaningBoxes = [];
   final TextEditingController _wordController = TextEditingController();
+  final TextEditingController _definitionController = TextEditingController();
+  final TextEditingController _example1Controller = TextEditingController();
+  final TextEditingController _example2Controller = TextEditingController();
   final TextEditingController _synonymsController = TextEditingController();
   final TextEditingController _antonymsController = TextEditingController();
   final TextEditingController _familyController = TextEditingController();
@@ -42,13 +44,6 @@ class _AddWordState extends State<AddWord> {
   String? _errorMessage;
   int streakCount = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    meaningBoxes.add(MeaningBoxData());
-    _fetchStreakCount();
-  }
-
   Future<void> _fetchStreakCount() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -57,15 +52,21 @@ class _AddWordState extends State<AddWord> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _fetchStreakCount();
+  }
+
+  @override
   void dispose() {
     _wordController.dispose();
+    _definitionController.dispose();
+    _example1Controller.dispose();
+    _example2Controller.dispose();
     _synonymsController.dispose();
     _antonymsController.dispose();
     _familyController.dispose();
     _phrasesController.dispose();
-    for (var box in meaningBoxes) {
-      box.dispose();
-    }
     super.dispose();
   }
 
@@ -96,24 +97,11 @@ class _AddWordState extends State<AddWord> {
         partOfSpeech: _selectedTuLoai!,
         usIpa: _usAudioName,
         ukIpa: _ukAudioName,
-        meanings: meaningBoxes
-            .asMap()
-            .entries
-            .map((entry) {
-          final box = entry.value;
-          return Meaning(
-            meaningId: uuid.v4(),
-            definition: box.meaningController.text,
-            examples: [
-              if (box.example1Controller.text.isNotEmpty)
-                Example(exampleId: uuid.v4(), example: box.example1Controller.text),
-              if (box.example2Controller.text.isNotEmpty)
-                Example(exampleId: uuid.v4(), example: box.example2Controller.text),
-            ].where((example) => example.example.isNotEmpty).toList(),
-          );
-        })
-            .where((meaning) => meaning.definition.isNotEmpty)
-            .toList(),
+        definition: _definitionController.text,
+        examples: [
+          if (_example1Controller.text.isNotEmpty) _example1Controller.text,
+          if (_example2Controller.text.isNotEmpty) _example2Controller.text,
+        ].where((example) => example.isNotEmpty).toList(),
         synonyms: _synonymsController.text.isNotEmpty
             ? _synonymsController.text
             .split(',')
@@ -178,12 +166,8 @@ class _AddWordState extends State<AddWord> {
             'part_of_speech': word.partOfSpeech,
             'us_ipa': word.usIpa ?? '',
             'uk_ipa': word.ukIpa ?? '',
-            'definitions': word.meanings
-                .map((m) => {
-              'definition': m.definition,
-              'examples': m.examples.map((e) => e.example).toList(),
-            })
-                .toList(),
+            'definition': word.definition,
+            'example': word.examples,
             'synonyms': word.synonyms.map((s) => s.synonymWordId).toList(),
             'antonyms': word.antonyms.map((s) => s.antonymWordId).toList(),
             'family': word.family.map((f) => f.familyWord).toList(),
@@ -193,6 +177,7 @@ class _AddWordState extends State<AddWord> {
             'us_audio': _usAudioPath != null,
             'uk_audio': _ukAudioPath != null,
             'image': false,
+            'is_deleted': word.isDeleted ? 1 : 0,
           }
         ]
       };
@@ -471,46 +456,11 @@ class _AddWordState extends State<AddWord> {
                         ],
                       ),
                       SizedBox(height: 10, width: screenWidth),
-                      ...meaningBoxes.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final box = entry.value;
-                        return Column(
-                          children: [
-                            meaningBox(box, index),
-                            SizedBox(height: 10),
-                          ],
-                        );
-                      }).toList(),
-                      SizedBox(height: 5, width: screenWidth),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  if (meaningBoxes.length > 1) {
-                                    meaningBoxes.removeLast();
-                                  }
-                                });
-                              },
-                              child: Text('Xóa ý nghĩa'),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  meaningBoxes.add(MeaningBoxData());
-                                });
-                              },
-                              child: Text('Thêm ý nghĩa'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildLabeledTextField('Định nghĩa', _definitionController),
+                      SizedBox(height: 10, width: screenWidth),
+                      _buildLabeledTextField('Ví dụ 1', _example1Controller),
+                      SizedBox(height: 10, width: screenWidth),
+                      _buildLabeledTextField('Ví dụ 2', _example2Controller),
                       SizedBox(height: 10, width: screenWidth),
                       _buildLabeledTextField('Từ đồng nghĩa', _synonymsController),
                       SizedBox(height: 10, width: screenWidth),
@@ -563,22 +513,6 @@ class _AddWordState extends State<AddWord> {
     );
   }
 
-  Widget meaningBox(MeaningBoxData box, int index) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabeledTextField('Nghĩa ${index + 1}', box.meaningController),
-          SizedBox(height: 10),
-          _buildLabeledTextField('Ví dụ 1', box.example1Controller),
-          SizedBox(height: 10),
-          _buildLabeledTextField('Ví dụ 2', box.example2Controller),
-        ],
-      ),
-    );
-  }
-
   Widget _buildLabeledTextField(String label, TextEditingController controller) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -621,18 +555,6 @@ class _AddWordState extends State<AddWord> {
         ),
       ],
     );
-  }
-}
-
-class MeaningBoxData {
-  final TextEditingController meaningController = TextEditingController();
-  final TextEditingController example1Controller = TextEditingController();
-  final TextEditingController example2Controller = TextEditingController();
-
-  void dispose() {
-    meaningController.dispose();
-    example1Controller.dispose();
-    example2Controller.dispose();
   }
 }
 
@@ -681,7 +603,7 @@ class _AddSoundButtonState extends State<AddSoundButton> {
 
     if (file != null) {
       final fileSize = await file.length();
-      if (fileSize > 5 * 1024 * 1024) { // Giới hạn 5MB
+      if (fileSize > 5 * 1024 * 1024) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('File quá lớn, vui lòng chọn file dưới 5MB'),
