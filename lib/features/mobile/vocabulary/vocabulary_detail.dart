@@ -7,7 +7,7 @@ import 'dart:async';
 //import 'package:html/parser.dart' as htmlParser;
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
-import 'package:eng_dictionary/features/common/widgets/search.dart';
+import 'package:eng_dictionary/features/mobile/home/search.dart';
 class VocabularyPhone extends StatefulWidget {
   final String word;
 
@@ -39,7 +39,7 @@ class _VocabularyState extends State<VocabularyPhone> {
         title: Text(
           'DICTIONARY',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             letterSpacing: 2,
@@ -82,7 +82,7 @@ class _VocabularyState extends State<VocabularyPhone> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Search(controller: _controller),
+                    SearchPhone(controller: _controller),
                     // Word title
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),

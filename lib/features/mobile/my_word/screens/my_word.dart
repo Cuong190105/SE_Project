@@ -27,23 +27,17 @@ class _MyWord extends State<MyWord> {
     final audioUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/52/En-us-hello.ogg';
 
     final data =  [
-      {'word': 'applefffffffffffffffffffffffffffffff',
+      {'word': 'apple',
         'type': ['Danh từ', 'Động từ'],
         'phonetic': [['/us1/','/uk1/'],['/us2/','/uk2/']],
         'audio' : [[audioUrl, audioUrl, audioUrl], [audioUrl, audioUrl, audioUrl]],
-        'meaning': ['quả táo','đu đubbbbbbbbbbbbbbbbboooooooooooooo'
-            'oooooooooooooooooooooooooooooooooooooooooooooooooooooo'
-            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
-            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
-            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
-            'ooooooooooooooooooooooooooooooooooooooooooooooooohhhhhhhhhhhh'
-            'hhhhhhhhhhhhhhhhhhhhhhhhhf'],
+        'meaning': ['quả táo','táo'],
         'example': [['v1','vd2'], ['v1','vd2']],
-        'image': ['https://i.pravatar.cc/150','https://i.pravatar.cc/151'],
+        'image': ['https://cdn-images.vtv.vn/thumb_w/1200/Uploaded/nguyetmai/2013_03_29/apples_00412559.jpg','https://i.pravatar.cc/151'],
         'synonym': 'táo',
         'antonym': 'cam',
         'family': 'taos',
-        'phrase': 'tao không dai, tao ddd',
+        'phrase': 'táo tây, táo tàu',
       },
       {'word': 'tomato', 'type': ['Động từ'],
         'phonetic': [['/us2/','/uk2/']],
