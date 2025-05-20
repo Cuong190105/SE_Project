@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/features/desktop/settings/setting_screen.dart';
 import 'package:eng_dictionary/features/mobile/settings/screens/setting_screen.dart';
 class SettingButton extends StatelessWidget {
   const SettingButton({Key? key}) : super(key: key);

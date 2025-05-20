@@ -1,26 +1,24 @@
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/add_word_phone.dart';
 import 'package:flutter/material.dart';
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:http/http.dart' as http;
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/vocabulary_card.dart';
-import 'package:eng_dictionary/features/desktop/my_word/screens/add_word.dart';
-import 'package:eng_dictionary/features/desktop/my_word/screens/my_word_detail.dart';
+import 'package:eng_dictionary/features/mobile/my_word/widgets/vocabulary_card.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
-import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/desktop/home/home_screen.dart';
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/related_word.dart';
-import 'package:eng_dictionary/features/desktop/my_word/widgets/meaning_box.dart';
+import 'package:eng_dictionary/features/mobile/my_word/widgets/related_word.dart';
+import 'package:eng_dictionary/features/mobile/my_word/widgets/meaning_box.dart';
 
 class UpdateWord extends StatefulWidget {
   final Map<String, dynamic> vocabularyList;
@@ -29,6 +27,7 @@ class UpdateWord extends StatefulWidget {
   @override
   _UpdateWordState createState() => _UpdateWordState();
 }
+
 class _UpdateWordState extends State<UpdateWord> {
   late Map<String, dynamic> vocabularyList;
 
@@ -46,8 +45,17 @@ class _UpdateWordState extends State<UpdateWord> {
   final List<Map<String, dynamic>> means = [];
   bool _isLoading = false;
   String? _selectedTuLoai;
-  final List<String> _dsTuLoai = ['Danh từ', 'Động từ', 'Tính từ', 'Trạng từ',
-    'Giới từ', 'Liên từ', 'Thán từ', 'Đại từ', 'Từ hạn định'];
+  final List<String> _dsTuLoai = [
+    'Danh từ',
+    'Động từ',
+    'Tính từ',
+    'Trạng từ',
+    'Giới từ',
+    'Liên từ',
+    'Thán từ',
+    'Đại từ',
+    'Từ hạn định'
+  ];
   List<Widget> meaningBoxes = [];
 
   @override
@@ -61,7 +69,7 @@ class _UpdateWordState extends State<UpdateWord> {
     phrase.text = vocabularyList['phrase'] ?? '';
     _loadExistingData();
   }
-  
+
   @override
   void dispose() {
     // Dispose các controller chính
@@ -110,26 +118,19 @@ class _UpdateWordState extends State<UpdateWord> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    int streakCount = 5; // Đợi dữ liệu từ database
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
-        leadingWidth: screenWidth,
-        leading: Stack(
-          children: [
-            Center(
-              child:LogoSmall(),
-            ),
-          ],
-        ),
+        leading: Container() ,
+        leadingWidth: 100,
+        title: const Text("SỬA TỪ VỰNG", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-         StreakCount(),
+          StreakCount(),
           SettingButton(),
         ],
       ),
-
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -140,122 +141,134 @@ class _UpdateWordState extends State<UpdateWord> {
           ),
         ),
         child: SafeArea(
-          child: Stack(
-              children: [
-                SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                          child: CustomBackButton(content: '${vocabularyList['word']}',),
-                        ),
+          child: Stack(children: [
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
+                      child: CustomBackButton(
+                        content: '${vocabularyList['word']}',
                       ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50),
-                        child: Column(
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                    ),
+                    child: Column(
+                      children: [
+                        // Từ vựng
+                        TextField(
+                          controller: wordController,
+                          decoration: InputDecoration(
+                            hintText: 'Từ vựng',
+                            hintStyle: TextStyle(color: Colors.blue.shade300),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color:
+                                      Colors.blue), // Viền xanh khi chưa focus
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: Colors.blue,
+                                  width: 2.0), // Viền xanh khi focus
+                            ),
+                          ),
+                          maxLines: 1, // Không cho xuống dòng
+                        ),
+                        SizedBox(height: 10, width: screenWidth),
+
+                        ...meaningBoxes,
+                        SizedBox(height: 5, width: screenWidth),
+
+                        // xóa thêm nghĩa
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-
-                            // Từ vựng
-                            TextField (
-                              controller: wordController,
-                              decoration: InputDecoration(
-                                hintText: 'Từ vựng',
-                                hintStyle: TextStyle(color: Colors.blue.shade300),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue), // Viền xanh khi chưa focus
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.blue, width: 2.0), // Viền xanh khi focus
-                                ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 50), // cách viền trái
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _removeNewMeaningBox();
+                                  });
+                                },
+                                child: Text('Xóa ý nghĩa'),
                               ),
-                              maxLines: 1, // Không cho xuống dòng
                             ),
-                            SizedBox(height: 10, width: screenWidth),
-
-                            ...meaningBoxes,
-                            SizedBox(height: 5, width: screenWidth),
-
-                            // xóa thêm nghĩa
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 110), // cách viền trái
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _removeNewMeaningBox();
-                                      });
-                                    },
-                                    child: Text('Xóa ý nghĩa'),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 25), // cách viền phải
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _addNewMeaningBox();
-                                      });
-                                    },
-                                    child: Text('Thêm ý nghĩa'),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10, width: screenWidth),
-
-                            RelatedWord(label: 'Từ đồng nghĩa', controller: synonym),
-                            SizedBox(height: 10, width: screenWidth),
-                            RelatedWord(label: 'Từ trái nghĩa', controller: antonym),
-                            SizedBox(height: 10, width: screenWidth),
-                            RelatedWord(label: 'Họ từ vựng', controller: family),
-                            SizedBox(height: 10, width: screenWidth),
-                            RelatedWord(label: 'Cụm từ', controller: phrase),
-                            SizedBox(height: 10, width: screenWidth),
-
-                            ElevatedButton(
-                              onPressed: () {
-                                if (wordController.text.isEmpty || meaningControllers == null || meaningControllers.isEmpty) {
-                                  // Hiển thị thông báo lỗi
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Vui lòng điền từ vựng!',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      backgroundColor: Colors.red, // Màu đỏ cho thông báo lỗi
-                                    ),
-                                  );
-                                } else {
-                                  // Nếu tất cả điều kiện hợp lệ, thực hiện lưu từ vựng
-                                  _saveVocabulary();
-                                  printData();
-                                  // đẩy dữ liệu, dữ liệu lưu cục bộ ok
-                                }
-                              },
-                              child: Text('Lưu từ vựng'),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  right: 25), // cách viền phải
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _addNewMeaningBox();
+                                  });
+                                },
+                                child: Text('Thêm ý nghĩa'),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                        SizedBox(height: 10, width: screenWidth),
 
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-                if (_isLoading)
-                  Container(
-                    color: Colors.black.withOpacity(0.5), // Màu đen mờ
-                    child: Center(
-                      child: CircularProgressIndicator(), // Vòng xoay
+                        RelatedWord(
+                            label: 'Từ đồng nghĩa', controller: synonym),
+                        SizedBox(height: 10, width: screenWidth),
+                        RelatedWord(
+                            label: 'Từ trái nghĩa', controller: antonym),
+                        SizedBox(height: 10, width: screenWidth),
+                        RelatedWord(label: 'Họ từ vựng', controller: family),
+                        SizedBox(height: 10, width: screenWidth),
+                        RelatedWord(label: 'Cụm từ', controller: phrase),
+                        SizedBox(height: 10, width: screenWidth),
+
+                        ElevatedButton(
+                          onPressed: () {
+                            if (wordController.text.isEmpty ||
+                                meaningControllers == null ||
+                                meaningControllers.isEmpty) {
+                              // Hiển thị thông báo lỗi
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Vui lòng điền từ vựng!',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor:
+                                      Colors.red, // Màu đỏ cho thông báo lỗi
+                                ),
+                              );
+                            } else {
+                              // Nếu tất cả điều kiện hợp lệ, thực hiện lưu từ vựng
+                              _saveVocabulary();
+                              printData();
+                              // đẩy dữ liệu, dữ liệu lưu cục bộ ok
+                            }
+                          },
+                          child: Text('Lưu từ vựng'),
+                        ),
+                      ],
                     ),
                   ),
-              ]
-          ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5), // Màu đen mờ
+                child: Center(
+                  child: CircularProgressIndicator(), // Vòng xoay
+                ),
+              ),
+          ]),
         ),
       ),
     );
@@ -286,7 +299,9 @@ class _UpdateWordState extends State<UpdateWord> {
 
     try {
       // Mô phỏng hành động lưu từ vựng (chờ dữ liệu hoặc gửi yêu cầu)
-      await Future.delayed(Duration(seconds: 2)); // Giả lập việc lưu dữ liệu (thực tế có thể là các hàm như gọi API)
+      await Future.delayed(Duration(
+          seconds:
+              2)); // Giả lập việc lưu dữ liệu (thực tế có thể là các hàm như gọi API)
 
       setState(() {
         _isLoading = false; // Tắt chế độ loading
@@ -295,8 +310,8 @@ class _UpdateWordState extends State<UpdateWord> {
       // Điều hướng trở lại trang Home
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreenDesktop()),
-            (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
+        MaterialPageRoute(builder: (context) => AddWordPhone(vocabularyList: [],)),
+        (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
       );
 
       // Thông báo thành công (nền xanh)
@@ -320,6 +335,7 @@ class _UpdateWordState extends State<UpdateWord> {
       );
     }
   }
+
   // Nút quay lại
   Widget buttonBack(BuildContext context) {
     return Align(
@@ -330,10 +346,12 @@ class _UpdateWordState extends State<UpdateWord> {
           Navigator.pop(context); // Quay lại màn hình trước đó
         },
 
-        hoverColor: Colors.grey.shade300.withOpacity(0),              // Màu nền khi di chuột vào
+        hoverColor:
+            Colors.grey.shade300.withOpacity(0), // Màu nền khi di chuột vào
       ),
     );
   }
+
   // từ loại
   Widget typeWord() {
     return Row(
@@ -341,12 +359,19 @@ class _UpdateWordState extends State<UpdateWord> {
       children: [
         Text(
           'Từ loại: ',
-          style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.blue.shade900,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         SizedBox(width: 8),
         // Nút chọn từ loại với hiệu ứng hover
         DropdownButton<String>(
-          hint: Text("Chọn từ loại", style: TextStyle(fontSize: 16, color: Colors.blue.shade900),),
+          hint: Text(
+            "Chọn từ loại",
+            style: TextStyle(fontSize: 16, color: Colors.blue.shade900),
+          ),
           value: _selectedTuLoai,
           items: _dsTuLoai.map((loai) {
             return DropdownMenuItem(
@@ -366,8 +391,8 @@ class _UpdateWordState extends State<UpdateWord> {
   }
 
   void _addNewMeaningBox() {
-    final Map<String, dynamic> mean= {};
-    final TextEditingController  meaningController = TextEditingController();
+    final Map<String, dynamic> mean = {};
+    final TextEditingController meaningController = TextEditingController();
     final TextEditingController example1Controller = TextEditingController();
     final TextEditingController example2Controller = TextEditingController();
     final TextEditingController phoneticUsController = TextEditingController();
@@ -375,13 +400,12 @@ class _UpdateWordState extends State<UpdateWord> {
     final selectedType = ValueNotifier<String>("");
 
     final List<ValueNotifier<AudioPlayer>> audioPlayer = [
-      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer đầu tiên
-      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer thứ hai
-      ValueNotifier<AudioPlayer>(AudioPlayer()),  // Gán AudioPlayer thứ ba
+      ValueNotifier<AudioPlayer>(AudioPlayer()), // Gán AudioPlayer đầu tiên
+      ValueNotifier<AudioPlayer>(AudioPlayer()), // Gán AudioPlayer thứ hai
+      ValueNotifier<AudioPlayer>(AudioPlayer()), // Gán AudioPlayer thứ ba
     ];
-    final ValueNotifier<List<Uint8List>> image =  ValueNotifier([]);
+    final ValueNotifier<List<Uint8List>> image = ValueNotifier([]);
     setState(() {
-
       meaningBoxes.add(MeaningBox(
           selectedType: selectedType,
           meaningController: meaningController,
@@ -393,24 +417,32 @@ class _UpdateWordState extends State<UpdateWord> {
           imageByte: image));
 
       selectedTypes.add(selectedType);
-      phoneticControllers.add([phoneticUkController, phoneticUsController]); // Phiên âm UK và US
+      phoneticControllers.add(
+          [phoneticUkController, phoneticUsController]); // Phiên âm UK và US
       audioPlayers.add(audioPlayer); //  cho UK và US và nghĩa
       meaningControllers.add(meaningController); // Điều khiển nghĩa
-      exampleControllers.add([example1Controller, example2Controller]); // Ví dụ 1 và ví dụ 2
+      exampleControllers
+          .add([example1Controller, example2Controller]); // Ví dụ 1 và ví dụ 2
       images.add(image); // Điều khiển cho URL hình ảnh
 
       mean['type'] = selectedType.value;
-      List<TextEditingController> phoneticsList = [phoneticUsController, phoneticUkController];
+      List<TextEditingController> phoneticsList = [
+        phoneticUsController,
+        phoneticUkController
+      ];
       mean['phonetic'] = phoneticsList;
       mean['meaning'] = meaningController;
-      List<TextEditingController> examplesList = [example1Controller, example2Controller];
+      List<TextEditingController> examplesList = [
+        example1Controller,
+        example2Controller
+      ];
       mean['example'] = examplesList;
       mean['audio'] = audioPlayer;
 
       means.add(mean);
-
     });
   }
+
   void _loadExistingData() {
     final types = vocabularyList['type'] as List<dynamic>?;
     final phonetics = vocabularyList['phonetic'] as List<dynamic>?;
@@ -426,7 +458,6 @@ class _UpdateWordState extends State<UpdateWord> {
         audios != null &&
         images != null &&
         types.length == meanings.length) {
-
       for (int i = 0; i < types.length; i++) {
         final type = ValueNotifier<String>(types[i]);
         final meaning = TextEditingController(text: meanings[i]);
@@ -490,6 +521,7 @@ class _UpdateWordState extends State<UpdateWord> {
       _addNewMeaningBox();
     }
   }
+
   void _removeNewMeaningBox() {
     if (meaningBoxes.length <= 1) return;
 
@@ -523,13 +555,15 @@ class _UpdateWordState extends State<UpdateWord> {
     });
   }
 
-  Future<void> _loadAudios(List<List<String>> audiosUrl, List<List<AudioPlayer>> audioPlayers) async {
-
+  Future<void> _loadAudios(List<List<String>> audiosUrl,
+      List<List<AudioPlayer>> audioPlayers) async {
     for (int i = 0; i < audiosUrl.length; i++) {
       await _audios(audiosUrl[i], audioPlayers[i]);
     }
   }
-  Future<void> _audios(List<String> audiosUrl, List<AudioPlayer> players) async {
+
+  Future<void> _audios(
+      List<String> audiosUrl, List<AudioPlayer> players) async {
     try {
       for (int i = 0; i < audiosUrl.length; i++) {
         await players[i].setUrl(audiosUrl[i]);
@@ -537,8 +571,8 @@ class _UpdateWordState extends State<UpdateWord> {
     } catch (e) {
       print('Lỗi thêm âm thanh: $e');
     }
-
   }
+
   Future<void> _playAudio(AudioPlayer player) async {
     try {
       if (player.playing) {
@@ -553,7 +587,6 @@ class _UpdateWordState extends State<UpdateWord> {
   }
 
   Future<void> printData() async {
-
     print('wordController: ${wordController.text}');
 
     for (int i = 0; i < selectedTypes.length; i++) {
@@ -584,14 +617,11 @@ class _UpdateWordState extends State<UpdateWord> {
       }
 
       print("image: Có ${images[i].value.length} ảnh:");
-
     }
 
     print('synonymController: ${synonym.text}');
     print('antonymController: ${antonym.text}');
     print('familyController: ${family.text}');
     print('phraseController: ${phrase.text}');
-
   }
-
 }

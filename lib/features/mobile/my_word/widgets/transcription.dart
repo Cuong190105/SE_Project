@@ -17,46 +17,56 @@ class Transcription extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-        Text(
-          label,
-          style: TextStyle(fontSize: 16, color: Colors.blue.shade900, fontWeight: FontWeight.bold,),
-        ),
-
-        SizedBox(width: 8),
-
-        Container(
-          width: 200,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.shade100,
-                blurRadius: 5,
-                spreadRadius: 1,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.blue.shade900,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              //hintText: 'Nhập ${label.toLowerCase()}...',
-              hintStyle: TextStyle(color: Colors.blue.shade300),
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 8),
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade100,
+                      blurRadius: 5,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintStyle: TextStyle(color: Colors.blue.shade300),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: AddSoundButton(
+            size: 800,
+            audioPlayer: audioPlayer,
           ),
         ),
-
-        // Phiên âm
-        SizedBox(width: 8),
-        AddSoundButton(size: 861, audioPlayer: audioPlayer,),
       ],
     );
   }

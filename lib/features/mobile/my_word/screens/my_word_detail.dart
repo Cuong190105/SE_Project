@@ -91,15 +91,10 @@ class _WordDetailsState extends State<WordDetails> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
+        leadingWidth: 110,
         elevation: 0,
-        leadingWidth: screenWidth,
-        leading: Stack(
-          children: [
-            Center(
-              child: LogoSmall(),
-            ),
-          ],
-        ),
+        leading: Container(),
+        title: const Text("NỘI DUNG", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
         actions: [
          StreakCount(),
          SettingButton(),
@@ -140,7 +135,7 @@ class _WordDetailsState extends State<WordDetails> {
                       ),
                     ),
                   ),
-                  SizedBox(width: screenWidth / 5),
+                  SizedBox(width: screenWidth / 8),
                   TextButton(
                     onPressed: () => setState(() => selectedIndex = 1),
                     child: Text(
@@ -157,7 +152,7 @@ class _WordDetailsState extends State<WordDetails> {
               Expanded(
                 child: selectedIndex == 0
                     ? ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 50),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           itemCount: types.length,
                           itemBuilder: (context, index) {
                             return Padding(
@@ -224,7 +219,7 @@ class _WordDetailsState extends State<WordDetails> {
                           },
                         )
                     : SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [

@@ -5,7 +5,7 @@ import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:eng_dictionary/features/common/widgets/my_word/add_word_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/mobile/my_word/widgets/vocabulary_card.dart';
-import 'package:eng_dictionary/features/mobile/my_word/screens/add_word.dart';
+import 'package:eng_dictionary/features/mobile/my_word/screens/add_word_phone.dart';
 import 'package:eng_dictionary/features/mobile/my_word/screens/my_word_detail.dart';
 import 'package:eng_dictionary/features/mobile/my_word/screens/update_word.dart';
 
@@ -23,160 +23,72 @@ class _MyWord extends State<MyWord> {
     List<ValueNotifier<Map<String, dynamic>>> vocabularyList = [];
     await Future.delayed(Duration(seconds: 2)); // Mô phỏng chờ tải dữ liệu
 
-    final audioUrl =
-        'https://upload.wikimedia.org/wikipedia/commons/5/52/En-us-hello.ogg';
 
-    final data = [
-      {
-        'word': 'applefffffffffffffffffffffffffffffff',
+    final audioUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/52/En-us-hello.ogg';
+
+    final data =  [
+      {'word': 'applefffffffffffffffffffffffffffffff',
         'type': ['Danh từ', 'Động từ'],
-        'phonetic': [
-          ['/us1/', '/uk1/'],
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl],
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': [
-          'quả táo',
-          'đu đubbbbbbbbbbbbbbbbboooooooooooooo'
-        ],
-        'example': [
-          ['v1', 'vd2'],
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/150', 'https://i.pravatar.cc/151'],
+        'phonetic': [['/us1/','/uk1/'],['/us2/','/uk2/']],
+        'audio' : [[audioUrl, audioUrl, audioUrl], [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['quả táo','đu đubbbbbbbbbbbbbbbbboooooooooooooo'
+            'oooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo'
+            'ooooooooooooooooooooooooooooooooooooooooooooooooohhhhhhhhhhhh'
+            'hhhhhhhhhhhhhhhhhhhhhhhhhf'],
+        'example': [['v1','vd2'], ['v1','vd2']],
+        'image': ['https://i.pravatar.cc/150','https://i.pravatar.cc/151'],
         'synonym': 'táo',
         'antonym': 'cam',
         'family': 'taos',
         'phrase': 'tao không dai, tao ddd',
       },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
-      {
-        'word': 'tomato',
-        'type': ['Động từ'],
-        'phonetic': [
-          ['/us2/', '/uk2/']
-        ],
-        'audio': [
-          [audioUrl, audioUrl, audioUrl]
-        ],
-        'meaning': ['đu đu'],
-        'example': [
-          ['v1', 'vd2']
-        ],
-        'image': ['https://i.pravatar.cc/153']
-      },
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
+      {'word': 'tomato', 'type': ['Động từ'],
+        'phonetic': [['/us2/','/uk2/']],
+        'audio' : [ [audioUrl, audioUrl, audioUrl]],
+        'meaning': ['đu đu'], 'example': [['v1','vd2']],
+        'image': ['https://i.pravatar.cc/153']},
 
       // Thêm nhiều từ khác...
     ];
-    vocabularyList =
-        data.map((item) => ValueNotifier<Map<String, dynamic>>(item)).toList();
+    vocabularyList = data.map((item) => ValueNotifier<Map<String, dynamic>>(item)).toList();
     return vocabularyList;
   }
 
