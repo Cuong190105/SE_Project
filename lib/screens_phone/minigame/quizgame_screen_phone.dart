@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'quiz_question.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eng_dictionary/back_end/api_service.dart';
 
 class QuizGameScreenPhone extends StatefulWidget {
   const QuizGameScreenPhone({super.key});
@@ -293,7 +295,7 @@ class _QuizGameScreenState extends State<QuizGameScreenPhone> {
   }
 }
 
-class QuizResultScreen extends StatelessWidget {
+class QuizResultScreen extends StatefulWidget {
   final int correctAnswers;
   final int totalQuestions;
 
@@ -302,6 +304,99 @@ class QuizResultScreen extends StatelessWidget {
     required this.correctAnswers,
     required this.totalQuestions,
   });
+
+  @override
+  _QuizResultScreenState createState() => _QuizResultScreenState();
+}
+
+class _QuizResultScreenState extends State<QuizResultScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _updateStreak();
+  }
+
+  Future<void> _updateStreak() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastCompletion = prefs.getString('last_minigame_completion');
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    int currentStreak = prefs.getInt('streak_count') ?? 0;
+    bool showCongrats = false;
+
+    print('Today: $todayString, Last Completion: $lastCompletion, Current Streak: $currentStreak');
+
+    if (lastCompletion == null) {
+      // Lần đầu chơi
+      currentStreak = 1;
+      showCongrats = true;
+    } else {
+      try {
+        final lastCompletionDate = DateTime.parse(lastCompletion);
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final lastDate = DateTime(lastCompletionDate.year, lastCompletionDate.month, lastCompletionDate.day);
+        final difference = todayDate.difference(lastDate).inDays;
+
+        print('Difference in days: $difference');
+
+        if (lastCompletion == todayString) {
+          // Đã chơi hôm nay, giữ nguyên streak
+          print('Played today, no streak change');
+        } else if (difference == 1) {
+          // Chơi ngày liên tiếp
+          currentStreak += 1;
+          showCongrats = true;
+          print('Consecutive day, streak incremented to $currentStreak');
+        } else if (difference > 1) {
+          // Đứt quãng, reset streak
+          currentStreak = 1;
+          showCongrats = true;
+          print('Missed days, streak reset to $currentStreak');
+        }
+      } catch (e) {
+        print('Error parsing date: $e');
+        // Fallback: reset streak nếu lỗi parse
+        currentStreak = 1;
+        showCongrats = true;
+      }
+    }
+
+    // Lưu ngày hoàn thành và streak mới
+    await prefs.setString('last_minigame_completion', todayString);
+    await prefs.setInt('streak_count', currentStreak);
+    print('Saved: last_minigame_completion=$todayString, streak_count=$currentStreak');
+
+    // Cập nhật streak lên server
+    final result = await ApiService.updateStreak(currentStreak);
+    if (!result['success']) {
+      print('API update failed: ${result['message']}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi đồng bộ streak: ${result['message']}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      print('API update successful');
+    }
+
+    // Hiển thị thông báo chúc mừng nếu streak thay đổi
+    if (showCongrats) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              currentStreak == 1 && lastCompletion != null
+                  ? 'Chuỗi streak đã được đặt lại! Streak hiện tại: $currentStreak'
+                  : 'Chúc mừng! Bạn đã giữ chuỗi streak: $currentStreak ngày!',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +410,7 @@ class QuizResultScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Bạn trả lời đúng $correctAnswers/$totalQuestions câu!',
+              'Bạn trả lời đúng ${widget.correctAnswers}/${widget.totalQuestions} câu!',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),

@@ -52,6 +52,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         flashcardSet = sets.first;
       }
 
+      // Chỉ giữ lại các thẻ chưa bị xóa
+      flashcardSet!.cards = flashcardSet!.cards.where((card) => !card.isDeleted).toList();
+
       debugPrint('Đã tải bộ thẻ: ${flashcardSet!.id}');
       setState(() {
         _isLoading = false;
@@ -117,8 +120,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                 Navigator.pop(context);
                 return;
               }
-              if (frontController.text.trim().isNotEmpty &&
-                  backController.text.trim().isNotEmpty) {
+              if (frontController.text.trim().isNotEmpty && backController.text.trim().isNotEmpty) {
                 setState(() {
                   _isLoading = true;
                 });
@@ -151,10 +153,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   }
 
   void _showEditCardDialog(Flashcard card) {
-    final TextEditingController frontController =
-    TextEditingController(text: card.frontContent);
-    final TextEditingController backController =
-    TextEditingController(text: card.backContent);
+    final TextEditingController frontController = TextEditingController(text: card.frontContent);
+    final TextEditingController backController = TextEditingController(text: card.backContent);
 
     showDialog(
       context: context,
@@ -187,8 +187,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (frontController.text.trim().isNotEmpty &&
-                  backController.text.trim().isNotEmpty) {
+              if (frontController.text.trim().isNotEmpty && backController.text.trim().isNotEmpty) {
                 setState(() {
                   _isLoading = true;
                 });
@@ -222,8 +221,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   }
 
   void _showRenameSetDialog() {
-    final TextEditingController nameController =
-    TextEditingController(text: flashcardSet?.name ?? '');
+    final TextEditingController nameController = TextEditingController(text: flashcardSet?.name ?? '');
 
     showDialog(
       context: context,
@@ -282,7 +280,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -295,13 +293,13 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             children: [
               Text(
                 _errorMessage!,
-                style: TextStyle(color: Colors.red, fontSize: 16),
+                style: const TextStyle(color: Colors.red, fontSize: 16),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadFlashcardSet,
-                child: Text('Thử lại'),
+                child: const Text('Thử lại'),
               ),
             ],
           ),
@@ -311,7 +309,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
 
     if (flashcardSet == null) {
       return Scaffold(
-        body: Center(child: Text('Không tìm thấy bộ thẻ')),
+        body: const Center(child: Text('Không tìm thấy bộ thẻ')),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.blue.shade700,
           child: const Icon(Icons.add, color: Colors.white),
@@ -321,12 +319,14 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
     }
 
     final color = flashcardSet!.color;
-    final totalCards = flashcardSet!.totalCards;
+    final totalCards = flashcardSet!.cards.length;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(flashcardSet!.name,
-            style: const TextStyle(color: Colors.white)),
+        title: Text(
+          flashcardSet!.name,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: color,
         actions: [
           IconButton(
@@ -364,9 +364,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    totalCards > 0
-                        ? 'Thẻ ${currentCardIndex + 1} / $totalCards'
-                        : 'Chưa có thẻ nào',
+                    totalCards > 0 ? 'Thẻ ${currentCardIndex + 1} / $totalCards' : 'Chưa có thẻ nào',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -386,9 +384,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             ),
           ),
           Expanded(
-            child: totalCards > 0
-                ? _buildFlashcard(color)
-                : _buildEmptyState(color),
+            child: totalCards > 0 ? _buildFlashcard(color) : _buildEmptyState(color),
           ),
           if (totalCards > 0)
             Padding(
@@ -484,7 +480,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           elevation: 8,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: color.withOpacity(0.5), width: 2),
           ),
           child: Container(
             decoration: BoxDecoration(
@@ -519,26 +514,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
-                        if (_isFlipped)
-                          Text(
-                            'Nhấn để xem từ tiếng Anh',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          )
-                        else
-                          Text(
-                            'Nhấn để xem nghĩa',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
+                        Text(
+                          _isFlipped ? 'Nhấn để xem từ tiếng Anh' : 'Nhấn để xem nghĩa',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade700,
+                            fontStyle: FontStyle.italic,
                           ),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
                     ),
                   ),

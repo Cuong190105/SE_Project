@@ -173,6 +173,7 @@ class DatabaseHelper {
           front TEXT NOT NULL,
           back TEXT NOT NULL,
           is_learned INTEGER NOT NULL DEFAULT 0,
+          is_deleted INTEGER NOT NULL DEFAULT 0,
           FOREIGN KEY (set_id) REFERENCES flashcard_sets (set_id)
         )
       ''');
@@ -315,13 +316,14 @@ class DatabaseHelper {
 
         for (var card in animalCards) {
           db.execute('''
-            INSERT INTO flashcards (id, set_id, front, back, is_learned)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO flashcards (id, set_id, front, back, is_learned, is_deleted)
+            VALUES (?, ?, ?, ?, ?, ?)
           ''', [
             card['id'],
             'animals_001',
             card['front'],
             card['back'],
+            0,
             0
           ]);
         }
@@ -359,13 +361,14 @@ class DatabaseHelper {
 
         for (var card in musicCards) {
           db.execute('''
-            INSERT INTO flashcards (id, set_id, front, back, is_learned)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO flashcards (id, set_id, front, back, is_learned, is_deleted)
+            VALUES (?, ?, ?, ?, ?, ?)
           ''', [
             card['id'],
             'music_001',
             card['front'],
             card['back'],
+            0,
             0
           ]);
         }
@@ -417,18 +420,19 @@ class DatabaseHelper {
         set.isSample ? 1 : 0,
       ]);
 
-      db.execute('DELETE FROM flashcards WHERE set_id = ?', [set.id]);
+      db.execute('DELETE FROM flashcards WHERE set_id = ? AND is_deleted = 0', [set.id]);
 
       for (var card in set.cards) {
         db.execute('''
-          INSERT INTO flashcards (id, set_id, front, back, is_learned)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT OR REPLACE INTO flashcards (id, set_id, front, back, is_learned, is_deleted)
+          VALUES (?, ?, ?, ?, ?, ?)
         ''', [
           card.id,
           set.id,
           card.frontContent,
           card.backContent,
           card.isLearned ? 1 : 0,
+          card.isDeleted ? 1 : 0,
         ]);
       }
       debugPrint('Bộ thẻ ${set.id} đã được lưu thành công.');
@@ -453,7 +457,7 @@ class DatabaseHelper {
 
       for (var setRow in setRows) {
         final cardRows = db.select(
-          'SELECT * FROM flashcards WHERE set_id = ?',
+          'SELECT * FROM flashcards WHERE set_id = ? AND is_deleted = 0',
           [setRow['set_id']],
         );
 
@@ -468,6 +472,7 @@ class DatabaseHelper {
             frontContent: cardRow['front'] as String,
             backContent: cardRow['back'] as String,
             isLearned: (cardRow['is_learned'] as int) == 1,
+            isDeleted: (cardRow['is_deleted'] as int) == 1,
           ))
               .toList(),
           color: Color(setRow['color'] as int),
@@ -519,6 +524,7 @@ class DatabaseHelper {
             frontContent: cardRow['front'] as String,
             backContent: cardRow['back'] as String,
             isLearned: (cardRow['is_learned'] as int) == 1,
+            isDeleted: (cardRow['is_deleted'] as int) == 1,
           ))
               .toList(),
           color: Color(setRow['color'] as int),

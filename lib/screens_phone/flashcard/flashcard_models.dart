@@ -11,12 +11,14 @@ class Flashcard {
   String frontContent;
   String backContent;
   bool isLearned;
+  bool isDeleted;
 
   Flashcard({
     required this.id,
     required this.frontContent,
     required this.backContent,
     this.isLearned = false,
+    this.isDeleted = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -25,6 +27,7 @@ class Flashcard {
       'front': frontContent,
       'back': backContent,
       'is_learned': isLearned,
+      'is_deleted': isDeleted,
     };
   }
 
@@ -40,6 +43,13 @@ class Flashcard {
           ? json['is_learned'] == 1
           : (json['is_learned'] is String
           ? json['is_learned'].toLowerCase() == 'true' || json['is_learned'] == '1'
+          : false)),
+      isDeleted: json['is_deleted'] is bool
+          ? json['is_deleted']
+          : (json['is_deleted'] is int
+          ? json['is_deleted'] == 1
+          : (json['is_deleted'] is String
+          ? json['is_deleted'].toLowerCase() == 'true' || json['is_deleted'] == '1'
           : false)),
     );
   }
@@ -219,6 +229,7 @@ class FlashcardManager {
         id: 'card_${DateTime.now().millisecondsSinceEpoch}',
         frontContent: front,
         backContent: back,
+        isDeleted: false,
       );
 
       set.cards.add(newCard);
@@ -280,7 +291,8 @@ class FlashcardManager {
     try {
       final sets = await getSets();
       final set = sets.firstWhere((set) => set.id == setId);
-      set.cards.removeWhere((card) => card.id == cardId);
+      final card = set.cards.firstWhere((card) => card.id == cardId);
+      card.isDeleted = true;
 
       final updatedSet = FlashcardSet(
         id: set.id,
@@ -289,7 +301,7 @@ class FlashcardManager {
         description: set.description,
         cards: set.cards,
         color: set.color,
-        progress: set.cards.where((card) => card.isLearned).length,
+        progress: set.cards.where((card) => card.isLearned && !card.isDeleted).length,
         createdAt: set.createdAt,
         updatedAt: DateTime.now(),
         isSynced: false,
@@ -297,10 +309,10 @@ class FlashcardManager {
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
-      debugPrint('Đã xóa thẻ $cardId khỏi bộ $setId');
+      debugPrint('Đã đánh dấu xóa thẻ $cardId khỏi bộ $setId');
       return true;
     } catch (e, stackTrace) {
-      debugPrint('Lỗi xóa thẻ $cardId khỏi bộ $setId: $e\n$stackTrace');
+      debugPrint('Lỗi đánh dấu xóa thẻ $cardId khỏi bộ $setId: $e\n$stackTrace');
       return false;
     }
   }
@@ -319,7 +331,7 @@ class FlashcardManager {
         description: set.description,
         cards: set.cards,
         color: set.color,
-        progress: set.cards.where((card) => card.isLearned).length,
+        progress: set.cards.where((card) => card.isLearned && !card.isDeleted).length,
         createdAt: set.createdAt,
         updatedAt: DateTime.now(),
         isSynced: false,
@@ -410,9 +422,11 @@ class FlashcardManager {
       }
 
       final unsyncedSets = await DatabaseHelper.instance.getUnsyncedSets();
+      debugPrint('Số bộ thẻ chưa đồng bộ: ${unsyncedSets.length}');
+
       if (unsyncedSets.isEmpty) {
-        debugPrint('Không có dữ liệu cần đồng bộ.');
-        return {'success': true, 'message': 'Không có dữ liệu cần đồng bộ'};
+        debugPrint('Tất cả thẻ đã được đồng bộ.');
+        return {'success': true, 'message': 'Tất cả thẻ đã được đồng bộ'};
       }
 
       final response = await ApiService.post('sync/uploadFlashcards', {
@@ -443,4 +457,4 @@ class FlashcardManager {
       return {'success': false, 'message': 'Lỗi đồng bộ: $e'};
     }
   }
-} 
+}

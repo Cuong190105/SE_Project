@@ -11,47 +11,56 @@ class FlashcardScreen extends StatefulWidget {
 }
 
 class _FlashcardScreenState extends State<FlashcardScreen> {
+  List<FlashcardSet> _flashcardSets = [];
   bool _isLoading = true;
-  List<FlashcardSet> _sets = [];
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadFlashcardSets();
   }
 
-  Future<void> _loadData() async {
-    debugPrint('Loading flashcard data...');
+  Future<void> _loadFlashcardSets() async {
+    debugPrint('Đang tải danh sách bộ thẻ...');
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
-      await FlashcardManager.syncOnStartup().timeout(
-        Duration(seconds: 10),
-        onTimeout: () {
-          debugPrint('Sync on startup timed out');
-          throw Exception('Không thể đồng bộ với server');
-        },
-      );
-      _sets = await FlashcardManager.getSets();
-      debugPrint('Loaded ${_sets.length} flashcard sets');
+      final sets = await FlashcardManager.getSets();
       setState(() {
+        _flashcardSets = sets
+            .map((set) => FlashcardSet(
+          id: set.id,
+          userEmail: set.userEmail,
+          name: set.name,
+          description: set.description,
+          cards: set.cards.where((card) => !card.isDeleted).toList(),
+          color: set.color,
+          progress: set.cards.where((card) => card.isLearned && !card.isDeleted).length,
+          createdAt: set.createdAt,
+          updatedAt: set.updatedAt,
+          isSynced: set.isSynced,
+          isSample: set.isSample,
+        ))
+            .toList();
         _isLoading = false;
       });
+      debugPrint('Đã tải ${_flashcardSets.length} bộ thẻ.');
     } catch (e, stackTrace) {
-      debugPrint('Error loading flashcard data: $e\n$stackTrace');
+      debugPrint('Lỗi tải danh sách bộ thẻ: $e\n$stackTrace');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Lỗi tải dữ liệu: $e';
+        _errorMessage = 'Không thể tải danh sách bộ thẻ. Vui lòng thử lại.';
       });
     }
   }
 
-  void _showCreateSetDialog() {
+  void _showAddSetDialog() {
     final TextEditingController nameController = TextEditingController();
-    final TextEditingController descController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
 
     showDialog(
       context: context,
@@ -64,15 +73,15 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
               controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'Tên bộ thẻ',
-                hintText: 'Nhập tên cho bộ thẻ mới',
+                hintText: 'Nhập tên bộ thẻ',
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: descController,
+              controller: descriptionController,
               decoration: const InputDecoration(
-                labelText: 'Mô tả',
+                labelText: 'Mô tả (tùy chọn)',
                 hintText: 'Nhập mô tả cho bộ thẻ',
               ),
               maxLines: 2,
@@ -93,12 +102,9 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                 try {
                   await FlashcardManager.createNewSet(
                     nameController.text.trim(),
-                    descController.text.trim(),
+                    descriptionController.text.trim(),
                   );
-                  _sets = await FlashcardManager.getSets();
-                  setState(() {
-                    _isLoading = false;
-                  });
+                  await _loadFlashcardSets();
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Tạo bộ thẻ thành công')),
@@ -120,9 +126,8 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     );
   }
 
-  void _showRenameSetDialog(String setId, String currentName) {
-    final TextEditingController nameController =
-    TextEditingController(text: currentName);
+  void _showRenameSetDialog(FlashcardSet set) {
+    final TextEditingController nameController = TextEditingController(text: set.name);
 
     showDialog(
       context: context,
@@ -148,14 +153,14 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                   _isLoading = true;
                 });
                 try {
-                  await FlashcardManager.renameSet(setId, nameController.text.trim());
-                  _sets = await FlashcardManager.getSets();
-                  setState(() {
-                    _isLoading = false;
-                  });
+                  await FlashcardManager.renameSet(
+                    set.id,
+                    nameController.text.trim(),
+                  );
+                  await _loadFlashcardSets();
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đổi tên thành công')),
+                    const SnackBar(content: Text('Đổi tên bộ thẻ thành công')),
                   );
                 } catch (e) {
                   setState(() {
@@ -174,12 +179,85 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
     );
   }
 
+  void _deleteSet(FlashcardSet set) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xóa bộ thẻ'),
+        content: Text('Bạn có chắc muốn xóa bộ thẻ "${set.name}"? Hành động này không thể hoàn tác.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              setState(() {
+                _isLoading = true;
+              });
+              try {
+                await FlashcardManager.deleteSet(set.id);
+                await _loadFlashcardSets();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Xóa bộ thẻ thành công')),
+                );
+              } catch (e) {
+                setState(() {
+                  _isLoading = false;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi xóa bộ thẻ: $e')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _syncWithServer() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final result = await FlashcardManager.syncToServer();
+      await _loadFlashcardSets();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Đồng bộ hoàn tất'),
+          backgroundColor: result['success'] ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flashcard', style: TextStyle(color: Colors.white)),
+        title: const Text('Bộ thẻ', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue.shade700,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync, color: Colors.white),
+            onPressed: _syncWithServer,
+            tooltip: 'Đồng bộ với server',
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -190,227 +268,160 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
           children: [
             Text(
               _errorMessage!,
-              style: TextStyle(color: Colors.red, fontSize: 16),
+              style: const TextStyle(color: Colors.red, fontSize: 16),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadData,
-              child: Text('Thử lại'),
+              onPressed: _loadFlashcardSets,
+              child: const Text('Thử lại'),
             ),
           ],
         ),
       )
-          : Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.blue.shade50,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Bộ thẻ ghi nhớ của bạn',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade700,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${_sets.length} bộ',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: _sets.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildAddNewSetCard(context);
-                } else {
-                  return _buildFlashcardSetCard(context, index - 1);
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blue.shade700,
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: _showCreateSetDialog,
-      ),
-    );
-  }
-
-  Widget _buildAddNewSetCard(BuildContext context) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.blue.shade200, width: 2),
-      ),
-      child: InkWell(
-        onTap: _showCreateSetDialog,
-        borderRadius: BorderRadius.circular(16),
+          : _flashcardSets.isEmpty
+          ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.add, size: 40, color: Colors.blue.shade700),
+            Icon(
+              Icons.note_add,
+              size: 80,
+              color: Colors.blue.shade700.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
-              'Thêm bộ mới',
+              'Chưa có bộ thẻ nào',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue.shade700,
               ),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              'Nhấn nút + để tạo bộ thẻ mới',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
           ],
         ),
+      )
+          : GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 200,
+          childAspectRatio: 0.8,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: _flashcardSets.length,
+        itemBuilder: (context, index) {
+          final set = _flashcardSets[index];
+          return _buildFlashcardSetCard(set);
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blue.shade700,
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: _showAddSetDialog,
       ),
     );
   }
 
-  Widget _buildFlashcardSetCard(BuildContext context, int index) {
-    final set = _sets[index];
-    final color = set.color;
-
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const FlashcardDetailScreen(),
-              settings: RouteSettings(arguments: {'setId': set.id}),
+  Widget _buildFlashcardSetCard(FlashcardSet set) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const FlashcardDetailScreen(),
+            settings: RouteSettings(arguments: {'setId': set.id}),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [set.color, set.color.withOpacity(0.7)],
             ),
-          ).then((_) {
-            _loadData();
-          });
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.card_membership,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onSelected: (value) {
-                      if (value == 'rename') {
-                        _showRenameSetDialog(set.id, set.name);
-                      } else if (value == 'delete') {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Xóa bộ thẻ'),
-                            content:
-                            Text('Bạn có chắc muốn xóa bộ "${set.name}"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Hủy'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  setState(() {
-                                    _isLoading = true;
-                                  });
-                                  try {
-                                    await FlashcardManager.deleteSet(set.id);
-                                    _sets = await FlashcardManager.getSets();
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Xóa bộ thẻ thành công')),
-                                    );
-                                  } catch (e) {
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Lỗi xóa bộ thẻ: $e')),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: const Text('Xóa'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'rename',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 20),
-                            SizedBox(width: 8),
-                            Text('Đổi tên'),
-                          ],
-                        ),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      set.name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${set.totalCards} thẻ',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: set.progressPercentage,
+                      backgroundColor: Colors.white24,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(set.progressPercentage * 100).toStringAsFixed(0)}% hoàn thành',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    if (value == 'rename') {
+                      _showRenameSetDialog(set);
+                    } else if (value == 'delete' && !set.isSample) {
+                      _deleteSet(set);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'rename',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 20),
+                          SizedBox(width: 8),
+                          Text('Đổi tên'),
+                        ],
+                      ),
+                    ),
+                    if (!set.isSample)
                       const PopupMenuItem(
                         value: 'delete',
                         child: Row(
@@ -421,56 +432,30 @@ class _FlashcardScreenState extends State<FlashcardScreen> {
                           ],
                         ),
                       ),
-                    ],
+                  ],
+                ),
+              ),
+              if (!set.isSynced && !set.isSample)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Chưa đồng bộ',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          set.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (set.isSample)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Text(
-                            'Mẫu',
-                            style: TextStyle(
-                              color: Colors.blue.shade700,
-                              fontStyle: FontStyle.italic,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text('${set.totalCards} thẻ',
-                      style: TextStyle(color: Colors.grey.shade600)),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: set.progressPercentage,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

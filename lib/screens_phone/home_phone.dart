@@ -6,6 +6,8 @@ import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'translate_phone.dart';
 import 'search_phone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eng_dictionary/back_end/api_service.dart';
 
 class HomeScreenPhone extends StatefulWidget {
   const HomeScreenPhone({super.key});
@@ -23,14 +25,52 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
   void initState() {
     super.initState();
     _loadUserData();
+    _checkAndShowStreakNotification();
   }
 
   Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
     final email = await AuthService.getUserEmail();
-    setState(() {
-      userEmail = email;
-      streakCount = 5; // TODO: Thay bằng logic lấy streak từ server hoặc local
-    });
+    try {
+      final userData = await ApiService.get('user');
+      setState(() {
+        userEmail = email;
+        streakCount = userData['streak'] ?? 0; // Lấy streak từ server
+      });
+      await prefs.setInt('streak_count', streakCount);
+    } catch (e) {
+      setState(() {
+        userEmail = email;
+        streakCount = prefs.getInt('streak_count') ?? 0; // Fallback to local storage
+      });
+      print('Error loading user data: $e');
+    }
+  }
+
+  Future<void> _checkAndShowStreakNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastCompletion = prefs.getString('last_minigame_completion');
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    if (lastCompletion != todayString) {
+      // Hiển thị dialog nếu chưa chơi minigame hôm nay
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Giữ chuỗi Streak!'),
+            content: const Text('Hãy hoàn thành một minigame để giữ streak của bạn!'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
   }
 
   @override
@@ -205,6 +245,7 @@ class _HomeScreenPhoneState extends State<HomeScreenPhone> {
                             ),
                           ).then((_) {
                             _controller.clear();
+                            _loadUserData(); // Làm mới streak khi quay lại
                           });
                         },
                       ),

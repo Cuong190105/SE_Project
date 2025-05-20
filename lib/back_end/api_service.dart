@@ -78,7 +78,15 @@ class ApiService {
       throw Exception('Lỗi kết nối: $e');
     }
   }
-
+  // Update streak
+  static Future<Map<String, dynamic>> updateStreak(int streak) async {
+    try {
+      final response = await post('user/changeStreak', {'streak': streak});
+      return {'success': true, 'message': 'Cập nhật streak thành công'};
+    } catch (e) {
+      return {'success': false, 'message': 'Lỗi khi cập nhật streak: $e'};
+    }
+  }
   // Xử lý phản hồi
   static dynamic _processResponse(http.Response response) {
     if (response.statusCode == 200) {
