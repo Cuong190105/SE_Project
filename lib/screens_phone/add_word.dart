@@ -5,8 +5,8 @@ import 'package:file_selector/file_selector.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/services/api_service.dart';
-import '../data/models/database_helper.dart';
+import '../back_end/api_service.dart';
+import '../database_SQLite/database_helper.dart';
 
 class AddWord extends StatefulWidget {
   const AddWord({super.key});

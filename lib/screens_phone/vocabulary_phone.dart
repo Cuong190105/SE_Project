@@ -1,14 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:eng_dictionary/features/mobile/home/search.dart';
-import 'translate_phone.dart';
+import 'package:eng_dictionary/screens_phone/add_word.dart';
+import 'package:eng_dictionary/screens_phone/meaning_list.dart';
+import 'package:eng_dictionary/screens_phone/related_word.dart';
+import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
-import '../data/models/database_helper.dart';
-
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'search_phone.dart';
+import 'back_button.dart';
 class VocabularyPhone extends StatefulWidget {
-  final Word word;
+  final String word;
 
   const VocabularyPhone({Key? key, required this.word}) : super(key: key);
 
@@ -18,79 +21,35 @@ class VocabularyPhone extends StatefulWidget {
 
 class _VocabularyState extends State<VocabularyPhone> {
   TextEditingController _controller = TextEditingController();
-  Map<String, dynamic> _vocabularyData = {};
-  bool _isLoading = true;
-  String _errorMessage = '';
+  int selectedIndex = 0;
+  late final MeaningList _vocabularyList;
+  late final RelatedWordsList _relatedWordsList;
 
   @override
   void initState() {
     super.initState();
-    _loadVocabularyData();
+    _vocabularyList = MeaningList(word: widget.word);
+    _relatedWordsList = RelatedWordsList(word: widget.word);
   }
 
-  Future<void> _loadVocabularyData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
-    try {
-      _vocabularyData = {
-        'word': widget.word.word,
-        'partOfSpeech': widget.word.partOfSpeech,
-        'usIpa': widget.word.usIpa,
-        'ukIpa': widget.word.ukIpa,
-        'definition': widget.word.definition,
-        'examples': widget.word.examples,
-      };
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Lỗi khi tải dữ liệu: $e';
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _playAudio(String audioUrl) {
-    // Placeholder for audio playing logic
+  void dispose() {
+    _controller.dispose();
+    _vocabularyList == null;
+    _relatedWordsList == null;
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    int streakCount = 5;
-
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
         elevation: 0,
-        title: Text(
-          'DICTIONARY',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 2,
-          ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.blue.shade700),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          Row(
-            children: [
-              Text(
-                "$streakCount",
-                style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
-            ],
-          ),
-        ],
+        leadingWidth: 300,
+        leading: CustomBackButton(color: Colors.white, content: widget.word),
+        
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -102,214 +61,75 @@ class _VocabularyState extends State<VocabularyPhone> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SearchPhone(controller: _controller),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        widget.word.word,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue.shade700,
-                          letterSpacing: 1,
+          child: SingleChildScrollView(
+            child: Column(children: [
+              Stack(
+                children: [
+                  Column(
+                    children: [
+                      const SizedBox(height: 100),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () => setState(() => selectedIndex = 0),
+                            child: Text(
+                              'Ý nghĩa',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: selectedIndex == 0
+                                    ? Colors.blue
+                                    : Colors.grey,
+                                fontWeight: selectedIndex == 0
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: screenWidth / 10),
+                          TextButton(
+                            onPressed: () => setState(() => selectedIndex = 1),
+                            child: Text(
+                              'Các từ ngữ liên quan',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: selectedIndex == 1
+                                    ? Colors.blue
+                                    : Colors.grey,
+                                fontWeight: selectedIndex == 1
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 50),
+                      Container(
+                        height: screenHeight - 350,
+                        child: IndexedStack(
+                          index: selectedIndex,
+                          children: [
+                            _vocabularyList,
+                            _relatedWordsList,
+                          ],
                         ),
                       ),
+                    ],
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 15),
+                      child: SearchPhone(controller: _controller),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Divider(height: 1, thickness: 1, color: Colors.grey.shade300),
-              Expanded(
-                child: _isLoading
-                    ? Center(child: CircularProgressIndicator())
-                    : _errorMessage.isNotEmpty
-                    ? Center(child: Text(_errorMessage, style: TextStyle(color: Colors.red)))
-                    : VocabularyList(word: widget.word),
-              ),
-            ],
+            ]),
           ),
         ),
       ),
-    );
-  }
-}
-
-class Wiktionary extends StatefulWidget {
-  final Word word;
-  const Wiktionary({super.key, required this.word});
-
-  @override
-  State<Wiktionary> createState() => _WiktionaryState();
-}
-
-class _WiktionaryState extends State<Wiktionary> {
-  late Future<List<String>> _results;
-
-  @override
-  void initState() {
-    super.initState();
-    _results = _fetchWord(widget.word.word);
-  }
-
-  Future<List<String>> _fetchWord(String word) async {
-    final url = 'https://en.wiktionary.org/w/rest.php/v1/page/$word/html';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        dom.Document document = html_parser.parse(response.body);
-
-        List<String> texts = [];
-
-        var pTags = document.getElementsByTagName('p');
-        texts.addAll(pTags.map((e) => e.text.trim()));
-
-        var liTags = document.getElementsByTagName('li');
-        texts.addAll(liTags.map((e) => e.text.trim()));
-
-        return texts.where((element) => element.isNotEmpty).toList();
-      } else {
-        throw Exception('Không tìm thấy từ "$word"');
-      }
-    } catch (e) {
-      throw Exception('Lỗi kết nối: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<String>>(
-      future: _results,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Lỗi: ${snapshot.error}', style: TextStyle(color: Colors.red)));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Không có dữ liệu'));
-        } else {
-          final results = snapshot.data!;
-          return Expanded(
-            child: ListView.builder(
-              itemCount: results.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      results[index],
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        }
-      },
-    );
-  }
-}
-
-class VocabularyList extends StatefulWidget {
-  final Word word;
-  VocabularyList({required this.word});
-
-  @override
-  _VocabularyListState createState() => _VocabularyListState();
-}
-
-class _VocabularyListState extends State<VocabularyList> {
-  late Future<Map<String, dynamic>> _wordDetails;
-
-  @override
-  void initState() {
-    super.initState();
-    _wordDetails = _prepareWordDetails(widget.word);
-  }
-
-  Future<Map<String, dynamic>> _prepareWordDetails(Word word) async {
-    return {
-      'type': word.partOfSpeech,
-      'phonetic': word.usIpa ?? word.ukIpa ?? 'Không có phiên âm',
-      'definition': word.definition,
-      'examples': word.examples,
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _wordDetails,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return Center(child: Text('Không tìm thấy dữ liệu'));
-        } else {
-          final wordType = snapshot.data!;
-          return ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${wordType['type']}',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Icon(Icons.volume_up, size: 20),
-                        SizedBox(width: 5),
-                        Text(
-                          'US: ${wordType['phonetic']}',
-                          style: TextStyle(fontStyle: FontStyle.italic),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Nghĩa: ${wordType['definition']}',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        if (wordType['examples'].isNotEmpty)
-                          for (var example in wordType['examples'])
-                            Text(
-                              '• $example',
-                              style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                            ),
-                        if (wordType['examples'].isEmpty)
-                          Text(
-                            '• Không có ví dụ',
-                            style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                          ),
-                      ],
-                    ),
-                    Divider(),
-                  ],
-                ),
-              ),
-            ],
-          );
-        }
-      },
     );
   }
 }

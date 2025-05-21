@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/services.dart';
+import 'package:just_audio/just_audio.dart';
 import 'add_word.dart';
-import 'home_phone.dart';
-import '../database_SQLite/database_helper.dart';
-import 'vocabulary_phone.dart';
-
+import 'home_desktop.dart';
 class Vocabularies extends StatefulWidget {
   const Vocabularies({super.key});
 
@@ -13,50 +12,20 @@ class Vocabularies extends StatefulWidget {
 }
 
 class _Vocabularies extends State<Vocabularies> {
-  List<Word> _words = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-  int streakCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _fetchStreakCount();
-    _fetchWords();
-  }
-
-  Future<void> _fetchStreakCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      streakCount = prefs.getInt('streak_count') ?? 5;
-    });
-  }
-
-  Future<void> _fetchWords() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      final words = await DatabaseHelper.instance.getWords();
-      setState(() {
-        _words = words;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Lỗi khi tải danh sách từ vựng: $e';
-        _isLoading = false;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    bool _isHovering = false;
+    double screenHeight = MediaQuery.of(context).size.height;
+    int streakCount = 5; // Đợi dữ liệu từ database
+    bool _isHovering = false; // hiệu ứng khi di chuột trở về
+    bool _isHoveringT = false; // hiệu ứng khi di chuột trở về
     bool isHoveringIcon = false;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade300,
@@ -66,7 +35,6 @@ class _Vocabularies extends State<Vocabularies> {
           children: [
             Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -83,6 +51,7 @@ class _Vocabularies extends State<Vocabularies> {
                   ),
                   StatefulBuilder(
                     builder: (context, setState) {
+
                       return MouseRegion(
                         onEnter: (_) => setState(() => isHoveringIcon = true),
                         onExit: (_) => setState(() => isHoveringIcon = false),
@@ -90,15 +59,15 @@ class _Vocabularies extends State<Vocabularies> {
                           onTap: () {
                             Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(builder: (context) => const HomeScreenPhone()),
-                                  (route) => false,
+                              MaterialPageRoute(builder: (context) => const HomeScreenDesktop()),
+                                  (route) => false,  // Điều này sẽ loại bỏ toàn bộ các trang trong stack
                             );
                           },
-                          customBorder: const CircleBorder(),
+                          customBorder: const CircleBorder(), // Để hiệu ứng nhấn bo tròn đúng hình
                           child: Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white,
+                              color: isHoveringIcon ? Colors.grey.shade300 : Colors.white, // Hover đổi màu
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -121,6 +90,32 @@ class _Vocabularies extends State<Vocabularies> {
                 ],
               ),
             ),
+            /*Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: screenWidth / 2,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(color: Colors.blue.shade100, blurRadius: 5, spreadRadius: 1),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  decoration: InputDecoration(
+                    prefixIcon: IconButton(
+                      icon: Icon(Icons.search, color: Colors.blue.shade700),
+                      onPressed: () {},
+                    ),
+                    hintText: 'Nhập từ cần tìm kiếm',
+                    hintStyle: TextStyle(color: Colors.blue.shade300),
+                    border: InputBorder.none,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),*/
           ],
         ),
         actions: [
@@ -143,6 +138,7 @@ class _Vocabularies extends State<Vocabularies> {
           ),
         ],
       ),
+
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -160,6 +156,7 @@ class _Vocabularies extends State<Vocabularies> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: Row(
                     children: [
+                      // Phần bên trái: nút quay lại + tiêu đề
                       StatefulBuilder(
                         builder: (context, setState) {
                           return MouseRegion(
@@ -199,112 +196,67 @@ class _Vocabularies extends State<Vocabularies> {
                           );
                         },
                       ),
+
+                      // Spacer đẩy nút + sang phải
                       Spacer(),
+                      // Nút dấu cộng
                       add_button(context),
                     ],
                   ),
                 ),
                 const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
                   child: Column(
                     children: [
-                      if (_isLoading)
-                        Center(child: CircularProgressIndicator()),
-                      if (_errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(color: Colors.red, fontSize: 14),
-                          ),
-                        ),
-                      if (!_isLoading && _words.isNotEmpty)
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: _words.length,
-                          itemBuilder: (context, index) {
-                            final word = _words[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              child: ListTile(
-                                title: Text(
-                                  word.word,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  word.partOfSpeech,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => VocabularyPhone(word: word.word,),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      if (!_isLoading && _words.isEmpty)
-                        Center(child: Text('Chưa có từ vựng nào')),
+
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 24),
               ],
             ),
           ),
+
         ),
       ),
     );
   }
 
+  // Nút quay lại
   Widget buttonBack(BuildContext context) {
     return Align(
-      alignment: Alignment.topLeft,
+      alignment: Alignment.topLeft, // Canh về góc trái trên
       child: IconButton(
         icon: Icon(Icons.arrow_back, size: 30, color: Colors.blue.shade700),
         onPressed: () {
-          Navigator.pop(context);
+          Navigator.pop(context); // Quay lại màn hình trước đó
         },
-        hoverColor: Colors.grey.shade300.withOpacity(0),
+
+        hoverColor: Colors.grey.shade300.withOpacity(0),              // Màu nền khi di chuột vào
       ),
     );
   }
-
+  // nút thêm từ
   Widget add_button(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const AddWord()),
-        ).then((result) {
-          if (result == true) {
-            _fetchWords();
-          }
-        });
+        );
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue.shade500,
-        shape: CircleBorder(),
-        padding: EdgeInsets.all(15),
-        elevation: 1,
+        backgroundColor: Colors.blue.shade500, // Nền xanh dương
+        shape: CircleBorder(),        // Hình tròn
+        padding: EdgeInsets.all(15),  // Kích thước nút
+        elevation: 1,                 // Đổ bóng nhẹ
       ),
-      child: Icon(
-        Icons.add,
-        color: Colors.white,
-        size: 32,
+      child:  Icon(
+        Icons.add,                    // Icon dấu +
+        color: Colors.white,         // Màu trắng
+        size: 32,                     // Kích thước icon
       ),
     );
   }

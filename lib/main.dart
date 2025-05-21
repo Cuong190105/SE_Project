@@ -1,12 +1,15 @@
-import 'package:eng_dictionary/features/common/screens/splash_screen.dart';
+import 'package:eng_dictionary/screens_phone/authentic_phone/login_screen_phone.dart';
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/data/models/database_helper.dart';
-import 'package:eng_dictionary/data/models/flashcard_manager.dart';
-import 'package:eng_dictionary/data/models/word_manager.dart';
+import 'database_SQLite/database_helper.dart';
+import 'screens_desktop/home_desktop.dart';
+import 'screens_phone/home_phone.dart';
+import 'authentic/register_screen.dart';
 import 'package:window_size/window_size.dart';
 import 'dart:io';
-import 'package:eng_dictionary/features/mobile/auth/screens/login_screen.dart';
-import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
+import 'package:flutter/foundation.dart';
+import 'back_end/test_api.dart';
+import 'package:eng_dictionary/authentic/splash_screen.dart';
+import 'screens_phone/flashcard/flashcard_models.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,10 +17,8 @@ void main() async {
   // Đảm bảo flashcard mẫu được chèn
   await DatabaseHelper.instance.database; // Khởi tạo DB trước
   await DatabaseHelper.instance.ensureSampleFlashcards();
-  await DatabaseHelper.instance.ensureSampleWords();
   // Đồng bộ flashcard khi khởi động
   await FlashcardManager.syncOnStartup();
-  await WordManager.syncOnStartup();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     setWindowMinSize(const Size(1300, 800));
@@ -30,10 +31,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'EDU dictionary',
-      debugShowCheckedModeBanner: false,
-      home: LoginScreenPhone(),
-    );
+    if (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      return const MaterialApp(
+        title: 'EDU dictionary',
+        debugShowCheckedModeBanner: false,
+        home: HomeScreenPhone(),
+      );
+    } else {
+      return const MaterialApp(
+        title: 'EDU dictionary',
+        debugShowCheckedModeBanner: false,
+        home: LoginScreenPhone(),
+        //SplashScreen(),
+      );
+    }
   }
 }
