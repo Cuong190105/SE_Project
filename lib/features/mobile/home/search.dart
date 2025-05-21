@@ -1,72 +1,93 @@
 import 'package:flutter/material.dart';
-import 'package:eng_dictionary/features/mobile/vocabulary/vocabulary_detail.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../database_SQLite/database_helper.dart';
+import 'dart:convert';
+import 'package:uuid/uuid.dart';
+import 'package:eng_dictionary/data/models/database_helper.dart';
+import 'package:eng_dictionary/features/mobile/vocabulary/vocabulary_detail.dart';
+import 'dart:async';
 
 class SearchPhone extends StatefulWidget {
   final TextEditingController controller;
 
-  SearchPhone({Key? key, required this.controller}) : super(key: key);
+  const SearchPhone({Key? key, required this.controller}) : super(key: key);
 
   @override
-  _Search createState() => _Search();
+  _SearchPhoneState createState() => _SearchPhoneState();
 }
 
-class _Search extends State<SearchPhone> {
+class _SearchPhoneState extends State<SearchPhone> {
   Future<List<String>>? _suggestions;
   Set<int> _hoveredIndexes = {};
-  bool _mounted = true;
+  Timer? _debounce;
 
   @override
   void dispose() {
-    _mounted = false;
+    _debounce?.cancel();
     super.dispose();
   }
 
   void _searchWords(String query) {
-    if (_mounted) {
-      setState(() {
-        _suggestions = fetchSuggestions(query);
-      });
-    }
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _suggestions = query.isEmpty ? null : fetchSuggestions(query);
+        });
+      }
+    });
   }
 
   Future<List<String>> fetchSuggestions(String query) async {
-    final url = 'https://api.datamuse.com/sug?s=$query';
-    final response = await http.get(Uri.parse(url));
+    try {
+      final url = 'https://api.datamuse.com/sug?s=$query';
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 5));
 
-    if (response.statusCode == 200) {
-      final decoded = json.decode(response.body);
-      if (decoded is List) {
-        return decoded
-            .where((item) => item != null && item['word'] != null)
-            .map<String>((item) => item['word'] as String)
-            .take(10)
-            .toList();
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        if (decoded is List) {
+          return decoded
+              .where((item) => item != null && item['word'] != null)
+              .map<String>((item) => item['word'] as String)
+              .take(10)
+              .toList();
+        } else {
+          throw Exception('Định dạng phản hồi API không hợp lệ');
+        }
       } else {
-        throw Exception('Định dạng phản hồi API không hợp lệ');
+        throw Exception('Không thể lấy được gợi ý');
       }
-    } else {
-      throw Exception('Không thể lấy được gợi ý');
+    } catch (e) {
+      debugPrint('Lỗi lấy gợi ý: $e');
+      rethrow;
     }
   }
 
-  // Tìm từ trong cơ sở dữ liệu hoặc tạo mới nếu không tìm thấy
   Future<Word> _getOrCreateWord(String wordText) async {
     final dbHelper = DatabaseHelper.instance;
     final words = await dbHelper.getWords();
     final existingWord = words.firstWhere(
           (w) => w.word.toLowerCase() == wordText.toLowerCase(),
-      orElse: () => Word(
-        wordId: wordText, // Tạm thời dùng wordText làm ID
-        userEmail: 'unknown_user@example.com',
-        definition: wordText,
-        word: wordText,
-        partOfSpeech: 'Unknown',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
+      orElse: () {
+        final newWord = Word(
+          wordId: const Uuid().v4(),
+          userEmail: 'unknown_user@example.com',
+          word: wordText,
+          partOfSpeech: 'Unknown',
+          definition: 'No definition available',
+          examples: [],
+          synonyms: [],
+          antonyms: [],
+          family: [],
+          phrases: [],
+          media: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isSynced: false,
+          isDeleted: false,
+        );
+        dbHelper.insertWord(newWord);
+        return newWord;
+      },
     );
     return existingWord;
   }
@@ -89,36 +110,30 @@ class _Search extends State<SearchPhone> {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      margin: const EdgeInsets.symmetric(
-          horizontal: 8), // Add margin for better spacing
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
-        mainAxisSize:
-            MainAxisSize.min, // Prevent column from expanding infinitely
+        mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: widget.controller,
-            onChanged: (value) {
-              _searchWords(value);
-              setState(() {});
-            },
+            onChanged: _searchWords,
             decoration: InputDecoration(
               prefixIcon: Icon(Icons.search, color: Colors.blue.shade700),
-              suffixIcon: IconButton(
+              suffixIcon: widget.controller.text.isNotEmpty
+                  ? IconButton(
                 icon: Icon(Icons.clear, color: Colors.blue.shade700),
                 onPressed: () {
                   widget.controller.clear();
                   _searchWords('');
-                  setState(() {});
                 },
-              ),
+              )
+                  : null,
               hintText: 'Nhập từ cần tìm kiếm',
               hintStyle: TextStyle(color: Colors.blue.shade300),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                  vertical: 15), // Add padding for better height
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
             ),
-            textAlign:
-                TextAlign.start, // Left align text for better readability
+            textAlign: TextAlign.start,
           ),
           Container(
             height: 1,
@@ -129,90 +144,54 @@ class _Search extends State<SearchPhone> {
               future: _suggestions,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Padding(
-                    padding: const EdgeInsets.all(20),
+                  return const Padding(
+                    padding: EdgeInsets.all(20),
                     child: CircularProgressIndicator(),
                   );
                 } else if (snapshot.hasError) {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 20),
-                    color: Colors.white,
                     child: Center(
-                      child: Text('${snapshot.error}',
-                          style: TextStyle(color: Colors.red)),
+                      child: Text(
+                        'Không thể tải gợi ý: ${snapshot.error}',
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   );
-                } else if (snapshot.hasData) {
+                } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                   final data = snapshot.data!;
                   return Container(
-                    width: double
-                        .infinity, // Use parent width instead of screen width
-                    constraints: BoxConstraints(
-                      maxHeight:
-                          300, // Limit height to prevent excessive scrolling
-                    ),
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxHeight: 300),
                     color: Colors.white,
-                    child: data.isEmpty
-                        ? Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Center(
-                        child: Text('Không tìm thấy định nghĩa.',
-                            style: TextStyle(color: Colors.red)),
-                      ),
-                    )
-                        : ListView.builder(
+                    child: ListView.builder(
                       shrinkWrap: true,
                       itemCount: data.length,
                       itemBuilder: (context, index) {
                         final wordText = data[index];
                         final isHovered = _hoveredIndexes.contains(index);
 
-                              return MouseRegion(
-                                onEnter: (_) {
-                                  if (_mounted) {
-                                    setState(() {
-                                      _hoveredIndexes.add(index);
-                                    });
-                                  }
-                                },
-                                onExit: (_) {
-                                  if (_mounted) {
-                                    setState(() {
-                                      _hoveredIndexes.remove(index);
-                                    });
-                                  }
-                                },
-                                child: Container(
-                                  color: isHovered
-                                      ? Colors.grey.shade300
-                                      : Colors.transparent,
-                                  child: ListTile(
-                                    title: Text(
-                                      word,
-                                      overflow: TextOverflow
-                                          .ellipsis, // Prevent text overflow
-                                      style: TextStyle(
-                                          fontSize:
-                                              14), // Slightly smaller text
-                                    ),
-                                    dense: true, // Make list tiles more compact
-                                    onTap: () {
-                                      // Clear the text before navigation
-                                      if (_mounted) {
-                                        widget.controller.clear();
-                                        _searchWords(''); // Clear suggestions
-                                      }
-
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => VocabularyPhone(
-                                            word: word,
-                                          ),
-                                        ),
-                                      );
-                                    },
+                        return MouseRegion(
+                          onEnter: (_) => setState(() => _hoveredIndexes.add(index)),
+                          onExit: (_) => setState(() => _hoveredIndexes.remove(index)),
+                          child: Container(
+                            color: isHovered ? Colors.grey.shade200 : Colors.transparent,
+                            child: ListTile(
+                              title: Text(
+                                wordText,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              dense: true,
+                              onTap: () {
+                                widget.controller.clear();
+                                _searchWords('');
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VocabularyPhone(word: wordText),
                                   ),
                                 );
                               },
@@ -223,7 +202,16 @@ class _Search extends State<SearchPhone> {
                     ),
                   );
                 } else {
-                  return SizedBox();
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: const Center(
+                      child: Text(
+                        'Không tìm thấy gợi ý.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                  );
                 }
               },
             ),

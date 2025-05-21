@@ -7,6 +7,7 @@ import 'package:eng_dictionary/core/services/api_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+
 class Meaning {
   String meaningId;
   String definition;

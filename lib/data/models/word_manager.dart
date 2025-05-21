@@ -5,6 +5,7 @@ import 'package:eng_dictionary/core/services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'word_set.dart';
+import 'package:uuid/uuid.dart';
 
 class WordManager {
   static Future<List<WordSet>> getSets() async {
@@ -16,27 +17,9 @@ class WordManager {
     }
   }
 
-  static Future<bool> addWordToSet(String wordId) async {
+  static Future<bool> addWordToSet(WordSet wordSet) async {
     try {
-      final sets = await getSets();
-      final set = sets.firstWhere((set) => set.id == wordId);
-
-      final vocab = WordSet(
-        id: set.id,
-        word: set.word,
-        userEmail: set.userEmail,
-        meanings: set.meanings,
-        synonyms: set.synonyms,
-        antonyms: set.antonyms,
-        family: set.family,
-        phrases: set.phrases,
-        deleted: false,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSynced: false,
-        isSample: set.isSample,
-      );
-      await DatabaseHelper.instance.insertWordSets(vocab);
+      await DatabaseHelper.instance.insertWordSets(wordSet);
       return true;
     } catch (e, stackTrace) {
       debugPrint('Lỗi thêm từ: $e\n$stackTrace');
@@ -44,26 +27,13 @@ class WordManager {
     }
   }
 
-  static Future<bool> updateWord(String wordId) async {
+  static Future<bool> updateWord(String wordId, WordSet updatedWordSet) async {
     try {
-      final sets = await getSets();
-      final set = sets.firstWhere((set) => set.id == wordId);
-      final updated = WordSet(
-        id: set.id,
-        word: set.word,
-        userEmail: set.userEmail,
-        meanings: set.meanings,
-        synonyms: set.synonyms,
-        antonyms: set.antonyms,
-        family: set.family,
-        phrases: set.phrases,
-        deleted: false,
-        createdAt: set.createdAt,
-        updatedAt: DateTime.now(),
-        isSynced: false,
-        isSample: set.isSample,
-      );
-      await DatabaseHelper.instance.insertWordSets(updated);
+      if (updatedWordSet.id != wordId) {
+        debugPrint('ID không khớp: wordId=$wordId, updatedWordSet.id=${updatedWordSet.id}');
+        return false;
+      }
+      await DatabaseHelper.instance.insertWordSets(updatedWordSet);
       return true;
     } catch (e, stackTrace) {
       debugPrint('Lỗi cập nhật từ: $e\n$stackTrace');
@@ -85,7 +55,10 @@ class WordManager {
     debugPrint('Bắt đầu đồng bộ từ vựng với server...');
     try {
       final connectivity = await Connectivity().checkConnectivity();
-      if (connectivity == ConnectivityResult.none) return;
+      if (connectivity == ConnectivityResult.none) {
+        debugPrint('Không có kết nối mạng');
+        return;
+      }
 
       final prefs = await SharedPreferences.getInstance();
       final userEmail = prefs.getString('user_email') ?? 'unknown_user@example.com';
@@ -94,7 +67,7 @@ class WordManager {
       final response = await ApiService.get('sync/downloadVocabularies?timestamp=$lastSync');
       final vocabList = (response['payload'] as List)
           .map((json) => WordSet.fromJson(json))
-          .where((v) => v.userEmail == userEmail)
+          .where((v) => v.userEmail == userEmail && !v.isSample)
           .toList();
 
       for (var vocab in vocabList) {

@@ -1,9 +1,7 @@
 import 'package:eng_dictionary/features/mobile/my_word/screens/my_word.dart';
 import 'package:flutter/material.dart';
-import 'translate_phone.dart';
-import 'search_phone.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eng_dictionary/back_end/api_service.dart';
+import 'package:eng_dictionary/core/services/api_service.dart';
 
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
 import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';

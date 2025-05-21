@@ -1,10 +1,13 @@
-/*import 'package:eng_dictionary/screens_phone/authentic_phone/forgotpassword_screen_phone.dart';
-import 'package:eng_dictionary/screens_phone/authentic_phone/register_screen_phone.dart';
-import 'package:eng_dictionary/screens_phone/home_phone.dart';
+
 import 'package:flutter/material.dart';
 import 'package:device_info_plus/device_info_plus.dart'; // Thêm package này
-import 'package:eng_dictionary/back_end/services/auth_service.dart'; // Import AuthService
+import 'package:eng_dictionary/core/services/api_service.dart'; // Import AuthService
 import 'dart:io';
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
+import 'package:eng_dictionary/features/common/screens/register_screen.dart';
+import 'package:eng_dictionary/features/common/screens/forgotpassword_screen.dart';
+import 'package:eng_dictionary/core/services/auth_service.dart';
+import 'package:eng_dictionary/features/common/screens/forgotpassword_screen_phone.dart';
 
 class LoginScreenPhone extends StatefulWidget {
   const LoginScreenPhone({super.key});
@@ -240,7 +243,7 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                                     MaterialPageRoute(
                                       builder:
                                           (context) =>
-                                          ForgotpasswordScreenPhone(),
+                                              ForgotpasswordScreenPhone(),
                                     ),
                                   );
                                 },
@@ -294,7 +297,7 @@ class _LoginScreenState extends State<LoginScreenPhone> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => RegisterScreenPhone(),
+                                          (context) => RegisterScreen(),
                                     ),
                                   );
                                 },
@@ -375,4 +378,4 @@ class _LoginScreenState extends State<LoginScreenPhone> {
       ),
     );
   }
-}*/
+}

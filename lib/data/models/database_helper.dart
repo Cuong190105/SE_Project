@@ -4,8 +4,12 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
-import '../screens_phone/flashcard/flashcard_models.dart';
+import '../models/flashcard.dart';
+import '../models/flashcard_set.dart';
+import '../models/flashcard_manager.dart';
 import 'package:uuid/uuid.dart';
+import 'word_set.dart';
+import 'meaning.dart';
 
 // Định nghĩa các lớp mô hình cho từ vựng
 class Word {
@@ -16,7 +20,7 @@ class Word {
   final String? usIpa;
   final String? ukIpa;
   final String definition;
-  final List<String> examples; // Thêm trường examples
+  final List<String> examples;
   final List<Synonym> synonyms;
   final List<Antonym> antonyms;
   final List<FamilyWord> family;
@@ -35,7 +39,7 @@ class Word {
     this.usIpa,
     this.ukIpa,
     required this.definition,
-    this.examples = const [], // Khởi tạo mặc định
+    this.examples = const [],
     this.synonyms = const [],
     this.antonyms = const [],
     this.family = const [],
@@ -355,6 +359,105 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> _insertSampleWords(sqlite3.Database db) async {
+    try {
+      db.execute('BEGIN TRANSACTION');
+      final now = DateTime.now().toIso8601String();
+      final uuid = Uuid();
+
+      final sampleWords = [
+        {
+          'word_id': 'word_001',
+          'word': 'Big',
+          'part_of_speech': 'adjective',
+          'us_ipa': '/bɪɡ/',
+          'uk_ipa': '/bɪɡ/',
+          'definition': 'Having a large size',
+          'examples': ['The elephant is big.', 'This is a big house.'],
+          'synonyms': ['large', 'huge'],
+          'antonyms': ['small', 'tiny'],
+          'family': ['bigger', 'biggest'],
+          'phrases': ['big deal', 'big picture']
+        },
+        {
+          'word_id': 'word_002',
+          'word': 'Fast',
+          'part_of_speech': 'adjective',
+          'us_ipa': '/fæst/',
+          'uk_ipa': '/fɑːst/',
+          'definition': 'Moving or capable of moving at high speed',
+          'examples': ['The car is fast.', 'He runs very fast.'],
+          'synonyms': ['quick', 'swift'],
+          'antonyms': ['slow', 'sluggish'],
+          'family': ['faster', 'fastest'],
+          'phrases': ['fast track', 'fast forward']
+        }
+      ];
+
+      for (var wordData in sampleWords) {
+        db.execute('''
+          INSERT INTO words (
+            word_id, user_email, word, part_of_speech, us_ipa, uk_ipa, definition, created_at, updated_at, is_synced, is_deleted
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', [
+          wordData['word_id'],
+          'sample@example.com',
+          wordData['word'],
+          wordData['part_of_speech'],
+          wordData['us_ipa'],
+          wordData['uk_ipa'],
+          wordData['definition'],
+          now,
+          now,
+          1,
+          0
+        ]);
+
+        for (var example in wordData['examples'] as List<String>) {
+          db.execute('''
+            INSERT INTO examples (example_id, word_id, example)
+            VALUES (?, ?, ?)
+          ''', [uuid.v4(), wordData['word_id'], example]);
+        }
+
+        for (var synonym in wordData['synonyms'] as List<String>) {
+          db.execute('''
+            INSERT INTO synonyms (synonym_id, word_id, synonym_word_id)
+            VALUES (?, ?, ?)
+          ''', [uuid.v4(), wordData['word_id'], synonym]);
+        }
+
+        for (var antonym in wordData['antonyms'] as List<String>) {
+          db.execute('''
+            INSERT INTO antonyms (antonym_id, word_id, antonym_word_id)
+            VALUES (?, ?, ?)
+          ''', [uuid.v4(), wordData['word_id'], antonym]);
+        }
+
+        for (var familyWord in wordData['family'] as List<String>) {
+          db.execute('''
+            INSERT INTO family (family_id, word_id, family_word)
+            VALUES (?, ?, ?)
+          ''', [uuid.v4(), wordData['word_id'], familyWord]);
+        }
+
+        for (var phrase in wordData['phrases'] as List<String>) {
+          db.execute('''
+            INSERT INTO phrases (phrase_id, word_id, phrase)
+            VALUES (?, ?, ?)
+          ''', [uuid.v4(), wordData['word_id'], phrase]);
+        }
+      }
+
+      db.execute('COMMIT');
+      debugPrint('Chèn dữ liệu mẫu từ vựng thành công.');
+    } catch (e, stackTrace) {
+      db.execute('ROLLBACK');
+      debugPrint('Lỗi chèn dữ liệu mẫu từ vựng: $e\n$stackTrace');
+      throw Exception('Không thể chèn dữ liệu mẫu từ vựng.');
+    }
+  }
+
   Future<void> ensureSampleFlashcards() async {
     final db = await database;
     try {
@@ -374,16 +477,16 @@ class DatabaseHelper {
   Future<void> ensureSampleWords() async {
     final db = await database;
     try {
-      final sampleCount = db.select('SELECT COUNT(*) as count FROM word_sets WHERE is_sample = 1');
+      final sampleCount = db.select('SELECT COUNT(*) as count FROM words WHERE is_synced = 1');
       if (sampleCount.first['count'] == 0) {
-        debugPrint('Chèn dữ liệu mẫu vì không tìm thấy...');
-        await _insertSampleFlashcardSets(db);
+        debugPrint('Chèn dữ liệu mẫu từ vựng vì không tìm thấy...');
+        await _insertSampleWords(db);
       } else {
-        debugPrint('Dữ liệu mẫu đã tồn tại.');
+        debugPrint('Dữ liệu mẫu từ vựng đã tồn tại.');
       }
     } catch (e, stackTrace) {
-      debugPrint('Lỗi kiểm tra dữ liệu mẫu: $e\n$stackTrace');
-      throw Exception('Không thể kiểm tra dữ liệu mẫu.');
+      debugPrint('Lỗi kiểm tra dữ liệu mẫu từ vựng: $e\n$stackTrace');
+      throw Exception('Không thể kiểm tra dữ liệu mẫu từ vựng.');
     }
   }
 
@@ -908,6 +1011,284 @@ class DatabaseHelper {
       debugPrint('Lỗi đánh dấu xóa từ vựng $wordId: $e\n$stackTrace');
       rethrow;
     }
+  }
+
+  Future<List<WordSet>> getWordSets() async {
+    final db = await database;
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('user_email') ?? 'unknown_user@example.com';
+    debugPrint('Lấy danh sách bộ từ cho người dùng: $userEmail và bộ mẫu...');
+
+    try {
+      final wordRows = db.select(
+        '''
+        SELECT w.*, 
+               s.synonym_id, s.synonym_word_id,
+               a.antonym_id, a.antonym_word_id,
+               f.family_id, f.family_word,
+               p.phrase_id, p.phrase,
+               med.media_id, med.type, med.file_path,
+               e.example_id, e.example
+        FROM words w
+        LEFT JOIN synonyms s ON w.word_id = s.word_id
+        LEFT JOIN antonyms a ON w.word_id = a.word_id
+        LEFT JOIN family f ON w.word_id = f.word_id
+        LEFT JOIN phrases p ON w.word_id = p.word_id
+        LEFT JOIN media med ON w.word_id = med.word_id
+        LEFT JOIN examples e ON w.word_id = e.word_id
+        WHERE w.user_email = ? OR w.is_synced = 1
+        ''',
+        [userEmail],
+      );
+
+      Map<String, WordSet> wordSetMap = {};
+
+      for (var row in wordRows) {
+        final wordId = row['word_id'] as String;
+
+        if (!wordSetMap.containsKey(wordId)) {
+          final meaning = Meaning(
+            meaningId: wordId,
+            definition: row['definition'] as String,
+            partOfSpeech: row['part_of_speech'] as String,
+            us_phonetic: row['us_ipa'] as String? ?? '',
+            uk_phonetic: row['uk_ipa'] as String? ?? '',
+            example1: row['example'] as String? ?? '',
+            example2: '',
+          );
+
+          wordSetMap[wordId] = WordSet(
+            id: wordId,
+            userEmail: row['user_email'] as String,
+            word: row['word'] as String,
+            meanings: [meaning],
+            synonyms: '',
+            antonyms: '',
+            family: '',
+            phrases: '',
+            createdAt: DateTime.parse(row['created_at'] as String),
+            updatedAt: DateTime.parse(row['updated_at'] as String),
+            isSynced: (row['is_synced'] as int) == 1,
+            isSample: false,
+            deleted: (row['is_deleted'] as int) == 1,
+          );
+        }
+
+        final wordSet = wordSetMap[wordId]!;
+
+        if (row['synonym_id'] != null) {
+          wordSet.synonyms += (wordSet.synonyms.isEmpty ? '' : ', ') + (row['synonym_word_id'] as String);
+        }
+
+        if (row['antonym_id'] != null) {
+          wordSet.antonyms += (wordSet.antonyms.isEmpty ? '' : ', ') + (row['antonym_word_id'] as String);
+        }
+
+        if (row['family_id'] != null) {
+          wordSet.family += (wordSet.family.isEmpty ? '' : ', ') + (row['family_word'] as String);
+        }
+
+        if (row['phrase_id'] != null) {
+          wordSet.phrases += (wordSet.phrases.isEmpty ? '' : ', ') + (row['phrase'] as String);
+        }
+
+        if (row['media_id'] != null && row['type'] == 'image') {
+          final file = File(row['file_path'] as String);
+          if (await file.exists()) {
+            wordSet.meanings[0].image = await file.readAsBytes();
+          }
+        }
+      }
+
+      final wordSets = wordSetMap.values.toList();
+      debugPrint('Đã lấy ${wordSets.length} bộ từ cho người dùng: $userEmail.');
+      return wordSets;
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi lấy danh sách bộ từ: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> insertWordSets(WordSet wordSet) async {
+    final db = await database;
+    try {
+      db.execute('BEGIN TRANSACTION');
+
+      final createdAtStr = wordSet.createdAt.toIso8601String();
+      final updatedAtStr = wordSet.updatedAt.toIso8601String();
+
+      final meaning = wordSet.meanings.isNotEmpty ? wordSet.meanings[0] : Meaning(meaningId: wordSet.id);
+      final word = Word(
+        wordId: wordSet.id,
+        userEmail: wordSet.userEmail,
+        word: wordSet.word,
+        partOfSpeech: meaning.partOfSpeech,
+        usIpa: meaning.us_phonetic,
+        ukIpa: meaning.uk_phonetic,
+        definition: meaning.definition,
+        examples: [meaning.example1, meaning.example2].where((e) => e.isNotEmpty).toList(),
+        synonyms: wordSet.synonyms.isNotEmpty
+            ? wordSet.synonyms.split(',').map((s) => Synonym(
+          synonymId: Uuid().v4(),
+          synonymWordId: s.trim(),
+        )).toList()
+            : [],
+        antonyms: wordSet.antonyms.isNotEmpty
+            ? wordSet.antonyms.split(',').map((a) => Antonym(
+          antonymId: Uuid().v4(),
+          antonymWordId: a.trim(),
+        )).toList()
+            : [],
+        family: wordSet.family.isNotEmpty
+            ? wordSet.family.split(',').map((f) => FamilyWord(
+          familyId: Uuid().v4(),
+          familyWord: f.trim(),
+        )).toList()
+            : [],
+        phrases: wordSet.phrases.isNotEmpty
+            ? wordSet.phrases.split(',').map((p) => Phrase(
+          phraseId: Uuid().v4(),
+          phrase: p.trim(),
+        )).toList()
+            : [],
+        media: meaning.image != null
+            ? [
+          Media(
+            mediaId: Uuid().v4(),
+            type: 'image',
+            filePath: join((await getApplicationDocumentsDirectory()).path, 'images', '${wordSet.id}.jpg'),
+          )
+        ]
+            : [],
+        createdAt: wordSet.createdAt,
+        updatedAt: wordSet.updatedAt,
+        isSynced: wordSet.isSynced,
+        isDeleted: wordSet.deleted,
+      );
+
+      if (meaning.image != null) {
+        final file = File(word.media.isNotEmpty ? word.media[0].filePath : '');
+        await file.create(recursive: true);
+        await file.writeAsBytes(meaning.image!);
+      }
+
+      await insertWord(word);
+
+      db.execute('COMMIT');
+      debugPrint('Bộ từ ${wordSet.id} đã được lưu thành công.');
+    } catch (e, stackTrace) {
+      db.execute('ROLLBACK');
+      debugPrint('Lỗi lưu bộ từ ${wordSet.id}: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<List<WordSet>> getUnsyncedWordSets() async {
+    final db = await database;
+    final prefs = await SharedPreferences.getInstance();
+    final userEmail = prefs.getString('user_email');
+    if (userEmail == null) {
+      debugPrint('Không tìm thấy email người dùng.');
+      return [];
+    }
+    debugPrint('Lấy danh sách bộ từ chưa đồng bộ cho người dùng: $userEmail...');
+
+    try {
+      final wordRows = db.select(
+        '''
+        SELECT w.*, 
+               s.synonym_id, s.synonym_word_id,
+               a.antonym_id, a.antonym_word_id,
+               f.family_id, f.family_word,
+               p.phrase_id, p.phrase,
+               med.media_id, med.type, med.file_path,
+               e.example_id, e.example
+        FROM words w
+        LEFT JOIN synonyms s ON w.word_id = s.word_id
+        LEFT JOIN antonyms a ON w.word_id = a.word_id
+        LEFT JOIN family f ON w.word_id = f.word_id
+        LEFT JOIN phrases p ON w.word_id = p.word_id
+        LEFT JOIN media med ON w.word_id = med.word_id
+        LEFT JOIN examples e ON w.word_id = e.word_id
+        WHERE w.user_email = ? AND w.is_synced = 0 AND w.is_deleted = 0
+        ''',
+        [userEmail],
+      );
+
+      Map<String, WordSet> wordSetMap = {};
+
+      for (var row in wordRows) {
+        final wordId = row['word_id'] as String;
+
+        if (!wordSetMap.containsKey(wordId)) {
+          final meaning = Meaning(
+            meaningId: wordId,
+            definition: row['definition'] as String,
+            partOfSpeech: row['part_of_speech'] as String,
+            us_phonetic: row['us_ipa'] as String? ?? '',
+            uk_phonetic: row['uk_ipa'] as String? ?? '',
+            example1: row['example'] as String? ?? '',
+            example2: '',
+          );
+
+          wordSetMap[wordId] = WordSet(
+            id: wordId,
+            userEmail: row[' sleevesuser_email'] as String,
+            word: row['word'] as String,
+            meanings: [meaning],
+            synonyms: '',
+            antonyms: '',
+            family: '',
+            phrases: '',
+            createdAt: DateTime.parse(row['created_at'] as String),
+            updatedAt: DateTime.parse(row['updated_at'] as String),
+            isSynced: false,
+            isSample: false,
+            deleted: (row['is_deleted'] as int) == 1,
+          );
+        }
+
+        final wordSet = wordSetMap[wordId]!;
+
+        if (row['synonym_id'] != null) {
+          wordSet.synonyms += (wordSet.synonyms.isEmpty ? '' : ', ') + (row['synonym_word_id'] as String);
+        }
+
+        if (row['antonym_id'] != null) {
+          wordSet.antonyms += (wordSet.antonyms.isEmpty ? '' : ', ') + (row['antonym_word_id'] as String);
+        }
+
+        if (row['family_id'] != null) {
+          wordSet.family += (wordSet.family.isEmpty ? '' : ', ') + (row['family_word'] as String);
+        }
+
+        if (row['phrase_id'] != null) {
+          wordSet.phrases += (wordSet.phrases.isEmpty ? '' : ', ') + (row['phrase'] as String);
+        }
+
+        if (row['media_id'] != null && row['type'] == 'image') {
+          final file = File(row['file_path'] as String);
+          if (await file.exists()) {
+            wordSet.meanings[0].image = await file.readAsBytes();
+          }
+        }
+      }
+
+      final wordSets = wordSetMap.values.toList();
+      debugPrint('Đã lấy ${wordSets.length} bộ từ chưa đồng bộ cho người dùng: $userEmail.');
+      return wordSets;
+    } catch (e, stackTrace) {
+      debugPrint('Lỗi lấy danh sách bộ từ chưa đồng bộ: $e\n$stackTrace');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteWordSets(String wordSetId) async {
+    await deleteWord(wordSetId);
+  }
+
+  Future<void> markWordSetAsSynced(String wordSetId) async {
+    await markWordAsSynced(wordSetId);
   }
 
   Future<void> close() async {

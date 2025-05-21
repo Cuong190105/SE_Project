@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'add_word.dart';
-import 'home_phone.dart';
-import '../database_SQLite/database_helper.dart';
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
+import '../data/models/database_helper.dart';
 import 'vocabulary_phone.dart';
 
 class Vocabularies extends StatefulWidget {

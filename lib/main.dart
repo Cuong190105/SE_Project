@@ -5,6 +5,8 @@ import 'package:eng_dictionary/data/models/flashcard_manager.dart';
 import 'package:eng_dictionary/data/models/word_manager.dart';
 import 'package:window_size/window_size.dart';
 import 'dart:io';
+import 'package:eng_dictionary/features/mobile/auth/screens/login_screen.dart';
+import 'package:eng_dictionary/features/mobile/home/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +33,7 @@ class MainApp extends StatelessWidget {
     return const MaterialApp(
       title: 'EDU dictionary',
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: LoginScreenPhone(),
     );
   }
 }

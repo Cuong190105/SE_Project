@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/mobile/minigame/widgets/quiz_question.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eng_dictionary/back_end/api_service.dart';
+import 'package:eng_dictionary/core/services/api_service.dart';
 
 class QuizGameScreenPhone extends StatefulWidget {
   const QuizGameScreenPhone({super.key});

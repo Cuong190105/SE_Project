@@ -2,149 +2,10 @@ import 'package:flutter/material.dart';
 import 'flashcard_set.dart';
 import 'flashcard.dart';
 import 'database_helper.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eng_dictionary/core/services/auth_service.dart';
-import 'database_helper.dart';
 import 'package:eng_dictionary/core/services/api_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
-class Flashcard {
-  String id;
-  String frontContent;
-  String backContent;
-  bool isLearned;
-  bool isDeleted;
-
-  Flashcard({
-    required this.id,
-    required this.frontContent,
-    required this.backContent,
-    this.isLearned = false,
-    this.isDeleted = false,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'front': frontContent,
-      'back': backContent,
-      'is_learned': isLearned,
-      'is_deleted': isDeleted,
-    };
-  }
-
-  factory Flashcard.fromJson(Map<String, dynamic> json) {
-    debugPrint('Parsing Flashcard JSON: $json');
-    return Flashcard(
-      id: json['id']?.toString() ?? 'card_${DateTime.now().millisecondsSinceEpoch}',
-      frontContent: json['front']?.toString() ?? '',
-      backContent: json['back']?.toString() ?? '',
-      isLearned: json['is_learned'] is bool
-          ? json['is_learned']
-          : (json['is_learned'] is int
-          ? json['is_learned'] == 1
-          : (json['is_learned'] is String
-          ? json['is_learned'].toLowerCase() == 'true' || json['is_learned'] == '1'
-          : false)),
-      isDeleted: json['is_deleted'] is bool
-          ? json['is_deleted']
-          : (json['is_deleted'] is int
-          ? json['is_deleted'] == 1
-          : (json['is_deleted'] is String
-          ? json['is_deleted'].toLowerCase() == 'true' || json['is_deleted'] == '1'
-          : false)),
-    );
-  }
-}
-
-class FlashcardSet {
-  String id;
-  String userEmail;
-  String name;
-  String description;
-  List<Flashcard> cards;
-  Color color;
-  int progress;
-  DateTime createdAt;
-  DateTime updatedAt;
-  bool isSynced;
-  bool isSample;
-  bool isDeleted;
-
-  FlashcardSet({
-    required this.id,
-    required this.userEmail,
-    required this.name,
-    this.description = '',
-    required this.cards,
-    required this.color,
-    this.progress = 0,
-    required this.createdAt,
-    required this.updatedAt,
-    this.isSynced = false,
-    this.isSample = false,
-    this.isDeleted = false,
-  });
-
-  int get totalCards => cards.length;
-
-  double get progressPercentage => totalCards > 0 ? progress / totalCards : 0.0;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'set_id': id,
-      'user_email': userEmail,
-      'name': name,
-      'description': description,
-      'cards': cards.map((card) => card.toJson()).toList(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      'is_sample': isSample ? 1 : 0,
-      'is_deleted': isDeleted ? 1 : 0,
-    };
-  }
-
-  static Future<FlashcardSet> fromJson(Map<String, dynamic> json) async {
-    debugPrint('Parsing FlashcardSet JSON: $json');
-    final prefs = await SharedPreferences.getInstance();
-    final userEmail = prefs.getString('user_email') ?? 'unknown_user@example.com';
-    final cards = (json['cards'] as List<dynamic>?)?.map((cardJson) {
-      if (cardJson is Map<String, dynamic>) {
-        return Flashcard.fromJson(cardJson);
-      } else {
-        debugPrint('Invalid card JSON: $cardJson');
-        throw Exception('Định dạng thẻ không hợp lệ trong JSON');
-      }
-    }).toList() ?? [];
-
-    bool isSample;
-    if (json['is_sample'] is int) {
-      isSample = json['is_sample'] == 1;
-    } else if (json['is_sample'] is String) {
-      isSample = json['is_sample'] == '1' || json['is_sample'].toLowerCase() == 'true';
-    } else if (json['is_sample'] is bool) {
-      isSample = json['is_sample'] as bool;
-    } else {
-      isSample = false;
-    }
-
-    return FlashcardSet(
-      id: json['set_id']?.toString() ?? 'set_${DateTime.now().millisecondsSinceEpoch}',
-      userEmail: userEmail,
-      name: json['name']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      cards: cards,
-      color: FlashcardManager.getColorForIndex(cards.length),
-      progress: cards.where((card) => card.isLearned).length,
-      createdAt: DateTime.parse(json['created_at']?.toString() ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at']?.toString() ?? DateTime.now().toIso8601String()),
-      isSynced: true,
-      isSample: isSample,
-    );
-  }
-}
 
 class FlashcardManager {
   static final List<Color> _defaultColors = [
@@ -181,6 +42,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: false,
+        isDeleted: false,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(newSet);
@@ -208,6 +70,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -238,6 +101,7 @@ class FlashcardManager {
         id: 'card_${DateTime.now().millisecondsSinceEpoch}',
         frontContent: front,
         backContent: back,
+        isLearned: false,
         isDeleted: false,
       );
 
@@ -254,6 +118,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -285,6 +150,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -315,6 +181,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -345,6 +212,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -382,7 +250,6 @@ class FlashcardManager {
 
       debugPrint('Phản hồi từ server: $response');
 
-      // Xử lý response là List hoặc Map
       List<dynamic> payload;
       if (response is List<dynamic>) {
         payload = response;
@@ -401,8 +268,8 @@ class FlashcardManager {
       final sets = <FlashcardSet>[];
       for (var json in payload) {
         if (json is Map<String, dynamic>) {
-          final set = await FlashcardSet.fromJson(json);
-          if (set.userEmail == userEmail && !set.isSample) {
+          final set = FlashcardSet.fromJson(json);
+          if (set.userEmail == userEmail && !set.isSample && !set.isDeleted) {
             sets.add(set);
           }
         } else {
@@ -412,7 +279,6 @@ class FlashcardManager {
       }
 
       for (var set in sets) {
-        set.color = getColorForIndex((await getSets()).length);
         await DatabaseHelper.instance.insertFlashcardSet(set);
       }
 
@@ -440,7 +306,10 @@ class FlashcardManager {
       }
 
       final response = await ApiService.post('sync/uploadWords', {
-        'payload': unsyncedSets.map((set) => set.toJson()).toList(),
+        'payload': unsyncedSets
+            .where((set) => !set.isDeleted)
+            .map((set) => set.toJson())
+            .toList(),
       }).timeout(Duration(seconds: 10), onTimeout: () {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');
       });
@@ -454,7 +323,9 @@ class FlashcardManager {
       }
 
       for (var set in unsyncedSets) {
-        await DatabaseHelper.instance.markSetAsSynced(set.id);
+        if (!set.isDeleted) {
+          await DatabaseHelper.instance.markSetAsSynced(set.id);
+        }
       }
 
       final prefs = await SharedPreferences.getInstance();

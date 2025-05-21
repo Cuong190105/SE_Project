@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'search_phone.dart';
-import 'home_phone.dart';
+import 'package:eng_dictionary/features/mobile/home/search.dart';
 import 'translate_phone.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html_parser;
-import '../database_SQLite/database_helper.dart';
+import '../data/models/database_helper.dart';
 
 class VocabularyPhone extends StatefulWidget {
   final Word word;
