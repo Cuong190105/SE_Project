@@ -1,14 +1,14 @@
-/*import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eng_dictionary/core/services/api_service.dart';
-import 'package:eng_dictionary/core/services/auth_service.dart';
+import 'package:eng_dictionary/back_end/api_service.dart';
+import 'package:eng_dictionary/back_end/services/auth_service.dart';
 import 'api_auth_service_test.mocks.dart';
-import '';
+
 // Tạo mock bằng mockito
 @GenerateMocks([http.Client, SharedPreferences])
 void main() {
@@ -274,4 +274,4 @@ void main() {
       expect(email, isNull);
     });
   });
-}*/
+}

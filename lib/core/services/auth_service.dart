@@ -335,6 +335,72 @@ class AuthService {
     }
   }
 
+  static Future<Map<String, dynamic>> logout() async {
+    try {
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        return {
+          'success': false,
+          'message': 'Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.',
+        };
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('access_token');
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Không tìm thấy token xác thực. Vui lòng đăng nhập lại.',
+        };
+      }
+
+      final response = await ApiService.post('logout', {});
+
+      if (response is Map<String, dynamic> && (response['success'] ?? true)) {
+        await prefs.remove('access_token');
+        await prefs.remove('user_email');
+        await prefs.remove('reset_email');
+
+        try {
+          final db = await DatabaseHelper.instance.database;
+          final tables = db.select("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('flashcard_sets', 'flashcards')");
+          for (var table in tables) {
+            final tableName = table['name'] as String;
+            debugPrint('Dữ liệu từ bảng $tableName đã được xóa.');
+          }
+          if (tables.isEmpty) {
+            debugPrint('Không tìm thấy bảng flashcard_sets hoặc flashcards.');
+          }
+        } catch (e) {
+          debugPrint('Lỗi khi xóa dữ liệu cơ sở dữ liệu: $e');
+        }
+
+        return {
+          'success': true,
+          'message': response['message'] ?? 'Đăng xuất thành công',
+        };
+      }
+
+      return {
+        'success': false,
+        'message': (response is Map<String, dynamic> && response['message'] != null)
+            ? response['message']
+            : 'Đăng xuất thất bại. Vui lòng thử lại.',
+      };
+    } catch (e) {
+      debugPrint('Lỗi đăng xuất: $e');
+      String message = 'Đăng xuất thất bại. Vui lòng thử lại.';
+      if (e.toString().contains('SocketException')) {
+        message = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      }
+      return {
+        'success': false,
+        'message': message,
+      };
+    }
+  }
+
+
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('access_token') != null;

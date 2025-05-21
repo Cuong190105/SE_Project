@@ -1,4 +1,6 @@
-# EDU Dictionary
+# eng_dictionary
+
+A new Flutter project.
 
 EDU Dictionary là một ứng dụng hướng tới việc hỗ trợ người dùng học Tiếng Anh.
 

@@ -10,7 +10,7 @@ class WordService {
       {Map<int, File>? images, Map<int, File>? usAudios, Map<int, File>? ukAudios}) async {
     try {
       final Map<String, String> fields = {
-        'payload': jsonEncode({'change': words})
+        'payload': jsonEncode({'change': []})
       };
 
       final Map<String, File> files = {};

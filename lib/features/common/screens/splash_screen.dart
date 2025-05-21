@@ -31,12 +31,12 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         // Nếu đã đăng nhập, chuyển đến màn hình chính
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreenDesktop()),
+          MaterialPageRoute(builder: (context) => HomeScreenPhone()),
         );
       } else {
         // Nếu chưa đăng nhập, chuyển đến màn hình đăng nhập
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoginScreen()),
+          MaterialPageRoute(builder: (context) => HomeScreenPhone()),
         );
       }
     } else {

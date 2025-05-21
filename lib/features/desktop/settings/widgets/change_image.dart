@@ -192,20 +192,40 @@ class _ChangeImageState extends State<ChangeImage> {
   }
 
   Future<void> _pickImage() async {
-    final XTypeGroup typeGroup = XTypeGroup(
-      label: 'images',
-      extensions: <String>['jpg', 'jpeg'],
-    );
+    late final XTypeGroup typeGroup;
 
-    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+    if (Platform.isAndroid) {
+      typeGroup = const XTypeGroup(
+        label: 'images_android',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      );
+    } else if (Platform.isIOS) {
+      // Enhanced iOS support with more mime types and UTIs
+      typeGroup = const XTypeGroup(
+        label: 'images_ios',
+        mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'],
+        uniformTypeIdentifiers: ['public.image', 'public.jpeg', 'public.png', 'com.compuserve.gif', 'public.heic'],
+      );
+    } else {
+      typeGroup = const XTypeGroup(
+        label: 'images',
+        extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+        mimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      );
+    }
 
-    if (file != null) {
-      // Update the new image path
-      setState(() {
-        widget.newImagePath.value = file.path;
-      });
+    try {
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
 
-
+      if (file != null) {
+        // Update the new image path
+        setState(() {
+          widget.newImagePath.value = file.path;
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      widget.errorMessage.value = 'Không thể chọn ảnh. Vui lòng thử lại.';
     }
   }
   // Hàm xóa ảnh

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
-class VocabularyCard extends StatelessWidget {
+class VocabularyCard extends StatefulWidget {
   final String word;
   final List<String> meaning;
   final VoidCallback? onView;
@@ -8,97 +9,142 @@ class VocabularyCard extends StatelessWidget {
   final VoidCallback? onDelete;
 
   const VocabularyCard({
-    Key? key,
+    super.key,
     required this.word,
     required this.meaning,
     this.onView,
     this.onEdit,
     this.onDelete,
-  }) : super(key: key);
+  });
+
+  @override
+  State<VocabularyCard> createState() => _VocabularyCardState();
+}
+
+class _VocabularyCardState extends State<VocabularyCard> {
+  bool _isHovered = false;
+  late Color _headerColor;
+
+  final List<Color> headerColors = [
+    Colors.blue.shade900,
+    Colors.red.shade900,
+    Colors.purple.shade900,
+    Colors.yellow.shade900,
+    Colors.orange.shade900,
+    Colors.green.shade900,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _headerColor = (headerColors..shuffle()).first;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return  Container(
-      height: 150,
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  word,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        height: screenHeight/3,
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: _isHovered ? Colors.grey.shade200 : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with random color
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _headerColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
               ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'view' && onView != null) {
-                    onView!();
-                  } else if (value == 'edit' && onEdit != null) {
-                    onEdit!();
-                  } else if (value == 'delete' && onDelete != null) {
-                    onDelete!();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: 'view',
-                    child: Row(
-                      children: [
-                        Icon(Icons.visibility, color: Colors.green),
-                        const SizedBox(width: 8),
-                        const Text('Xem'),
-                      ],
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.word,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        const Text('Sửa'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, color: Colors.red),
-                        const SizedBox(width: 8),
-                        const Text('Xóa'),
-                      ],
-                    ),
+                  PopupMenuButton<String>(
+                    color: Colors.white,
+                    onSelected: (value) {
+                      if (value == 'view' && widget.onView != null) {
+                        widget.onView!();
+                      } else if (value == 'edit' && widget.onEdit != null) {
+                        widget.onEdit!();
+                      } else if (value == 'delete' && widget.onDelete != null) {
+                        widget.onDelete!();
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'view',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.visibility, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('Xem'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.edit, color: Colors.blue),
+                            SizedBox(width: 8),
+                            Text('Sửa'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Xóa'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              (meaning as List).join(' || '),
-              style: const TextStyle(fontSize: 16),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 3,
-              softWrap: true,
             ),
-          ),
-        ],
+
+            const Divider(color: Colors.grey, height: 1, thickness: 1),
+
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  widget.meaning.join(' || '),
+                  style: const TextStyle(fontSize: 16),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 10,
+                  softWrap: true,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

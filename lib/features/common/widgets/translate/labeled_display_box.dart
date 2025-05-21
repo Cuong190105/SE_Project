@@ -19,6 +19,7 @@ class LabeledDisplayBox extends StatefulWidget {
   @override
   _LabeledDisplayBoxState createState() => _LabeledDisplayBoxState();
 }
+
 class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
   String translatedText = ""; // Ban đầu hiển thị thông báo
   Timer? _debounceTimer;
@@ -26,7 +27,8 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
   @override
   void didUpdateWidget(covariant LabeledDisplayBox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.inputText != oldWidget.inputText || widget.isEditing != oldWidget.isEditing) {
+    if (widget.inputText != oldWidget.inputText ||
+        widget.isEditing != oldWidget.isEditing) {
       if (widget.isEditing) {
         _debounceTranslation(widget.inputText);
       }
@@ -45,7 +47,8 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
 
   // Hàm gọi API để dịch văn bản
   Future<String> translateText(String text, String targetLang) async {
-    final url = Uri.parse("https://web-production-26d7.up.railway.app/translate");
+    final url =
+        Uri.parse("https://web-production-26d7.up.railway.app/translate");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
@@ -90,7 +93,6 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
           backgroundColor: Colors.red,
         ),
       );
-
     }
   }
 
@@ -121,10 +123,11 @@ class _LabeledDisplayBoxState extends State<LabeledDisplayBox> {
             builder: (context, constraints) {
               return GestureDetector(
                 onTap: () {
-                  FocusScope.of(context).requestFocus(FocusNode()); // Ẩn bàn phím
+                  FocusScope.of(context)
+                      .requestFocus(FocusNode()); // Ẩn bàn phím
                 },
                 child: Container(
-                  width: (screenWidth-55) / 2,
+                  width: (screenWidth - 55) / 2,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(12),

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class CustomBackButton extends StatelessWidget {
 
 final String content;
-const CustomBackButton({super.key, required this.content});
+final Color? color;
+const CustomBackButton({this.color,super.key, required this.content});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +41,7 @@ const CustomBackButton({super.key, required this.content});
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
+                              color: color ?? Colors.blue.shade700,
                               letterSpacing: 1,
                             ),
                             softWrap: true,

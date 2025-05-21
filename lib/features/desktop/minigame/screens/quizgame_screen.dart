@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'quizgame_screen.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 class QuizGameScreen extends StatefulWidget {

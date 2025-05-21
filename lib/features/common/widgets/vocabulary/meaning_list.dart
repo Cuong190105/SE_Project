@@ -596,7 +596,7 @@ class _MeaningListState extends State<MeaningList> {
                     // Điều hướng đến trang thêm từ
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => AddWord()),
+                      MaterialPageRoute(builder: (context) => AddWord(vocabularyList: [])),
                     );
                   },
                   child: Tooltip(
@@ -630,7 +630,7 @@ class _MeaningListState extends State<MeaningList> {
                     ),
                     SizedBox(height: 5, width: MediaQuery.of(context).size.width-100),
                     // Phát âm
-                    Row(
+                    Column(
                       children: [
                         GestureDetector(
                           onTap: () async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/desktop/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/search.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_big.dart';
 import 'package:eng_dictionary/features/desktop/home/widgets/buildIcon_grid.dart';

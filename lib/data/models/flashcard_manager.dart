@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'flashcard_set.dart';
 import 'flashcard.dart';
 import 'database_helper.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eng_dictionary/core/services/auth_service.dart';
-import 'database_helper.dart';
 import 'package:eng_dictionary/core/services/api_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
@@ -45,6 +42,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: false,
+        isDeleted: false,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(newSet);
@@ -72,6 +70,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -102,6 +101,8 @@ class FlashcardManager {
         id: 'card_${DateTime.now().millisecondsSinceEpoch}',
         frontContent: front,
         backContent: back,
+        isLearned: false,
+        isDeleted: false,
       );
 
       set.cards.add(newCard);
@@ -117,6 +118,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -148,6 +150,7 @@ class FlashcardManager {
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -163,7 +166,8 @@ class FlashcardManager {
     try {
       final sets = await getSets();
       final set = sets.firstWhere((set) => set.id == setId);
-      set.cards.removeWhere((card) => card.id == cardId);
+      final card = set.cards.firstWhere((card) => card.id == cardId);
+      card.isDeleted = true;
 
       final updatedSet = FlashcardSet(
         id: set.id,
@@ -172,18 +176,19 @@ class FlashcardManager {
         description: set.description,
         cards: set.cards,
         color: set.color,
-        progress: set.cards.where((card) => card.isLearned).length,
+        progress: set.cards.where((card) => card.isLearned && !card.isDeleted).length,
         createdAt: set.createdAt,
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
-      debugPrint('Đã xóa thẻ $cardId khỏi bộ $setId');
+      debugPrint('Đã đánh dấu xóa thẻ $cardId khỏi bộ $setId');
       return true;
     } catch (e, stackTrace) {
-      debugPrint('Lỗi xóa thẻ $cardId khỏi bộ $setId: $e\n$stackTrace');
+      debugPrint('Lỗi đánh dấu xóa thẻ $cardId khỏi bộ $setId: $e\n$stackTrace');
       return false;
     }
   }
@@ -202,11 +207,12 @@ class FlashcardManager {
         description: set.description,
         cards: set.cards,
         color: set.color,
-        progress: set.cards.where((card) => card.isLearned).length,
+        progress: set.cards.where((card) => card.isLearned && !card.isDeleted).length,
         createdAt: set.createdAt,
         updatedAt: DateTime.now(),
         isSynced: false,
         isSample: set.isSample,
+        isDeleted: set.isDeleted,
       );
 
       await DatabaseHelper.instance.insertFlashcardSet(updatedSet);
@@ -237,18 +243,42 @@ class FlashcardManager {
       final formatter = DateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
       final formattedLastSync = formatter.format(DateTime.parse(lastSync));
 
-      final response = await ApiService.get('sync/downloadFlashcards?timestamp=$formattedLastSync')
+      final response = await ApiService.get('sync/downloadWords?timestamp=$formattedLastSync')
           .timeout(Duration(seconds: 10), onTimeout: () {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');
       });
 
-      final sets = (response['payload'] as List)
-          .map((json) => FlashcardSet.fromJson(json))
-          .where((set) => set.userEmail == userEmail && !set.isSample)
-          .toList();
+      debugPrint('Phản hồi từ server: $response');
+
+      List<dynamic> payload;
+      if (response is List<dynamic>) {
+        payload = response;
+      } else if (response is Map<String, dynamic> && response.containsKey('payload')) {
+        if (response['payload'] is List<dynamic>) {
+          payload = response['payload'] as List<dynamic>;
+        } else {
+          debugPrint('Lỗi: payload không phải List: ${response['payload']}');
+          throw Exception('payload phải là một danh sách');
+        }
+      } else {
+        debugPrint('Lỗi: Phản hồi không đúng định dạng: $response');
+        throw Exception('Phản hồi từ server không đúng định dạng');
+      }
+
+      final sets = <FlashcardSet>[];
+      for (var json in payload) {
+        if (json is Map<String, dynamic>) {
+          final set = FlashcardSet.fromJson(json);
+          if (set.userEmail == userEmail && !set.isSample && !set.isDeleted) {
+            sets.add(set);
+          }
+        } else {
+          debugPrint('Invalid set JSON: $json');
+          throw Exception('Định dạng bộ thẻ không hợp lệ trong JSON');
+        }
+      }
 
       for (var set in sets) {
-        set.color = getColorForIndex((await getSets()).length);
         await DatabaseHelper.instance.insertFlashcardSet(set);
       }
 
@@ -268,13 +298,18 @@ class FlashcardManager {
       }
 
       final unsyncedSets = await DatabaseHelper.instance.getUnsyncedSets();
+      debugPrint('Số bộ thẻ chưa đồng bộ: ${unsyncedSets.length}');
+
       if (unsyncedSets.isEmpty) {
-        debugPrint('Không có dữ liệu cần đồng bộ.');
-        return {'success': true, 'message': 'Không có dữ liệu cần đồng bộ'};
+        debugPrint('Tất cả thẻ đã được đồng bộ.');
+        return {'success': true, 'message': 'Tất cả thẻ đã được đồng bộ'};
       }
 
-      final response = await ApiService.post('sync/uploadFlashcards', {
-        'payload': unsyncedSets.map((set) => set.toJson()).toList(),
+      final response = await ApiService.post('sync/uploadWords', {
+        'payload': unsyncedSets
+            .where((set) => !set.isDeleted)
+            .map((set) => set.toJson())
+            .toList(),
       }).timeout(Duration(seconds: 10), onTimeout: () {
         throw Exception('Đồng bộ server hết thời gian sau 10 giây');
       });
@@ -288,7 +323,9 @@ class FlashcardManager {
       }
 
       for (var set in unsyncedSets) {
-        await DatabaseHelper.instance.markSetAsSynced(set.id);
+        if (!set.isDeleted) {
+          await DatabaseHelper.instance.markSetAsSynced(set.id);
+        }
       }
 
       final prefs = await SharedPreferences.getInstance();

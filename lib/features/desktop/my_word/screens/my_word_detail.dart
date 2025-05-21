@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eng_dictionary/features/common/widgets/streak_count.dart';
-import 'package:eng_dictionary/features/common/widgets/setting_button.dart';
+import 'package:eng_dictionary/features/mobile/settings/widgets/setting_button.dart';
 import 'package:eng_dictionary/features/common/widgets/logo_small.dart';
 import 'package:eng_dictionary/features/common/widgets/back_button.dart';
 import 'package:just_audio/just_audio.dart';

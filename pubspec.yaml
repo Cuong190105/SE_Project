@@ -40,7 +40,7 @@ dependencies:
   test: ^1.24.0
   mockito: ^5.4.2
   build_runner: ^2.4.6
-  google_sign_in: ^6.1.5
+  google_sign_in: ^6.0.0
   googleapis: ^11.3.0
   googleapis_auth: ^1.4.1
   file_picker: ^10.1.7
